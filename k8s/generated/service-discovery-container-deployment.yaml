@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o k8s/generated/
+    kompose.version: 1.37.0 (HEAD)
+  labels:
+    io.kompose.service: service-discovery-container
+  name: service-discovery-container
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: service-discovery-container
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o k8s/generated/
+        kompose.version: 1.37.0 (HEAD)
+      labels:
+        io.kompose.service: service-discovery-container
+    spec:
+      containers:
+        - env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: dev
+          image: selimhorri/service-discovery-ecommerce-boot:0.1.0
+          name: service-discovery-container
+          ports:
+            - containerPort: 8761
+              protocol: TCP
+      restartPolicy: Always

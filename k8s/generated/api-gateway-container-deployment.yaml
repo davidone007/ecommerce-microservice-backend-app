@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o k8s/generated/
+    kompose.version: 1.37.0 (HEAD)
+  labels:
+    io.kompose.service: api-gateway-container
+  name: api-gateway-container
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: api-gateway-container
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -o k8s/generated/
+        kompose.version: 1.37.0 (HEAD)
+      labels:
+        io.kompose.service: api-gateway-container
+    spec:
+      containers:
+        - env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: http://service-discovery-container:8761/eureka/
+            - name: EUREKA_INSTANCE_HOSTNAME
+              value: api-gateway-container
+            - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+              value: "false"
+            - name: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED
+              value: "true"
+            - name: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWER-CASE-SERVICE-ID
+              value: "true"
+            - name: SPRING_CONFIG_IMPORT
+              value: optional:configserver:http://cloud-config-container:9296/
+            - name: SPRING_PROFILES_ACTIVE
+              value: dev
+            - name: SPRING_ZIPKIN_BASE-URL
+              value: http://zipkin-container:9411
+          image: selimhorri/api-gateway-ecommerce-boot:0.1.0
+          name: api-gateway-container
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+      restartPolicy: Always
