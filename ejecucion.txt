@@ -1,0 +1,3 @@
+docker-compose up --build  -d service-discovery-container cloud-config-container zipkin-container
+docker-compose up -d api-gateway-container
+docker-compose up -d user-service-container product-service-container order-service-container payment-service-container shipping-service-container favourite-service-container proxy-client-container
