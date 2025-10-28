@@ -7,6 +7,7 @@ import javax.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
 
+import com.selimhorri.app.domain.Order;
 import com.selimhorri.app.dto.OrderDto;
 import com.selimhorri.app.exception.wrapper.OrderNotFoundException;
 import com.selimhorri.app.helper.OrderMappingHelper;
@@ -60,8 +61,10 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public OrderDto update(final Integer orderId, final OrderDto orderDto) {
 		log.info("*** OrderDto, service; update order with orderId *");
-		return OrderMappingHelper.map(this.orderRepository
-				.save(OrderMappingHelper.map(this.findById(orderId))));
+		Order existing = OrderMappingHelper.map(this.findById(orderId));
+		existing.setOrderDesc(orderDto.getOrderDesc());
+		existing.setOrderFee(orderDto.getOrderFee());
+		return OrderMappingHelper.map(this.orderRepository.save(existing));
 	}
 	
 	@Override
