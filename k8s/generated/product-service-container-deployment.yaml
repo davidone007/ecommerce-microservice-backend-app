@@ -20,6 +20,21 @@ spec:
       labels:
         io.kompose.service: product-service-container
     spec:
+      initContainers:
+        - name: wait-for-dependencies
+          image: curlimages/curl:7.85.0
+          command:
+            - sh
+            - -c
+            - |
+              until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do
+                echo "waiting for eureka..."
+                sleep 2
+              done
+              until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do
+                echo "waiting for cloud-config..."
+                sleep 2
+              done
       containers:
         - env:
             - name: EUREKA_CLIENT_ENABLED
