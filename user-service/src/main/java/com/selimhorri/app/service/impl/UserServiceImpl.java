@@ -57,8 +57,28 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserDto update(final Integer userId, final UserDto userDto) {
 		log.info("*** UserDto, service; update user with userId *");
-		return UserMappingHelper.map(this.userRepository.save(
-				UserMappingHelper.map(this.findById(userId))));
+		final var existingUser = this.userRepository.findById(userId)
+				.orElseThrow(() -> new UserObjectNotFoundException(String.format("User with id: %d not found", userId)));
+		
+		// Update fields from userDto if provided
+		if (userDto.getFirstName() != null) {
+			existingUser.setFirstName(userDto.getFirstName());
+		}
+		if (userDto.getLastName() != null) {
+			existingUser.setLastName(userDto.getLastName());
+		}
+		if (userDto.getImageUrl() != null) {
+			existingUser.setImageUrl(userDto.getImageUrl());
+		}
+		if (userDto.getEmail() != null) {
+			existingUser.setEmail(userDto.getEmail());
+		}
+		if (userDto.getPhone() != null) {
+			existingUser.setPhone(userDto.getPhone());
+		}
+		// Don't update credential or addresses in this method
+		
+		return UserMappingHelper.map(this.userRepository.save(existingUser));
 	}
 	
 	@Override
@@ -70,7 +90,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserDto findByUsername(final String username) {
 		log.info("*** UserDto, service; fetch user with username *");
-		return UserMappingHelper.map(this.userRepository.findByCredentialUsername(username)
+		return UserMappingHelper.map(this.userRepository.findByCredential_Username(username)
 				.orElseThrow(() -> new UserObjectNotFoundException(String.format("User with username: %s not found", username))));
 	}
 	
