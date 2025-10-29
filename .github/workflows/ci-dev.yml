@@ -6,9 +6,9 @@ permissions:
 
 on:
     push:
-        branches: [master, main, dev, "feat/*", "ops/feat/*"]
+        branches: [dev, "feat/*", "ops/feat/*"]
     pull_request:
-        branches: [master, main, dev]
+        branches: [dev, "feat/*", "ops/feat/*"]
 
 jobs:
     maven-build:
