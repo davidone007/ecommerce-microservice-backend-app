@@ -18,6 +18,12 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v4
 
+            - name: Download JAR artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: jars
+                  path: .
+
             - name: Cache Maven local repository
               uses: actions/cache@v4
               with:
