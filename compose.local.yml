@@ -1,0 +1,60 @@
+services:
+  service-discovery-container:
+    build:
+      context: .
+      dockerfile: service-discovery/Dockerfile
+    image: selimhorri/service-discovery-ecommerce-boot:0.1.0
+
+  cloud-config-container:
+    build:
+      context: .
+      dockerfile: cloud-config/Dockerfile
+    image: selimhorri/cloud-config-ecommerce-boot:0.1.0
+
+  api-gateway-container:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    image: selimhorri/api-gateway-ecommerce-boot:0.1.0
+
+  proxy-client-container:
+    build:
+      context: .
+      dockerfile: proxy-client/Dockerfile
+    image: selimhorri/proxy-client-ecommerce-boot:0.1.0
+
+  order-service-container:
+    build:
+      context: .
+      dockerfile: order-service/Dockerfile
+    image: selimhorri/order-service-ecommerce-boot:0.1.0
+
+  payment-service-container:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    image: selimhorri/payment-service-ecommerce-boot:0.1.0
+
+  product-service-container:
+    build:
+      context: .
+      dockerfile: product-service/Dockerfile
+    image: selimhorri/product-service-ecommerce-boot:0.1.0
+
+  shipping-service-container:
+    build:
+      context: .
+      dockerfile: shipping-service/Dockerfile
+    image: selimhorri/shipping-service-ecommerce-boot:0.1.0
+
+  user-service-container:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    image: selimhorri/user-service-ecommerce-boot:0.1.0
+
+  favourite-service-container:
+    build:
+      context: .
+      dockerfile: favourite-service/Dockerfile
+    image: selimhorri/favourite-service-ecommerce-boot:0.1.0
