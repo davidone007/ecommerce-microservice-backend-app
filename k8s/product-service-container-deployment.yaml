@@ -2,23 +2,23 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kompose.cmd: kompose convert -o k8s/generated/
+    kompose.cmd: kompose convert -o k8s/
     kompose.version: 1.37.0 (HEAD)
   labels:
-    io.kompose.service: proxy-client-container
-  name: proxy-client-container
+    io.kompose.service: product-service-container
+  name: product-service-container
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: proxy-client-container
+      io.kompose.service: product-service-container
   template:
     metadata:
       annotations:
-        kompose.cmd: kompose convert -o k8s/generated/
+        kompose.cmd: kompose convert -o k8s/
         kompose.version: 1.37.0 (HEAD)
       labels:
-        io.kompose.service: proxy-client-container
+        io.kompose.service: product-service-container
     spec:
       initContainers:
         - name: wait-for-dependencies
@@ -44,7 +44,7 @@ spec:
             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
               value: http://service-discovery-container:8761/eureka/
             - name: EUREKA_INSTANCE_HOSTNAME
-              value: proxy-client-container
+              value: product-service-container
             - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
               value: "false"
             - name: RIBBON_EUREKA_ENABLED
@@ -53,11 +53,11 @@ spec:
               value: optional:configserver:http://cloud-config-container:9296/
             - name: SPRING_PROFILES_ACTIVE
               value: dev
-            - name: SPRING_ZIPKIN_BASE-URL
+            - name: SPRING_ZIPKIN_BASE_URL
               value: http://zipkin-container:9411
-          image: selimhorri/proxy-client-ecommerce-boot:0.1.0
-          name: proxy-client-container
+          image: selimhorri/product-service-ecommerce-boot:0.1.0
+          name: product-service-container
           ports:
-            - containerPort: 8900
+            - containerPort: 8500
               protocol: TCP
       restartPolicy: Always

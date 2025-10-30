@@ -43,6 +43,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/api/authenticate/**").permitAll()
 				.antMatchers("/api/categories/**").permitAll()
 				.antMatchers("/api/products/**").permitAll()
+				// Allow creating users (registration) without authentication. Keep other user endpoints protected.
+				// More restrictive: only allow POST to the exact /api/users endpoint (no subpaths).
+				.antMatchers(HttpMethod.POST, "/api/users").permitAll()
+				.antMatchers(HttpMethod.POST, "/api/users/authenticate").permitAll()
 				.antMatchers("/api/**")
 					.hasAnyRole(RoleBasedAuthority.ROLE_USER.getRole(), 
 							RoleBasedAuthority.ROLE_ADMIN.getRole())

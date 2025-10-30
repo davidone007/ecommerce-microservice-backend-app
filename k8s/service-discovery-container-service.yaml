@@ -2,13 +2,12 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    kompose.cmd: kompose convert -o k8s/generated/
+    kompose.cmd: kompose convert -o k8s/
     kompose.version: 1.37.0 (HEAD)
   labels:
     io.kompose.service: service-discovery-container
   name: service-discovery-container
 spec:
-  type: NodePort
   ports:
     - name: "8761"
       port: 8761

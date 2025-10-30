@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kompose.cmd: kompose convert -o k8s/generated/
+    kompose.cmd: kompose convert -o k8s/
     kompose.version: 1.37.0 (HEAD)
   labels:
     io.kompose.service: order-service-container
@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       annotations:
-        kompose.cmd: kompose convert -o k8s/generated/
+        kompose.cmd: kompose convert -o k8s/
         kompose.version: 1.37.0 (HEAD)
       labels:
         io.kompose.service: order-service-container
@@ -53,7 +53,7 @@ spec:
               value: optional:configserver:http://cloud-config-container:9296/
             - name: SPRING_PROFILES_ACTIVE
               value: dev
-            - name: SPRING_ZIPKIN_BASE-URL
+            - name: SPRING_ZIPKIN_BASE_URL
               value: http://zipkin-container:9411
           image: selimhorri/order-service-ecommerce-boot:0.1.0
           name: order-service-container

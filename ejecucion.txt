@@ -1,3 +1,26 @@
-docker-compose up --build  -d service-discovery-container cloud-config-container zipkin-container
-docker-compose up -d api-gateway-container
-docker-compose up -d user-service-container product-service-container order-service-container payment-service-container shipping-service-container favourite-service-container proxy-client-container
+./mvnw clean package -DskipTests
+
+ ./mvnw -f proxy-client/pom.xml clean package -DskipTests
+
+docker compose -f compose.yml -f compose.local.yml up --build -d service-discovery-container cloud-config-container zipkin-container
+
+docker compose -f compose.yml -f compose.local.yml up --build -d api-gateway-container
+
+docker compose -f compose.yml -f compose.local.yml build user-service-container product-service-container order-service-container payment-service-container shipping-service-container favourite-service-container proxy-client-container
+
+docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate proxy-client-container
+
+
+
+
+###Minikube
+
+minikube delete
+
+minikube start --memory=16384 --cpus=4
+
+kubectl apply -f k8s/
+
+kubectl get pods -A
+
+kubectl describe deployment api-gateway-container

@@ -24,7 +24,7 @@ services:
       - microservices_network
     environment:
       - SPRING_PROFILES_ACTIVE=dev
-      - SPRING_ZIPKIN_BASE-URL=http://zipkin-container:9411
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin-container:9411
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery-container:8761/eureka/
 
   api-gateway-container:
@@ -36,11 +36,11 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-container:9296/
-      - SPRING_ZIPKIN_BASE-URL=http://zipkin-container:9411
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin-container:9411
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery-container:8761/eureka/
       - EUREKA_INSTANCE_PREFER-IP-ADDRESS=false
       - EUREKA_INSTANCE_HOSTNAME=api-gateway-container
-      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
+      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=false
       - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWER-CASE-SERVICE-ID=true
     depends_on:
       - service-discovery-container
@@ -56,7 +56,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-container:9296/
-      - SPRING_ZIPKIN_BASE-URL=http://zipkin-container:9411
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin-container:9411
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery-container:8761/eureka/
       - EUREKA_CLIENT_ENABLED=true
       - EUREKA_CLIENT_FETCH-REGISTRY=true
@@ -76,7 +76,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-container:9296/
-      - SPRING_ZIPKIN_BASE-URL=http://zipkin-container:9411
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin-container:9411
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery-container:8761/eureka/
       - EUREKA_CLIENT_ENABLED=true
       - EUREKA_CLIENT_FETCH-REGISTRY=true
@@ -96,7 +96,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-container:9296/
-      - SPRING_ZIPKIN_BASE-URL=http://zipkin-container:9411
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin-container:9411
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery-container:8761/eureka/
       - EUREKA_CLIENT_ENABLED=true
       - EUREKA_CLIENT_FETCH-REGISTRY=true
@@ -116,7 +116,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-container:9296/
-      - SPRING_ZIPKIN_BASE-URL=http://zipkin-container:9411
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin-container:9411
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery-container:8761/eureka/
       - EUREKA_CLIENT_ENABLED=true
       - EUREKA_CLIENT_FETCH-REGISTRY=true
@@ -136,7 +136,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-container:9296/
-      - SPRING_ZIPKIN_BASE-URL=http://zipkin-container:9411
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin-container:9411
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery-container:8761/eureka/
       - EUREKA_CLIENT_ENABLED=true
       - EUREKA_CLIENT_FETCH-REGISTRY=true
@@ -156,7 +156,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-container:9296/
-      - SPRING_ZIPKIN_BASE-URL=http://zipkin-container:9411
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin-container:9411
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery-container:8761/eureka/
       - EUREKA_CLIENT_ENABLED=true
       - EUREKA_CLIENT_FETCH-REGISTRY=true
@@ -176,7 +176,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-container:9296/
-      - SPRING_ZIPKIN_BASE-URL=http://zipkin-container:9411
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin-container:9411
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery-container:8761/eureka/
       - EUREKA_CLIENT_ENABLED=true
       - EUREKA_CLIENT_FETCH-REGISTRY=true
