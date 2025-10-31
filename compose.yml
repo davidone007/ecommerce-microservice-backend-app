@@ -8,7 +8,7 @@ services:
       - microservices_network
 
   service-discovery-container:
-    image: selimhorri/service-discovery-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/service-discovery:${BRANCH_TAG}
     ports:
       - 8761:8761
     networks:
@@ -17,7 +17,7 @@ services:
       - SPRING_PROFILES_ACTIVE=dev
 
   cloud-config-container:
-    image: selimhorri/cloud-config-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/cloud-config:${BRANCH_TAG}
     ports:
       - 9296:9296
     networks:
@@ -28,7 +28,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery-container:8761/eureka/
 
   api-gateway-container:
-    image: selimhorri/api-gateway-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/api-gateway:${BRANCH_TAG}
     ports:
       - 8080:8080
     networks:
@@ -48,7 +48,7 @@ services:
       - zipkin-container
 
   proxy-client-container:
-    image: selimhorri/proxy-client-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/proxy-client:${BRANCH_TAG}
     ports:
       - 8900:8900
     networks:
@@ -68,7 +68,7 @@ services:
       - cloud-config-container
 
   order-service-container:
-    image: selimhorri/order-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/order-service:${BRANCH_TAG}
     ports:
       - 8300:8300
     networks:
@@ -88,7 +88,7 @@ services:
       - cloud-config-container
 
   payment-service-container:
-    image: selimhorri/payment-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/payment-service:${BRANCH_TAG}
     ports:
       - 8400:8400
     networks:
@@ -108,7 +108,7 @@ services:
       - cloud-config-container
 
   product-service-container:
-    image: selimhorri/product-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/product-service:${BRANCH_TAG}
     ports:
       - 8500:8500
     networks:
@@ -128,7 +128,7 @@ services:
       - cloud-config-container
 
   shipping-service-container:
-    image: selimhorri/shipping-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/shipping-service:${BRANCH_TAG}
     ports:
       - 8600:8600
     networks:
@@ -148,7 +148,7 @@ services:
       - cloud-config-container
 
   user-service-container:
-    image: selimhorri/user-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/user-service:${BRANCH_TAG}
     ports:
       - 8700:8700
     networks:
@@ -168,7 +168,7 @@ services:
       - cloud-config-container
 
   favourite-service-container:
-    image: selimhorri/favourite-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/favourite-service:${BRANCH_TAG}
     ports:
       - 8800:8800
     networks:
