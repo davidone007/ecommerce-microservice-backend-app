@@ -1,10 +1,16 @@
+## General
+# Keep README / docs, ignore build output and OS files
 HELP.md
 target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+.DS_Store
+*.log
+.env
 
-### STS ###
+## Maven wrapper
+!.mvn/wrapper/maven-wrapper.jar
+
+## IDEs / editors
+# STS
 .apt_generated
 .classpath
 .factorypath
@@ -13,21 +19,35 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
+# VS Code
 .vscode/
+
+## Build folders (some modules may keep their own build dirs)
+# Ignore module build/ and target/ directories by default
+**/target/
+**/build/
+
+## Optional: local scripts, secrets and runtime files
+secrets/
+.keystore
+.p12
+
+## Local actions runner
+actions-runner/
+
+
+
+
