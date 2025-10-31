@@ -3,58 +3,58 @@ services:
     build:
       context: .
       dockerfile: service-discovery/Dockerfile
-    image: selimhorri/service-discovery-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/service-discovery:${BRANCH_TAG}
 
   cloud-config-container:
     build:
       context: .
       dockerfile: cloud-config/Dockerfile
-    image: selimhorri/cloud-config-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/cloud-config:${BRANCH_TAG}
 
   api-gateway-container:
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
-    image: selimhorri/api-gateway-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/api-gateway:${BRANCH_TAG}
 
   proxy-client-container:
     build:
       context: .
       dockerfile: proxy-client/Dockerfile
-    image: selimhorri/proxy-client-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/proxy-client:${BRANCH_TAG}
 
   order-service-container:
     build:
       context: .
       dockerfile: order-service/Dockerfile
-    image: selimhorri/order-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/order-service:${BRANCH_TAG}
 
   payment-service-container:
     build:
       context: .
       dockerfile: payment-service/Dockerfile
-    image: selimhorri/payment-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/payment-service:${BRANCH_TAG}
 
   product-service-container:
     build:
       context: .
       dockerfile: product-service/Dockerfile
-    image: selimhorri/product-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/product-service:${BRANCH_TAG}
 
   shipping-service-container:
     build:
       context: .
       dockerfile: shipping-service/Dockerfile
-    image: selimhorri/shipping-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/shipping-service:${BRANCH_TAG}
 
   user-service-container:
     build:
       context: .
       dockerfile: user-service/Dockerfile
-    image: selimhorri/user-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/user-service:${BRANCH_TAG}
 
   favourite-service-container:
     build:
       context: .
       dockerfile: favourite-service/Dockerfile
-    image: selimhorri/favourite-service-ecommerce-boot:0.1.0
+    image: ghcr.io/davidone007/favourite-service:${BRANCH_TAG}

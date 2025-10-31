@@ -6,9 +6,9 @@ permissions:
 
 on:
   push:
-    branches: [master, main, "stage", dev, "feat/*", "ops/feat/*"]
+    branches: [dev, "feat/*", "ops/feat/*"]
   pull_request:
-    branches: [master, main, de, "stage"]
+    branches: [dev, "feat/*", "ops/feat/*"]
 
 jobs:
   maven-build:
@@ -166,6 +166,8 @@ jobs:
         if: steps.check.outputs.exists == 'true'
         uses: docker/setup-buildx-action@v3
 
+      # NOTE: removed conditional push decision; images will be pushed for all branches/PRs with tag 'dev'
+
       - name: Log in to GHCR
         if: steps.check.outputs.exists == 'true'
         uses: docker/login-action@v3
@@ -174,14 +176,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Sanitize branch name for tags
-        if: steps.check.outputs.exists == 'true'
-        id: sanitize
-        run: |
-          # Derive the ref name (strip refs/*/ prefix) and replace any '/' with '-' to create a valid Docker tag
-          REF="${GITHUB_REF#refs/*/}"
-          SANITIZED="${REF//\//-}"
-          echo "sanitized_ref=${SANITIZED}" >> "$GITHUB_OUTPUT"
+      # Using fixed tag 'dev' for all pushed images
 
       - name: Extract metadata
         if: steps.check.outputs.exists == 'true'
@@ -192,8 +187,8 @@ jobs:
           tags: |
             type=raw,value=latest
             type=sha,prefix=,format=long
-            # Add a branch-based tag; use sanitized ref (slashes replaced with '-') to make a valid Docker tag
-            type=raw,value=${{ steps.sanitize.outputs.sanitized_ref }}
+            # Add a fixed tag 'dev' for all pushes
+            type=raw,value=dev
 
       - name: Build and push
         if: steps.check.outputs.exists == 'true'
