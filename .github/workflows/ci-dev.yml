@@ -37,7 +37,9 @@ jobs:
           # No usar cache en self-hosted para evitar timeouts
 
       - name: Build with Maven (run unit tests)
+        working-directory: ${{ github.workspace }}
         run: |
+          ls -lah mvnw
           chmod +x mvnw
           ./mvnw test jacoco:report -Dtest="*ServiceImplTest"
 
