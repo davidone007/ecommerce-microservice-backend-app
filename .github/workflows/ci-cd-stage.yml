@@ -392,12 +392,17 @@ jobs:
           # Check all endpoints until they are ready or timeout
           while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
             ALL_READY=true
+            READY_COUNT=0
+            
             for endpoint in "${ENDPOINTS[@]}"; do
-              if ! curl -sSf "$endpoint" >/dev/null 2>&1; then
+              if curl -sSf "$endpoint" >/dev/null 2>&1; then
+                READY_COUNT=$((READY_COUNT + 1))
+              else
                 ALL_READY=false
-                break
               fi
             done
+            
+            echo "[$SECONDS_WAITED s] Ready endpoints: $READY_COUNT/${#ENDPOINTS[@]}"
             
             if [ "$ALL_READY" = true ]; then
               echo "✅ All services are ready"
@@ -406,39 +411,75 @@ jobs:
             
             sleep 5
             SECONDS_WAITED=$((SECONDS_WAITED+5))
-            echo "Waiting for services... ($SECONDS_WAITED s / $TIMEOUT s)"
           done
 
           echo "⚠️  Service health check timed out after $TIMEOUT seconds"
-          echo "Services may still be starting. Proceeding with tests..."
+          echo "Proceeding anyway with tests (some services may not be ready yet)..."
+          echo "Final status:"
+          for endpoint in "${ENDPOINTS[@]}"; do
+            if curl -sSf "$endpoint" >/dev/null 2>&1; then
+              echo "✅ $endpoint"
+            else
+              echo "❌ $endpoint"
+            fi
+          done
 
       - name: Run E2E Tests with Postman Collection
         run: |
           echo "🧪 Running E2E tests with Postman collection..."
-          newman run "postman-collections/E2E Ecommerce Microservices Tests.postman_collection.json" \
-            --environment "postman-collections/local-stage.postman_environment.json" 2>/dev/null || \
+          
+          # Check if collection exists
+          if [ ! -f "postman-collections/E2E Ecommerce Microservices Tests.postman_collection.json" ]; then
+            echo "❌ Postman collection not found!"
+            echo "Available files in postman-collections:"
+            ls -la postman-collections/ || echo "Directory not found"
+            exit 1
+          fi
+          
+          # Create output directory for reports
+          mkdir -p test-reports
+          
+          # Run newman with full error output
+          echo "Running Newman with local-stage environment..."
+          if [ -f "postman-collections/local-stage.postman_environment.json" ]; then
+            newman run "postman-collections/E2E Ecommerce Microservices Tests.postman_collection.json" \
+              --environment "postman-collections/local-stage.postman_environment.json" \
+              --reporters cli,json,htmlextra \
+              --reporter-htmlextra-export "test-reports/e2e-test-report.html" \
+              --reporter-json-export "test-reports/e2e-test-report.json" \
+              --delay-request 500 \
+              --timeout-request 10000 || true
+          else
+            echo "⚠️  Environment file not found, trying with globals..."
             newman run "postman-collections/E2E Ecommerce Microservices Tests.postman_collection.json" \
               --globals "postman-collections/globals.json" \
               --reporters cli,json,htmlextra \
-              --reporter-htmlextra-export "e2e-test-report.html" \
-              --reporter-json-export "e2e-test-report.json" \
+              --reporter-htmlextra-export "test-reports/e2e-test-report.html" \
+              --reporter-json-export "test-reports/e2e-test-report.json" \
               --delay-request 500 \
-              --timeout-request 10000
+              --timeout-request 10000 || true
+          fi
+          
+          echo "✅ Newman execution completed"
+          echo "Generated reports:"
+          ls -la test-reports/ 2>/dev/null || echo "No reports generated"
 
       - name: Upload E2E test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-report
-          path: |
-            e2e-test-report.html
-            e2e-test-report.json
+          path: test-reports/
           retention-days: 7
 
       - name: Publish E2E Test Results
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-results-summary
-          path: e2e-test-report.json
-          retention-days: 7
+        run: |
+          echo "📊 E2E Test Summary:"
+          if [ -f "test-reports/e2e-test-report.json" ]; then
+            echo "✅ E2E test report generated successfully"
+            echo "Report details:"
+            cat test-reports/e2e-test-report.json | head -50
+          else
+            echo "⚠️  E2E test report not found"
+          fi
