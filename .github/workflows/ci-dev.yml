@@ -42,7 +42,7 @@ jobs:
           # Run unit tests. Some modules may not have tests matching the pattern
           # and would cause Maven Surefire to fail the build. Add -DfailIfNoTests=false
           # so that modules without matching tests don't fail the aggregated build.
-          ./mvnw test jacoco:report -Dtest="*ServiceImplTest" -DfailIfNoTests=false
+          ./mvnw -B -T 1C verify -Dtest="*ServiceImplTest" -DfailIfNoTests=false
 
       - name: Ensure SonarQube available (start local if missing)
         env:
