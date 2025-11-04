@@ -1,0 +1,84 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║    GUÍA COMPLETA: PRUEBAS DE RENDIMIENTO Y ESTRÉS CON LOCUST             ║
+║    Sistema E-Commerce Microservicios                                      ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+📋 CONTENIDO DEL DIRECTORIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📄 Documentación:
+  • README.md                  → Documentación completa
+  • QUICKSTART.md              → Inicio rápido en 5 minutos
+  • INSTALLATION_GUIDE.txt     → Este archivo
+  • benchmarks.py              → Métricas esperadas
+
+🔧 Código Python:
+  • config.py                  → Configuración centralizada
+  • utils.py                   → Utilidades y generador de datos
+  • locustfile.py              → Test principal (flujo completo)
+  • locustfile_products.py     → Tests de Product Service
+  • locustfile_orders.py       → Tests de Order Service
+  • locustfile_payments.py     → Tests de Payment Service
+  • locustfile_favorites.py    → Tests de Favourite Service
+  • locustfile_shipping.py     → Tests de Shipping Service
+  • generate_report.py         → Generador de reportes HTML
+
+🚀 Scripts ejecutables:
+  • demo.sh                    → Demostración interactiva
+  • run_performance_tests.sh   → Ejecutor principal
+  • stress_test.sh             → Pruebas de estrés
+  • test_service.sh            → Prueba de servicios
+
+
+⚡ INSTALACIÓN RÁPIDA (3 pasos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Instalar dependencias:
+   pip install -r requirements.txt
+
+2. (Opcional) Crear archivo .env:
+   cp .env.example .env
+
+3. Ejecutar prueba:
+   ./demo.sh
+
+
+🎯 COMANDOS PRINCIPALES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Tutorial interactivo:
+  ./demo.sh
+
+Prueba rápida (interfaz web):
+  ./run_performance_tests.sh -u 5 -t 2m
+
+Prueba de carga (30 usuarios, 5 min):
+  ./run_performance_tests.sh -u 30 -r 3 -t 5m --summary
+
+Prueba de estrés (100 usuarios, 10 min):
+  ./run_performance_tests.sh -u 100 -r 10 -t 10m --summary
+
+Prueba de servicio específico:
+  ./test_service.sh products -u 20 -t 5m
+  ./test_service.sh orders -u 50 -t 10m
+
+Generar reporte HTML:
+  python3 generate_report.py performance-results/TIMESTAMP_stats.csv
+
+Ver benchmarks esperados:
+  python3 benchmarks.py
+
+
+✅ PARA MÁS INFORMACIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Lee los siguientes archivos:
+• README.md       → Documentación completa
+• QUICKSTART.md   → Tutorial de 5 minutos
+• benchmarks.py   → Métricas esperadas y guía de interpretación
+
+Documentación oficial:
+https://docs.locust.io/

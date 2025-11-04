@@ -4,14 +4,34 @@
 
 docker compose -f compose.yml -f compose.local.yml up --build -d service-discovery-container cloud-config-container zipkin-container
 
-docker compose -f compose.yml -f compose.local.yml up --build -d api-gateway-container
+
+docker compose -f compose.yml -f compose.local.yml build api-gateway-container
+
+docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate api-gateway-container
 
 docker compose -f compose.yml -f compose.local.yml build user-service-container product-service-container order-service-container payment-service-container shipping-service-container favourite-service-container proxy-client-container
 
-docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate proxy-client-container
+docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate user-service-container product-service-container order-service-container payment-service-container shipping-service-container favourite-service-container proxy-client-container
 
+docker compose -f compose.yml -f compose.local.yml build proxy-client-container
 
+docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate user-service-container
 
+docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate api-gateway-container
+
+docker compose -f compose.yml -f compose.local.yml build user-service-container
+
+docker compose -f compose.yml -f compose.local.yml build product-service-container
+
+docker compose -f compose.yml -f compose.local.yml build order-service-container
+
+docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate order-service-container
+
+docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate product-service-container
+
+ ./mvnw -f product-service/pom.xml clean package -DskipTests
+
+ docker compose -f compose.yml -f compose.local.yml restart user-service-container product-service-container order-service-container payment-service-container shipping-service-container favourite-service-container
 
 ###Minikube
 
@@ -24,3 +44,7 @@ kubectl apply -f k8s/
 kubectl get pods -A
 
 kubectl describe deployment api-gateway-container
+
+## Tests 
+
+cd "/Users/davidef/Desktop/ecommerce-microservice-backend-app copy" && ./mvnw test -Dtest="*ServiceImplTest"

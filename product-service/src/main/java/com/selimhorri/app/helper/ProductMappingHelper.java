@@ -25,6 +25,17 @@ public interface ProductMappingHelper {
 	}
 	
 	public static Product map(final ProductDto productDto) {
+		Category.CategoryBuilder categoryBuilder = Category.builder()
+				.categoryId(productDto.getCategoryDto().getCategoryId());
+		
+		// Solo agregar categoryTitle e imageUrl si no son null
+		if (productDto.getCategoryDto().getCategoryTitle() != null) {
+			categoryBuilder.categoryTitle(productDto.getCategoryDto().getCategoryTitle());
+		}
+		if (productDto.getCategoryDto().getImageUrl() != null) {
+			categoryBuilder.imageUrl(productDto.getCategoryDto().getImageUrl());
+		}
+		
 		return Product.builder()
 				.productId(productDto.getProductId())
 				.productTitle(productDto.getProductTitle())
@@ -32,12 +43,7 @@ public interface ProductMappingHelper {
 				.sku(productDto.getSku())
 				.priceUnit(productDto.getPriceUnit())
 				.quantity(productDto.getQuantity())
-				.category(
-						Category.builder()
-							.categoryId(productDto.getCategoryDto().getCategoryId())
-							.categoryTitle(productDto.getCategoryDto().getCategoryTitle())
-							.imageUrl(productDto.getCategoryDto().getImageUrl())
-							.build())
+				.category(categoryBuilder.build())
 				.build();
 	}
 	

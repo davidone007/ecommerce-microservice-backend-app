@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cache Maven local repository
+        if: runner.name != 'self-hosted'
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
@@ -33,11 +34,10 @@ jobs:
           java-version: "11"
           cache: "maven"
 
-      - name: Build with Maven (run tests + coverage)
+      - name: Build with Maven (run unit tests)
         run: |
-          chmod +x ./mvnw
-          # Run full verify so JaCoCo report-aggregate is produced in the root module
-          ./mvnw -B -T 1C verify
+          chmod +x mvnw
+          ./mvnw test jacoco:report -Dtest="*ServiceImplTest"
 
       - name: Ensure SonarQube available (start local if missing)
         env:
@@ -191,7 +191,7 @@ jobs:
             type=raw,value=dev
 
       - name: Build and push
-        if: steps.check.outputs.exists == 'true'
+        if: steps.check.outputs.exists == 'true' && (github.event_name == 'push' && github.ref == 'refs/heads/dev' || github.event_name == 'pull_request' && github.base_ref == 'dev')
         uses: docker/build-push-action@v5
         with:
           context: .

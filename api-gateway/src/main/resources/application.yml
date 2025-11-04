@@ -1,4 +1,3 @@
-
 server:
   servlet:
     context-path: /
@@ -21,7 +20,7 @@ spring:
         add-to-simple-url-handler-mapping: true
         cors-configurations:
           '[/**]':
-            allowed-origins: "${CLIENT_HOST:http://localhost:4200}"
+            allowed-origin-patterns: "*"
             allowed-headers: "*"
             exposed-headers: "*"
             allow-credentials: true
@@ -33,8 +32,30 @@ spring:
               - PATCH
               - OPTIONS
       routes:
-      # Only expose the proxy-client via the gateway. All client traffic should go through
-      # the proxy-client which acts as the façade and centralizes auth/authorization.
+      - id: ORDER-SERVICE
+        uri: lb://ORDER-SERVICE
+        predicates:
+        - Path=/order-service/**
+      - id: PAYMENT-SERVICE
+        uri: lb://PAYMENT-SERVICE
+        predicates:
+        - Path=/payment-service/**
+      - id: PRODUCT-SERVICE
+        uri: lb://PRODUCT-SERVICE
+        predicates:
+        - Path=/product-service/**
+      - id: SHIPPING-SERVICE
+        uri: lb://SHIPPING-SERVICE
+        predicates:
+        - Path=/shipping-service/**
+      - id: USER-SERVICE
+        uri: lb://USER-SERVICE
+        predicates:
+        - Path=/user-service/**
+      - id: FAVOURITE-SERVICE
+        uri: lb://FAVOURITE-SERVICE
+        predicates:
+        - Path=/favourite-service/**
       - id: PROXY-CLIENT
         uri: lb://PROXY-CLIENT
         predicates:
@@ -61,13 +82,3 @@ management:
   endpoint:
     health:
       show-details: always
-
-
-
-
-
-
-
-
- 
- 

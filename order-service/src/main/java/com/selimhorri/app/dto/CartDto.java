@@ -21,6 +21,10 @@ public class CartDto implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	private Integer cartId;
+	
+	@Builder.Default
+	private boolean isActive = true; // Por defecto activo al crear
+	
 	private Integer userId;
 	
 	@JsonInclude(Include.NON_NULL)

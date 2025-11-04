@@ -24,7 +24,7 @@ spec:
         - env:
             - name: SPRING_PROFILES_ACTIVE
               value: dev
-          image: selimhorri/service-discovery-ecommerce-boot:0.1.0
+          image: ghcr.io/davidone007/service-discovery:${BRANCH_TAG}
           name: service-discovery-container
           ports:
             - containerPort: 8761

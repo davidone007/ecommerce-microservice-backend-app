@@ -17,12 +17,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "products")
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true, exclude = {"category"})
+@ToString(exclude = {"category"})
 @Data
 @Builder
 public final class Product extends AbstractMappedEntity implements Serializable {
