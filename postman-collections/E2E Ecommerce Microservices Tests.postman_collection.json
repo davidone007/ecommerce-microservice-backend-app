@@ -1825,7 +1825,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"orderId\": {{test_orderId}},\n    \"orderDate\": \"02-11-2024__10:30:00:000000\",\n    \"orderDesc\": \"Compra de laptop y mouse\",\n    \"orderFee\": 979.98,\n    \"orderStatus\": \"CANCELLED\",\n    \"isActive\": false,\n    \"cart\": {\n        \"cartId\": {{test_cartId}}\n    }\n}"
+              "raw": "{\n    \"orderId\": {{test_orderId}},\n    \"orderDate\": \"02-11-2024__10:30:00:000000\",\n    \"orderDesc\": \"Compra de laptop y mouse\",\n    \"orderFee\": 979.98,\n    \"orderStatus\": \"CREATED\",\n    \"isActive\": false,\n    \"cart\": {\n        \"cartId\": {{test_cartId}}\n    }\n}"
             },
             "url": {
               "raw": "http://localhost:8080/app/api/orders/{{test_orderId}}",
