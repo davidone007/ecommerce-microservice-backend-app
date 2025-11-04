@@ -1,4 +1,4 @@
-name: CI - Stage build ( Integration tests + K8s deploy + E2E tests )
+name: CI - CD - Stage build ( Integration tests + K8s deploy + E2E tests )
 
 permissions:
   contents: read
