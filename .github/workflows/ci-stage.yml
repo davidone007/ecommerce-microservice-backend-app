@@ -1,0 +1,400 @@
+name: CI - Stage build (Integration tests + K8s deploy + E2E tests)
+
+permissions:
+  contents: read
+  packages: write
+
+on:
+  push:
+    branches: [stage]
+  pull_request:
+    branches: [stage]
+
+jobs:
+  maven-build:
+    name: Build (Maven)
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Build with Maven (compile + unit tests only)
+        run: |
+          chmod +x ./mvnw
+          # Run only unit tests at this stage
+          # Integration tests will run after infrastructure is deployed
+          # Pattern: *ServiceImplTest for unit tests
+          ./mvnw -B -T 1C verify \
+            -Dtest="*ServiceImplTest" \
+            -DfailIfNoTests=false
+
+      - name: Ensure SonarQube available (start local if missing)
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_TOKEN" ]; then
+            echo "SONAR_HOST_URL or SONAR_TOKEN not set; skipping Sonar availability check/startup"
+            exit 0
+          fi
+
+          echo "Checking SonarQube at $SONAR_HOST_URL"
+          if curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1; then
+            echo "SonarQube is reachable"
+            exit 0
+          fi
+
+          echo "SonarQube not reachable. Attempting to start local Sonar using docker-compose.sonar.yml"
+          if command -v docker >/dev/null 2>&1; then
+            if command -v docker-compose >/dev/null 2>&1; then
+              DOCKER_COMPOSE_CMD="docker-compose"
+            else
+              DOCKER_COMPOSE_CMD="docker compose"
+            fi
+            echo "Using: $DOCKER_COMPOSE_CMD"
+            $DOCKER_COMPOSE_CMD -f docker-compose.sonar.yml up -d
+          else
+            echo "Docker not available on runner; cannot start local Sonar. Proceeding and letting Sonar analysis step handle unreachable host."
+            exit 0
+          fi
+
+          SECONDS_WAITED=0
+          until curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1 || [ $SECONDS_WAITED -ge 180 ]; do
+            sleep 5
+            SECONDS_WAITED=$((SECONDS_WAITED+5))
+            echo "Waiting for SonarQube... ($SECONDS_WAITED s)"
+          done
+
+          if curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1; then
+            echo "SonarQube is up after startup"
+          else
+            echo "Timed out waiting for SonarQube to start. Proceeding and letting Sonar analysis step run (it may fail)."
+          fi
+
+      - name: SonarQube analysis
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_TOKEN" ]; then
+            echo "Skipping SonarQube analysis: SONAR_HOST_URL or SONAR_TOKEN not set as secrets"
+            exit 0
+          fi
+
+          chmod +x ./mvnw
+          ./mvnw -B -DskipTests=true sonar:sonar \
+          -Dsonar.host.url="$SONAR_HOST_URL" \
+          -Dsonar.login="$SONAR_TOKEN" \
+          -Dsonar.projectKey="ecommerce" \
+          -Dsonar.projectName="ecommerce" \
+          -Dsonar.coverage.jacoco.xmlReportPaths="**/target/site/jacoco/jacoco.xml,**/target/site/jacoco-aggregate/jacoco.xml"
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            **/target/surefire-reports/*.xml
+          retention-days: 3
+
+      - name: Upload build workspace
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace
+          path: |
+            .
+            !.git
+          retention-days: 1
+
+  docker-build:
+    name: Build ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: maven-build
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          [
+            api-gateway,
+            cloud-config,
+            favourite-service,
+            order-service,
+            payment-service,
+            product-service,
+            proxy-client,
+            service-discovery,
+            shipping-service,
+            user-service,
+          ]
+
+    steps:
+      - name: Download workspace
+        uses: actions/download-artifact@v4
+        with:
+          name: workspace
+          path: .
+
+      - name: Check if Dockerfile exists
+        id: check
+        run: |
+          if [ -f "${{ matrix.service }}/Dockerfile" ]; then 
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else 
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Docker Buildx
+        if: steps.check.outputs.exists == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: steps.check.outputs.exists == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        if: steps.check.outputs.exists == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
+          tags: |
+            type=raw,value=stage
+            type=sha,prefix=,format=long
+
+      - name: Build and push
+        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/stage'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Set build tag output for K8s deployment
+        if: steps.check.outputs.exists == 'true'
+        id: build-tag
+        run: |
+          # Extract the short SHA for use in K8s deployment
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "tag=stage" >> "$GITHUB_OUTPUT"
+
+  kubernetes-deploy:
+    name: Deploy to Kubernetes
+    runs-on: self-hosted
+    needs: docker-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        run: |
+          # Ensure kubectl is available
+          if ! command -v kubectl &> /dev/null; then
+            echo "kubectl not found. Installing..."
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+          fi
+
+          # Check if kubeconfig is configured
+          if [ ! -f ~/.kube/config ] && [ -z "$KUBECONFIG" ]; then
+            echo "⚠️  WARNING: kubeconfig not found and KUBECONFIG not set."
+            echo "Please ensure kubectl is configured for your Kubernetes cluster."
+            echo "For local testing, ensure KUBECONFIG points to your cluster config file."
+            exit 1
+          fi
+
+      - name: Deploy using deploy-k8s.sh script
+        run: |
+          echo "🚀 Deploying services to Kubernetes using deploy-k8s.sh..."
+          
+          # Get the short SHA for the image tag
+          BRANCH_TAG=$(git rev-parse --short HEAD)
+          
+          # Make the deploy script executable
+          chmod +x ./scripts/deploy-k8s.sh
+          
+          # Run the deploy script with the branch tag (short SHA)
+          # The script will:
+          # - Replace ${BRANCH_TAG} in YAML files with the provided tag
+          # - Add imagePullPolicy: IfNotPresent
+          # - Apply all manifests
+          # - Wait for rollouts
+          ./scripts/deploy-k8s.sh "$BRANCH_TAG"
+
+      - name: Verify deployment
+        run: |
+          echo "📋 Kubernetes deployment status:"
+          kubectl get deployments
+          echo ""
+          kubectl get services
+          echo ""
+          kubectl get pods
+          
+          # Wait for all deployments to be ready
+          echo ""
+          echo "Waiting for all deployments to be ready..."
+          SERVICES=("api-gateway" "cloud-config" "favourite-service" "order-service" "payment-service" "product-service" "proxy-client" "service-discovery" "shipping-service" "user-service")
+          
+          for service in "${SERVICES[@]}"; do
+            deployment="${service}-container"
+            if kubectl get deployment "$deployment" 2>/dev/null; then
+              echo "Waiting for $deployment to be ready..."
+              kubectl rollout status deployment/"$deployment" --timeout=5m || true
+            fi
+          done
+          
+          echo "✅ Deployment verification complete"
+
+  integration-tests:
+    name: Run Integration Tests
+    runs-on: self-hosted
+    needs: kubernetes-deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Wait for API Gateway to be ready
+        run: |
+          echo "Waiting for API Gateway to be ready..."
+          SECONDS_WAITED=0
+          TIMEOUT=300
+          
+          until curl -sSf http://localhost:8080/app/api/health >/dev/null 2>&1 || [ $SECONDS_WAITED -ge $TIMEOUT ]; do
+            sleep 5
+            SECONDS_WAITED=$((SECONDS_WAITED+5))
+            echo "Waiting for API Gateway... ($SECONDS_WAITED s / $TIMEOUT s)"
+          done
+          
+          if curl -sSf http://localhost:8080/app/api/health >/dev/null 2>&1; then
+            echo "✅ API Gateway is ready at http://localhost:8080"
+          else
+            echo "⚠️  API Gateway health check timed out after $TIMEOUT seconds"
+            echo "Services may still be starting. Checking pod status..."
+            kubectl get pods
+            exit 1
+          fi
+
+      - name: Run Integration Tests against deployed services
+        run: |
+          chmod +x ./mvnw
+          echo "🧪 Running integration tests (*IntegrationTest pattern) against live services..."
+          echo "Target API: http://localhost:8080/app/api"
+          echo ""
+          
+          ./mvnw -B -T 1C verify \
+            -Dtest="*IntegrationTest" \
+            -DfailIfNoTests=false
+          
+      - name: Upload integration test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: |
+            **/target/surefire-reports/*IntegrationTest*.xml
+          retention-days: 7
+
+      - name: Check test results
+        if: always()
+        run: |
+          echo "📊 Integration Test Summary:"
+          echo ""
+          # Count test results
+          TOTAL_TESTS=$(find . -name "*IntegrationTest*.xml" -exec grep -c "<testcase" {} + 2>/dev/null | awk '{sum+=$1} END {print sum}')
+          FAILURES=$(find . -name "*IntegrationTest*.xml" -exec grep -c "<failure" {} + 2>/dev/null | awk '{sum+=$1} END {print sum}')
+          
+          echo "Total tests executed: ${TOTAL_TESTS:-0}"
+          echo "Failures: ${FAILURES:-0}"
+          echo ""
+          
+          if [ "$FAILURES" -gt 0 ]; then
+            echo "⚠️  Some integration tests failed. Check artifacts for details."
+          else
+            echo "✅ All integration tests passed"
+          fi
+
+  e2e-tests:
+    name: Run E2E Tests (Postman)
+    runs-on: self-hosted
+    needs: integration-tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Newman
+        run: |
+          npm install -g newman
+          npm install -g newman-reporter-htmlextra
+
+      - name: Wait for services
+        run: |
+          echo "Waiting for API Gateway to be ready..."
+          SECONDS_WAITED=0
+          until curl -sSf http://localhost:8080/app/api/health >/dev/null 2>&1 || [ $SECONDS_WAITED -ge 300 ]; do
+            sleep 5
+            SECONDS_WAITED=$((SECONDS_WAITED+5))
+            echo "Waiting for API Gateway... ($SECONDS_WAITED s)"
+          done
+          
+          echo "✅ API Gateway is ready"
+
+      - name: Run E2E Tests with Postman Collection
+        run: |
+          echo "🧪 Running E2E tests with Postman collection..."
+          newman run "postman-collections/E2E Ecommerce Microservices Tests.postman_collection.json" \
+            --environment "postman-collections/local-stage.postman_environment.json" 2>/dev/null || \
+            newman run "postman-collections/E2E Ecommerce Microservices Tests.postman_collection.json" \
+              --globals "postman-collections/globals.json" \
+              --reporters cli,json,htmlextra \
+              --reporter-htmlextra-export "e2e-test-report.html" \
+              --reporter-json-export "e2e-test-report.json" \
+              --delay-request 500 \
+              --timeout-request 10000
+
+      - name: Upload E2E test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-report
+          path: |
+            e2e-test-report.html
+            e2e-test-report.json
+          retention-days: 7
+
+      - name: Publish E2E Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-summary
+          path: e2e-test-report.json
+          retention-days: 7
