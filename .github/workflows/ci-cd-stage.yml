@@ -490,3 +490,114 @@ jobs:
           else
             echo "⚠️  E2E test report not found"
           fi
+
+  generate-release-notes-stage:
+    name: Generate Stage Release Notes
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stage' && success()
+    outputs:
+      release_version: ${{ steps.version.outputs.version }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from git tags (stage)
+        id: version
+        run: |
+          # Get the latest stage tag or generate a new version
+          LATEST_TAG=$(git describe --tags --abbrev=0 --match "stage-*" 2>/dev/null || echo "stage-0.0.0")
+          LATEST_VERSION=${LATEST_TAG#stage-}
+          
+          # Parse version
+          MAJOR=$(echo $LATEST_VERSION | cut -d. -f1)
+          MINOR=$(echo $LATEST_VERSION | cut -d. -f2)
+          PATCH=$(echo $LATEST_VERSION | cut -d. -f3)
+          
+          # Increment patch version for stage
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "previous_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "📌 Stage release version: $NEW_VERSION"
+
+      - name: Generate Changelog (stage)
+        id: changelog
+        run: |
+          PREVIOUS_TAG=${{ steps.version.outputs.previous_tag }}
+          
+          # Generate changelog from commits
+          if [ "$PREVIOUS_TAG" != "stage-0.0.0" ]; then
+            CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %h: %s (%an)")
+          else
+            CHANGELOG=$(git log --pretty=format:"- %h: %s (%an)")
+          fi
+          
+          # Save to file for later use
+          echo "$CHANGELOG" > CHANGELOG_STAGE_TEMP.txt
+          
+          # Output for display
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "✅ Stage changelog generated"
+
+      - name: Create GitHub Pre-Release (Stage)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: stage-${{ steps.version.outputs.version }}
+          release_name: Stage Release stage-${{ steps.version.outputs.version }}
+          body: |
+            # 🌙 Stage Release stage-${{ steps.version.outputs.version }}
+
+            ## 📝 Changelog
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## 📦 Artifacts
+
+            - Build Date: ${{ github.event.head_commit.timestamp }}
+            - Commit: ${{ github.sha }}
+            - Author: ${{ github.actor }}
+            - Branch: stage
+
+            ## 🔗 Images (Stage Tag)
+
+            Docker images for this stage release:
+            - `ghcr.io/${{ github.repository_owner }}/api-gateway:stage`
+            - `ghcr.io/${{ github.repository_owner }}/product-service:stage`
+            - `ghcr.io/${{ github.repository_owner }}/user-service:stage`
+            - `ghcr.io/${{ github.repository_owner }}/order-service:stage`
+            - `ghcr.io/${{ github.repository_owner }}/payment-service:stage`
+            - `ghcr.io/${{ github.repository_owner }}/shipping-service:stage`
+            - `ghcr.io/${{ github.repository_owner }}/favourite-service:stage`
+            - `ghcr.io/${{ github.repository_owner }}/proxy-client:stage`
+            - `ghcr.io/${{ github.repository_owner }}/service-discovery:stage`
+            - `ghcr.io/${{ github.repository_owner }}/cloud-config:stage`
+
+            ## ✅ Quality Gates Passed
+
+            - Unit Tests: ✅
+            - Code Quality (SonarQube): ✅
+            - Container Build: ✅
+            - Kubernetes Deployment: ✅
+            - Integration Tests: ✅
+            - E2E Tests: ✅
+
+          draft: false
+          prerelease: true
+
+      - name: Upload stage changelog as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-release-notes
+          path: CHANGELOG_STAGE_TEMP.txt
+          retention-days: 30

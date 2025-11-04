@@ -1,50 +1,62 @@
+#######################################
+# 🧱 COMPILACIÓN DE MICROSERVICIOS
+#######################################
+
+# Compilar todos los proyectos (sin ejecutar tests)
 ./mvnw clean package -DskipTests
 
- ./mvnw -f proxy-client/pom.xml clean package -DskipTests
+# Compilar módulo específico: proxy-client
+./mvnw -f proxy-client/pom.xml clean package -DskipTests
 
-docker compose -f compose.yml -f compose.local.yml up --build -d service-discovery-container cloud-config-container zipkin-container
+# Compilar módulo específico: product-service
+./mvnw -f product-service/pom.xml clean package -DskipTests
 
 
+#######################################
+# 🐳 DOCKER COMPOSE – DESPLIEGUE LOCAL
+#######################################
+
+# Levantar contenedores base
+docker compose -f compose.yml -f compose.local.yml up --build -d \
+  service-discovery-container cloud-config-container zipkin-container
+
+# Construir y recrear API Gateway
 docker compose -f compose.yml -f compose.local.yml build api-gateway-container
-
 docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate api-gateway-container
 
-docker compose -f compose.yml -f compose.local.yml build user-service-container product-service-container order-service-container payment-service-container shipping-service-container favourite-service-container proxy-client-container
+# Construir y recrear todos los microservicios
+docker compose -f compose.yml -f compose.local.yml build \
+  user-service-container product-service-container order-service-container \
+  payment-service-container shipping-service-container favourite-service-container proxy-client-container
 
-docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate user-service-container product-service-container order-service-container payment-service-container shipping-service-container favourite-service-container proxy-client-container
+docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate \
+  user-service-container product-service-container order-service-container \
+  payment-service-container shipping-service-container favourite-service-container proxy-client-container
 
-docker compose -f compose.yml -f compose.local.yml build proxy-client-container
+# Reiniciar servicios específicos
+docker compose -f compose.yml -f compose.local.yml restart \
+  user-service-container product-service-container order-service-container \
+  payment-service-container shipping-service-container favourite-service-container
 
-docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate user-service-container
 
-docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate api-gateway-container
+#######################################
+# ☸️ MINIKUBE – DESPLIEGUE EN KUBERNETES
+#######################################
 
-docker compose -f compose.yml -f compose.local.yml build user-service-container
-
-docker compose -f compose.yml -f compose.local.yml build product-service-container
-
-docker compose -f compose.yml -f compose.local.yml build order-service-container
-
-docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate order-service-container
-
-docker compose -f compose.yml -f compose.local.yml up -d --no-deps --force-recreate product-service-container
-
- ./mvnw -f product-service/pom.xml clean package -DskipTests
-
- docker compose -f compose.yml -f compose.local.yml restart user-service-container product-service-container order-service-container payment-service-container shipping-service-container favourite-service-container
-
-###Minikube
-
+# Reiniciar el clúster de Minikube
 minikube delete
-
 minikube start --memory=16384 --cpus=4
 
+# Aplicar manifiestos de Kubernetes
 kubectl apply -f k8s/
 
+# Verificar el estado de los pods
 kubectl get pods -A
 
+# Describir un despliegue específico
 kubectl describe deployment api-gateway-container
 
+# Reiniciar despliegues
 kubectl rollout restart deployment user-service-container
 kubectl rollout restart deployment order-service-container
 kubectl rollout restart deployment payment-service-container
@@ -52,14 +64,16 @@ kubectl rollout restart deployment product-service-container
 kubectl rollout restart deployment shipping-service-container
 kubectl rollout restart deployment favourite-service-container
 
-
+# Reenviar puertos al gateway
 kubectl port-forward svc/api-gateway-container 8080:8080
 
+# (Opcional) Ejecutar el port-forward en segundo plano
 nohup kubectl port-forward svc/api-gateway-container 8080:8080 > portforward.log 2>&1 &
 
 
-## Tests 
+#######################################
+# 🧪 TESTS UNITARIOS
+#######################################
 
-
-cd "/Users/davidef/Desktop/ecommerce-microservice-backend-app copy" && ./mvnw test -Dtest="*ServiceImplTest"
-
+cd "/Users/davidef/Desktop/ecommerce-microservice-backend-app copy"
+./mvnw test -Dtest="*ServiceImplTest"
