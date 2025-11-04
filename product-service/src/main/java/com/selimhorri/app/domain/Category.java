@@ -22,12 +22,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "categories")
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true, exclude = {"subCategories", "parentCategory", "products"})
+@ToString(exclude = {"subCategories", "parentCategory", "products"})
 @Data
 @Builder
 public final class Category extends AbstractMappedEntity implements Serializable {

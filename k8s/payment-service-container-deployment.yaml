@@ -55,7 +55,7 @@ spec:
               value: dev
             - name: SPRING_ZIPKIN_BASE_URL
               value: http://zipkin-container:9411
-          image: selimhorri/payment-service-ecommerce-boot:0.1.0
+          image: ghcr.io/davidone007/payment-service:${BRANCH_TAG}
           name: payment-service-container
           ports:
             - containerPort: 8400

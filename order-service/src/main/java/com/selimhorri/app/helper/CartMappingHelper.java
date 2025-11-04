@@ -9,6 +9,7 @@ public interface CartMappingHelper {
 	public static CartDto map(final Cart cart) {
 		return CartDto.builder()
 				.cartId(cart.getCartId())
+				.isActive(cart.isActive())
 				.userId(cart.getUserId())
 				.userDto(
 						UserDto.builder()
@@ -20,6 +21,7 @@ public interface CartMappingHelper {
 	public static Cart map(final CartDto cartDto) {
 		return Cart.builder()
 				.cartId(cartDto.getCartId())
+				.isActive(cartDto.isActive())
 				.userId(cartDto.getUserId())
 				.build();
 	}

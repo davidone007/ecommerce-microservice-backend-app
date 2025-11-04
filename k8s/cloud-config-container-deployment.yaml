@@ -28,7 +28,7 @@ spec:
               value: dev
             - name: SPRING_ZIPKIN_BASE_URL
               value: http://zipkin-container:9411
-          image: selimhorri/cloud-config-ecommerce-boot:0.1.0
+          image: ghcr.io/davidone007/cloud-config:${BRANCH_TAG}
           name: cloud-config-container
           ports:
             - containerPort: 9296

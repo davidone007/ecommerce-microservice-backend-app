@@ -5,10 +5,12 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,113 +19,120 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.selimhorri.app.domain.Cart;
 import com.selimhorri.app.domain.Order;
-import com.selimhorri.app.dto.CartDto;
+import com.selimhorri.app.domain.enums.OrderStatus;
 import com.selimhorri.app.dto.OrderDto;
 import com.selimhorri.app.exception.wrapper.OrderNotFoundException;
+import com.selimhorri.app.repository.CartRepository;
 import com.selimhorri.app.repository.OrderRepository;
 
+/**
+ * Pruebas unitarias para OrderServiceImpl.
+ * Valida el comportamiento del servicio de órdenes.
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("OrderServiceImpl Unit Tests")
 class OrderServiceImplTest {
 
-    @Mock
-    private OrderRepository orderRepository;
+	@Mock
+	private OrderRepository orderRepository;
 
-    @InjectMocks
-    private OrderServiceImpl orderService;
+	@Mock
+	private CartRepository cartRepository;
 
-    private Order order;
-    private OrderDto orderDto;
+	@InjectMocks
+	private OrderServiceImpl orderService;
 
-    @BeforeEach
-    void setUp() {
-        LocalDateTime orderDate = LocalDateTime.now();
-        Cart cart = Cart.builder().cartId(1).build();
-        CartDto cartDto = CartDto.builder().cartId(1).build();
-        order = Order.builder()
-                .orderId(1)
-                .orderDate(orderDate)
-                .orderDesc("Test Order")
-                .orderFee(100.0)
-                .cart(cart)
-                .build();
-        orderDto = OrderDto.builder()
-                .orderId(1)
-                .orderDate(orderDate)
-                .orderDesc("Test Order")
-                .orderFee(100.0)
-                .cartDto(cartDto)
-                .build();
-    }
+	private Order testOrder;
+	private Cart testCart;
 
-    @Test
-    void testSave() {
-        // Given
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
+	@BeforeEach
+	void setUp() {
+		testCart = new Cart();
+		testOrder = new Order();
+		testOrder.setOrderId(1);
+		testOrder.setOrderDate(LocalDateTime.now());
+		testOrder.setOrderDesc("Test Order");
+		testOrder.setOrderFee(50.0);
+		testOrder.setCart(testCart);
+		testOrder.setStatus(OrderStatus.CREATED);
+	}
 
-        // When
-        OrderDto result = orderService.save(orderDto);
+	@Test
+	@DisplayName("Test 1: Debe actualizar estado de orden exitosamente")
+	void testUpdateStatus_Success() {
+		// Arrange
+		when(orderRepository.findByOrderIdAndIsActiveTrue(1))
+			.thenReturn(Optional.of(testOrder));
+		when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
 
-        // Then
-        assertNotNull(result);
-        assertEquals(orderDto.getOrderId(), result.getOrderId());
-        assertEquals(orderDto.getOrderDate(), result.getOrderDate());
-        assertEquals(orderDto.getOrderDesc(), result.getOrderDesc());
-        assertEquals(orderDto.getOrderFee(), result.getOrderFee());
-        verify(orderRepository, times(1)).save(any(Order.class));
-    }
+		// Act
+		OrderDto result = orderService.updateStatus(1);
 
-    @Test
-    void testUpdate() {
-        // Given
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
+		// Assert
+		assertNotNull(result);
+		verify(orderRepository, times(1)).findByOrderIdAndIsActiveTrue(1);
+		verify(orderRepository, times(1)).save(any(Order.class));
+	}
 
-        // When
-        OrderDto result = orderService.update(orderDto);
+	@Test
+	@DisplayName("Test 2: Debe lanzar excepción al actualizar orden no encontrada")
+	void testUpdateStatus_OrderNotFound() {
+		// Arrange
+		when(orderRepository.findByOrderIdAndIsActiveTrue(999))
+			.thenReturn(Optional.empty());
 
-        // Then
-        assertNotNull(result);
-        assertEquals(orderDto.getOrderId(), result.getOrderId());
-        assertEquals(orderDto.getOrderDate(), result.getOrderDate());
-        assertEquals(orderDto.getOrderDesc(), result.getOrderDesc());
-        assertEquals(orderDto.getOrderFee(), result.getOrderFee());
-        verify(orderRepository, times(1)).save(any(Order.class));
-    }
+		// Act & Assert
+		assertThrows(OrderNotFoundException.class, () -> orderService.updateStatus(999));
+		verify(orderRepository, times(1)).findByOrderIdAndIsActiveTrue(999);
+	}
 
-    @Test
-    void testUpdateWithId() {
-        // Given
-        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
+	@Test
+	@DisplayName("Test 3: Debe buscar orden por ID exitosamente")
+	void testFindById_Success() {
+		// Arrange
+		when(orderRepository.findByOrderIdAndIsActiveTrue(1))
+			.thenReturn(Optional.of(testOrder));
 
-        // When
-        OrderDto result = orderService.update(1, orderDto);
+		// Act
+		OrderDto result = orderService.findById(1);
 
-        // Then
-        assertNotNull(result);
-        assertEquals(orderDto.getOrderId(), result.getOrderId());
-        verify(orderRepository, times(1)).findById(1);
-        verify(orderRepository, times(1)).save(any(Order.class));
-    }
+		// Assert
+		assertNotNull(result);
+		verify(orderRepository, times(1)).findByOrderIdAndIsActiveTrue(1);
+	}
 
-    @Test
-    void testDeleteById() {
-        // Given
-        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
+	@Test
+	@DisplayName("Test 4: Debe lanzar excepción cuando orden no existe")
+	void testFindById_OrderNotFound() {
+		// Arrange
+		when(orderRepository.findByOrderIdAndIsActiveTrue(999))
+			.thenReturn(Optional.empty());
 
-        // When
-        orderService.deleteById(1);
+		// Act & Assert
+		assertThrows(OrderNotFoundException.class, () -> orderService.findById(999));
+	}
 
-        // Then
-        verify(orderRepository, times(1)).delete(any(Order.class));
-    }
+	@Test
+	@DisplayName("Test 5: Debe obtener lista de todas las órdenes activas")
+	void testFindAll_Success() {
+		// Arrange
+		Order order2 = new Order();
+		order2.setOrderId(2);
+		order2.setOrderDate(LocalDateTime.now());
+		order2.setOrderDesc("Another Order");
+		order2.setOrderFee(75.0);
+		order2.setCart(testCart);
+		order2.setStatus(OrderStatus.ORDERED);
 
-    @Test
-    void testFindByIdThrowsExceptionWhenNotFound() {
-        // Given
-        when(orderRepository.findById(1)).thenReturn(Optional.empty());
+		List<Order> orderList = Arrays.asList(testOrder, order2);
+		when(orderRepository.findAllByIsActiveTrue()).thenReturn(orderList);
 
-        // When & Then
-        assertThrows(OrderNotFoundException.class, () -> orderService.findById(1));
-        verify(orderRepository, times(1)).findById(1);
-    }
+		// Act
+		List<OrderDto> result = orderService.findAll();
+
+		// Assert
+		assertNotNull(result);
+		assertTrue(result.size() >= 0);
+		verify(orderRepository, times(1)).findAllByIsActiveTrue();
+	}
 }

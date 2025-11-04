@@ -55,7 +55,7 @@ spec:
               value: dev
             - name: SPRING_ZIPKIN_BASE_URL
               value: http://zipkin-container:9411
-          image: selimhorri/order-service-ecommerce-boot:0.1.0
+          image: ghcr.io/davidone007/order-service:${BRANCH_TAG}
           name: order-service-container
           ports:
             - containerPort: 8300
