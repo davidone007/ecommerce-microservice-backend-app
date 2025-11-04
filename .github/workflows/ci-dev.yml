@@ -38,18 +38,8 @@ jobs:
 
       - name: Build with Maven (run unit tests)
         run: |
-          ls -la
-          pwd
-          if [ -f "./mvnw" ]; then
-            chmod +x mvnw
-            ./mvnw test jacoco:report -Dtest="*ServiceImplTest"
-          elif [ -f "mvnw" ]; then
-            chmod +x mvnw
-            mvnw test jacoco:report -Dtest="*ServiceImplTest"
-          else
-            echo "mvnw wrapper not found, using system maven"
-            mvn test jacoco:report -Dtest="*ServiceImplTest"
-          fi
+          chmod +x ./mvnw
+          ./mvnw test jacoco:report -Dtest="*ServiceImplTest"
 
       - name: Ensure SonarQube available (start local if missing)
         env:
