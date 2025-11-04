@@ -9,34 +9,52 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.selimhorri.app.domain.Category;
 import com.selimhorri.app.dto.CategoryDto;
 import com.selimhorri.app.dto.ProductDto;
+import com.selimhorri.app.repository.CategoryRepository;
 import com.selimhorri.app.service.ProductService;
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Transactional
 class ProductServiceIntegrationTest {
 
     @Autowired
     private ProductService productService;
+    
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     private ProductDto productDto;
+    private Category testCategory;
 
     @BeforeEach
     void setUp() {
-        CategoryDto categoryDto = new CategoryDto();
-        categoryDto.setCategoryId(1);
-        categoryDto.setCategoryTitle("Test Category");
-        categoryDto.setImageUrl("http://example.com/cat.jpg");
+        // Create a test category in the database
+        testCategory = Category.builder()
+            .categoryTitle("Test Category")
+            .imageUrl("http://example.com/cat.jpg")
+            .build();
+        testCategory = categoryRepository.save(testCategory);
+        
+        // Convert to DTO - Important: include the categoryId
+        CategoryDto categoryDto = CategoryDto.builder()
+            .categoryId(testCategory.getCategoryId())
+            .categoryTitle(testCategory.getCategoryTitle())
+            .imageUrl(testCategory.getImageUrl())
+            .build();
 
-        productDto = new ProductDto();
-        productDto.setProductTitle("Test Product");
-        productDto.setImageUrl("http://example.com/image.jpg");
-        productDto.setSku("TEST123");
-        productDto.setPriceUnit(99.99);
-        productDto.setQuantity(10);
-        productDto.setCategoryDto(categoryDto);
+        productDto = ProductDto.builder()
+            .productTitle("Test Product")
+            .imageUrl("http://example.com/image.jpg")
+            .sku("TEST123")
+            .priceUnit(99.99)
+            .quantity(10)
+            .categoryDto(categoryDto)
+            .build();
     }
 
     @Test
@@ -54,18 +72,31 @@ class ProductServiceIntegrationTest {
 
     @Test
     void testFindAllIntegration() {
-        // Given
+        // Given - Create first product
         productService.save(productDto);
-        CategoryDto categoryDto2 = new CategoryDto();
-        categoryDto2.setCategoryId(2);
-        categoryDto2.setCategoryTitle("Test Category 2");
-        categoryDto2.setImageUrl("http://example.com/cat2.jpg");
-        ProductDto productDto2 = new ProductDto();
-        productDto2.setProductTitle("Test Product 2");
-        productDto2.setSku("TEST456");
-        productDto2.setPriceUnit(199.99);
-        productDto2.setQuantity(5);
-        productDto2.setCategoryDto(categoryDto2);
+        
+        // Create second product with a different category
+        Category testCategory2 = Category.builder()
+            .categoryTitle("Test Category 2")
+            .imageUrl("http://example.com/cat2.jpg")
+            .build();
+        testCategory2 = categoryRepository.save(testCategory2);
+        
+        CategoryDto categoryDto2 = CategoryDto.builder()
+            .categoryId(testCategory2.getCategoryId())
+            .categoryTitle(testCategory2.getCategoryTitle())
+            .imageUrl(testCategory2.getImageUrl())
+            .build();
+        
+        ProductDto productDto2 = ProductDto.builder()
+            .productTitle("Test Product 2")
+            .sku("TEST456")
+            .priceUnit(199.99)
+            .quantity(5)
+            .imageUrl("http://example.com/image2.jpg")
+            .categoryDto(categoryDto2)
+            .build();
+        
         productService.save(productDto2);
 
         // When
@@ -73,24 +104,29 @@ class ProductServiceIntegrationTest {
 
         // Then
         assertNotNull(result);
-        assertTrue(result.size() >= 2);
+        assertTrue(result.size() >= 2, "Should have at least 2 products");
     }
 
     @Test
     void testUpdateIntegration() {
         // Given
         ProductDto saved = productService.save(productDto);
-        CategoryDto updatedCategoryDto = new CategoryDto();
-        updatedCategoryDto.setCategoryId(1);
-        updatedCategoryDto.setCategoryTitle("Test Category");
-        updatedCategoryDto.setImageUrl("http://example.com/cat.jpg");
-        ProductDto updatedDto = new ProductDto();
-        updatedDto.setProductId(saved.getProductId());
-        updatedDto.setProductTitle("Updated Product");
-        updatedDto.setSku(saved.getSku());
-        updatedDto.setPriceUnit(149.99);
-        updatedDto.setQuantity(15);
-        updatedDto.setCategoryDto(updatedCategoryDto);
+        
+        CategoryDto updatedCategoryDto = CategoryDto.builder()
+            .categoryId(testCategory.getCategoryId())
+            .categoryTitle(testCategory.getCategoryTitle())
+            .imageUrl(testCategory.getImageUrl())
+            .build();
+        
+        ProductDto updatedDto = ProductDto.builder()
+            .productId(saved.getProductId())
+            .productTitle("Updated Product")
+            .sku(saved.getSku())
+            .priceUnit(149.99)
+            .quantity(15)
+            .imageUrl(saved.getImageUrl())
+            .categoryDto(updatedCategoryDto)
+            .build();
 
         // When
         ProductDto updated = productService.update(updatedDto);
@@ -119,17 +155,23 @@ class ProductServiceIntegrationTest {
         ProductDto saved = productService.save(productDto);
 
         // When
-        CategoryDto updateCategoryDto = new CategoryDto();
-        updateCategoryDto.setCategoryId(1);
-        updateCategoryDto.setCategoryTitle("Test Category");
-        updateCategoryDto.setImageUrl("http://example.com/cat.jpg");
-        ProductDto updateDto = new ProductDto();
-        updateDto.setProductId(saved.getProductId()); // Set the ID
-        updateDto.setProductTitle("Updated via ID");
-        updateDto.setPriceUnit(300.0);
-        updateDto.setQuantity(20);
-        updateDto.setCategoryDto(updateCategoryDto);
-        ProductDto updated = productService.update(updateDto); // Use update(ProductDto)
+        CategoryDto updateCategoryDto = CategoryDto.builder()
+            .categoryId(testCategory.getCategoryId())
+            .categoryTitle(testCategory.getCategoryTitle())
+            .imageUrl(testCategory.getImageUrl())
+            .build();
+        
+        ProductDto updateDto = ProductDto.builder()
+            .productId(saved.getProductId())
+            .productTitle("Updated via ID")
+            .priceUnit(300.0)
+            .quantity(20)
+            .sku(saved.getSku())
+            .imageUrl(saved.getImageUrl())
+            .categoryDto(updateCategoryDto)
+            .build();
+        
+        ProductDto updated = productService.update(updateDto);
 
         // Then
         assertEquals("Updated via ID", updated.getProductTitle());
