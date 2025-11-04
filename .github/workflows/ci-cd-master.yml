@@ -436,12 +436,12 @@ jobs:
         run: |
           echo "🔥 Running Smoke Tests..."
           echo ""
-          
+
           # Create output directory for reports
           mkdir -p smoke-test-reports
           FAILED_TESTS=0
           PASSED_TESTS=0
-          
+
           # Function to test an endpoint
           test_endpoint() {
             local test_num=$1
@@ -459,31 +459,31 @@ jobs:
               FAILED_TESTS=$((FAILED_TESTS + 1))
             fi
           }
-          
+
           # Test 1: API Gateway Health
           test_endpoint "1" "API Gateway - Products" "http://localhost:8080/app/api/products"
-          
+
           # Test 2: Product Service Health
           test_endpoint "2" "Product Service" "http://localhost:8500/product-service/api/products"
-          
+
           # Test 3: User Service Health
           test_endpoint "3" "User Service" "http://localhost:8700/user-service/api/users"
-          
+
           # Test 4: Order Service Health
           test_endpoint "4" "Order Service" "http://localhost:8300/order-service/api/orders"
-          
+
           # Test 5: Payment Service Health
           test_endpoint "5" "Payment Service" "http://localhost:8400/payment-service/api/payments"
-          
+
           # Test 6: Shipping Service Health
           test_endpoint "6" "Shipping Service" "http://localhost:8600/shipping-service/api/shippings"
-          
+
           # Test 7: Favourite Service Health
           test_endpoint "7" "Favourite Service" "http://localhost:8800/favourite-service/api/favourites"
-          
+
           echo ""
           echo "📊 Smoke Test Results: $PASSED_TESTS passed, $FAILED_TESTS failed"
-          
+
           # Exit with error if any test failed
           if [ $FAILED_TESTS -gt 0 ]; then
             echo "⚠️  Some smoke tests failed!"
@@ -541,16 +541,16 @@ jobs:
           # Get the latest tag or generate a new version
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           LATEST_VERSION=${LATEST_TAG#v}
-          
+
           # Parse version
           MAJOR=$(echo $LATEST_VERSION | cut -d. -f1)
           MINOR=$(echo $LATEST_VERSION | cut -d. -f2)
           PATCH=$(echo $LATEST_VERSION | cut -d. -f3)
-          
+
           # Increment patch version
           NEW_PATCH=$((PATCH + 1))
           NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-          
+
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "previous_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
           echo "📌 New version: $NEW_VERSION"
@@ -559,22 +559,22 @@ jobs:
         id: changelog
         run: |
           PREVIOUS_TAG=${{ steps.version.outputs.previous_tag }}
-          
+
           # Generate changelog from commits
           if [ "$PREVIOUS_TAG" != "v0.0.0" ]; then
             CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %h: %s (%an)")
           else
             CHANGELOG=$(git log --pretty=format:"- %h: %s (%an)")
           fi
-          
+
           # Save to file for later use
           echo "$CHANGELOG" > CHANGELOG_TEMP.txt
-          
+
           # Output for display
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          
+
           echo "✅ Changelog generated"
 
       - name: Create GitHub Release
