@@ -199,119 +199,10 @@ jobs:
         run: |
           echo "tag=latest" >> "$GITHUB_OUTPUT"
 
-  generate-release-notes:
-    name: Generate Release Notes
-    runs-on: ubuntu-latest
-    needs: docker-build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    outputs:
-      release_version: ${{ steps.version.outputs.version }}
-      changelog: ${{ steps.changelog.outputs.changelog }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get version from git tags
-        id: version
-        run: |
-          # Get the latest tag or generate a new version
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          LATEST_VERSION=${LATEST_TAG#v}
-          
-          # Parse version
-          MAJOR=$(echo $LATEST_VERSION | cut -d. -f1)
-          MINOR=$(echo $LATEST_VERSION | cut -d. -f2)
-          PATCH=$(echo $LATEST_VERSION | cut -d. -f3)
-          
-          # Increment patch version
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-          
-          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-          echo "previous_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
-          echo "📌 New version: $NEW_VERSION"
-
-      - name: Generate Changelog
-        id: changelog
-        run: |
-          PREVIOUS_TAG=${{ steps.version.outputs.previous_tag }}
-          
-          # Generate changelog from commits
-          if [ "$PREVIOUS_TAG" != "v0.0.0" ]; then
-            CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %h: %s (%an)")
-          else
-            CHANGELOG=$(git log --pretty=format:"- %h: %s (%an)")
-          fi
-          
-          # Save to file for later use
-          echo "$CHANGELOG" > CHANGELOG_TEMP.txt
-          
-          # Output for display
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          
-          echo "✅ Changelog generated"
-
-      - name: Create GitHub Release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          release_name: Release v${{ steps.version.outputs.version }}
-          body: |
-            # 🚀 Release v${{ steps.version.outputs.version }}
-
-            ## 📝 Changelog
-
-            ${{ steps.changelog.outputs.changelog }}
-
-            ## 📦 Artifacts
-
-            - Build Date: ${{ github.event.head_commit.timestamp }}
-            - Commit: ${{ github.sha }}
-            - Author: ${{ github.actor }}
-
-            ## 🔗 Images
-
-            Docker images for this release:
-            - `ghcr.io/${{ github.repository_owner }}/api-gateway:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/product-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/user-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/order-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/payment-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/shipping-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/favourite-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/proxy-client:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/service-discovery:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/cloud-config:v${{ steps.version.outputs.version }}`
-
-            ## ✅ Quality Gates Passed
-
-            - Unit Tests: ✅
-            - Code Quality (SonarQube): ✅
-            - Container Build: ✅
-            - Kubernetes Deployment: ✅
-            - Smoke Tests: ✅
-
-          draft: false
-          prerelease: false
-
-      - name: Upload changelog as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-notes
-          path: CHANGELOG_TEMP.txt
-          retention-days: 30
-
   kubernetes-deploy:
     name: Deploy to Kubernetes (Production)
     runs-on: self-hosted
-    needs: [docker-build, generate-release-notes]
+    needs: docker-build
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout
@@ -476,11 +367,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Wait for services
+      - name: Debug - Check services status
+        run: |
+          echo "📋 Debugging: Checking service ports..."
+          echo ""
+          echo "Checking if ports are listening:"
+          for port in 8080 8300 8400 8500 8600 8700 8800 9411; do
+            if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+              echo "✅ Port $port is listening"
+            else
+              echo "❌ Port $port is NOT listening"
+            fi
+          done
+          echo ""
+          echo "Kubernetes pods status:"
+          kubectl get pods --no-headers 2>/dev/null || echo "kubectl not available"
+          echo ""
+          echo "Kubernetes services:"
+          kubectl get svc --no-headers 2>/dev/null || echo "kubectl not available"
+
+      - name: Wait for services with retry
+        continue-on-error: true
         run: |
           echo "Waiting for services to be ready for smoke tests..."
           SECONDS_WAITED=0
-          TIMEOUT=300
+          TIMEOUT=120
+          RETRY_DELAY=5
 
           # Array of service endpoints to check
           declare -a ENDPOINTS=(
@@ -490,6 +402,7 @@ jobs:
             "http://localhost:8500/product-service/api/products"
             "http://localhost:8800/favourite-service/api/favourites"
             "http://localhost:8400/payment-service/api/payments"
+            "http://localhost:8300/order-service/api/orders"
           )
 
           # Check all endpoints until they are ready or timeout
@@ -498,7 +411,7 @@ jobs:
             READY_COUNT=0
             
             for endpoint in "${ENDPOINTS[@]}"; do
-              if curl -sSf "$endpoint" >/dev/null 2>&1; then
+              if curl -sSf --max-time 3 "$endpoint" >/dev/null 2>&1; then
                 READY_COUNT=$((READY_COUNT + 1))
               else
                 ALL_READY=false
@@ -512,12 +425,13 @@ jobs:
               exit 0
             fi
             
-            sleep 5
-            SECONDS_WAITED=$((SECONDS_WAITED+5))
+            sleep $RETRY_DELAY
+            SECONDS_WAITED=$((SECONDS_WAITED + RETRY_DELAY))
           done
 
           echo "⚠️  Service health check timed out after $TIMEOUT seconds"
-          echo "Proceeding anyway with smoke tests (some services may not be ready yet)..."
+          echo "📌 Proceeding anyway with smoke tests (testing what's available)..."
+          exit 0
 
       - name: Run Smoke Tests (Health Checks)
         run: |
@@ -526,86 +440,59 @@ jobs:
           
           # Create output directory for reports
           mkdir -p smoke-test-reports
+          FAILED_TESTS=0
+          PASSED_TESTS=0
+          
+          # Function to test an endpoint
+          test_endpoint() {
+            local test_num=$1
+            local test_name=$2
+            local endpoint=$3
+            
+            echo "$test_num️⃣  Testing $test_name..."
+            if curl -sSf --max-time 5 "$endpoint" >/dev/null 2>&1; then
+              echo "✅ $test_name"
+              echo "PASS: $test_name" >> smoke-test-reports/smoke-tests.log
+              PASSED_TESTS=$((PASSED_TESTS + 1))
+            else
+              echo "❌ $test_name FAILED"
+              echo "FAIL: $test_name" >> smoke-test-reports/smoke-tests.log
+              FAILED_TESTS=$((FAILED_TESTS + 1))
+            fi
+          }
           
           # Test 1: API Gateway Health
-          echo "1️⃣  Testing API Gateway..."
-          if curl -sSf http://localhost:8080/app/api/products > /dev/null 2>&1; then
-            echo "✅ API Gateway - Products endpoint"
-            echo "PASS: api-gateway-products" >> smoke-test-reports/smoke-tests.log
-          else
-            echo "❌ API Gateway - Products endpoint FAILED"
-            echo "FAIL: api-gateway-products" >> smoke-test-reports/smoke-tests.log
-            exit 1
-          fi
+          test_endpoint "1" "API Gateway - Products" "http://localhost:8080/app/api/products"
           
           # Test 2: Product Service Health
-          echo "2️⃣  Testing Product Service..."
-          if curl -sSf http://localhost:8500/product-service/api/products > /dev/null 2>&1; then
-            echo "✅ Product Service - Products endpoint"
-            echo "PASS: product-service-products" >> smoke-test-reports/smoke-tests.log
-          else
-            echo "❌ Product Service - Products endpoint FAILED"
-            echo "FAIL: product-service-products" >> smoke-test-reports/smoke-tests.log
-            exit 1
-          fi
+          test_endpoint "2" "Product Service" "http://localhost:8500/product-service/api/products"
           
           # Test 3: User Service Health
-          echo "3️⃣  Testing User Service..."
-          if curl -sSf http://localhost:8700/user-service/api/users > /dev/null 2>&1; then
-            echo "✅ User Service - Users endpoint"
-            echo "PASS: user-service-users" >> smoke-test-reports/smoke-tests.log
-          else
-            echo "❌ User Service - Users endpoint FAILED"
-            echo "FAIL: user-service-users" >> smoke-test-reports/smoke-tests.log
-            exit 1
-          fi
+          test_endpoint "3" "User Service" "http://localhost:8700/user-service/api/users"
           
           # Test 4: Order Service Health
-          echo "4️⃣  Testing Order Service..."
-          if curl -sSf http://localhost:8300/order-service/api/orders > /dev/null 2>&1; then
-            echo "✅ Order Service - Orders endpoint"
-            echo "PASS: order-service-orders" >> smoke-test-reports/smoke-tests.log
-          else
-            echo "❌ Order Service - Orders endpoint FAILED"
-            echo "FAIL: order-service-orders" >> smoke-test-reports/smoke-tests.log
-            exit 1
-          fi
+          test_endpoint "4" "Order Service" "http://localhost:8300/order-service/api/orders"
           
           # Test 5: Payment Service Health
-          echo "5️⃣  Testing Payment Service..."
-          if curl -sSf http://localhost:8400/payment-service/api/payments > /dev/null 2>&1; then
-            echo "✅ Payment Service - Payments endpoint"
-            echo "PASS: payment-service-payments" >> smoke-test-reports/smoke-tests.log
-          else
-            echo "❌ Payment Service - Payments endpoint FAILED"
-            echo "FAIL: payment-service-payments" >> smoke-test-reports/smoke-tests.log
-            exit 1
-          fi
+          test_endpoint "5" "Payment Service" "http://localhost:8400/payment-service/api/payments"
           
           # Test 6: Shipping Service Health
-          echo "6️⃣  Testing Shipping Service..."
-          if curl -sSf http://localhost:8600/shipping-service/api/shippings > /dev/null 2>&1; then
-            echo "✅ Shipping Service - Shippings endpoint"
-            echo "PASS: shipping-service-shippings" >> smoke-test-reports/smoke-tests.log
-          else
-            echo "❌ Shipping Service - Shippings endpoint FAILED"
-            echo "FAIL: shipping-service-shippings" >> smoke-test-reports/smoke-tests.log
-            exit 1
-          fi
+          test_endpoint "6" "Shipping Service" "http://localhost:8600/shipping-service/api/shippings"
           
           # Test 7: Favourite Service Health
-          echo "7️⃣  Testing Favourite Service..."
-          if curl -sSf http://localhost:8800/favourite-service/api/favourites > /dev/null 2>&1; then
-            echo "✅ Favourite Service - Favourites endpoint"
-            echo "PASS: favourite-service-favourites" >> smoke-test-reports/smoke-tests.log
-          else
-            echo "❌ Favourite Service - Favourites endpoint FAILED"
-            echo "FAIL: favourite-service-favourites" >> smoke-test-reports/smoke-tests.log
-            exit 1
-          fi
+          test_endpoint "7" "Favourite Service" "http://localhost:8800/favourite-service/api/favourites"
           
           echo ""
-          echo "✅ All smoke tests passed!"
+          echo "📊 Smoke Test Results: $PASSED_TESTS passed, $FAILED_TESTS failed"
+          
+          # Exit with error if any test failed
+          if [ $FAILED_TESTS -gt 0 ]; then
+            echo "⚠️  Some smoke tests failed!"
+            exit 1
+          else
+            echo "✅ All smoke tests passed!"
+            exit 0
+          fi
 
       - name: Upload smoke test reports
         if: always()
@@ -622,8 +509,8 @@ jobs:
           echo ""
           if [ -f "smoke-test-reports/smoke-tests.log" ]; then
             TOTAL=$(wc -l < smoke-test-reports/smoke-tests.log)
-            PASSED=$(grep -c "PASS:" smoke-test-reports/smoke-tests.log)
-            FAILED=$(grep -c "FAIL:" smoke-test-reports/smoke-tests.log)
+            PASSED=$(grep -c "PASS:" smoke-test-reports/smoke-tests.log || true)
+            FAILED=$(grep -c "FAIL:" smoke-test-reports/smoke-tests.log || true)
             
             echo "Total Tests: $TOTAL"
             echo "Passed: $PASSED"
@@ -631,12 +518,124 @@ jobs:
             echo ""
             echo "Details:"
             cat smoke-test-reports/smoke-tests.log
+          else
+            echo "No smoke test log found"
           fi
+
+  generate-release-notes:
+    name: Generate Release Notes
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && success()
+    outputs:
+      release_version: ${{ steps.version.outputs.version }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from git tags
+        id: version
+        run: |
+          # Get the latest tag or generate a new version
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          LATEST_VERSION=${LATEST_TAG#v}
+          
+          # Parse version
+          MAJOR=$(echo $LATEST_VERSION | cut -d. -f1)
+          MINOR=$(echo $LATEST_VERSION | cut -d. -f2)
+          PATCH=$(echo $LATEST_VERSION | cut -d. -f3)
+          
+          # Increment patch version
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "previous_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "📌 New version: $NEW_VERSION"
+
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          PREVIOUS_TAG=${{ steps.version.outputs.previous_tag }}
+          
+          # Generate changelog from commits
+          if [ "$PREVIOUS_TAG" != "v0.0.0" ]; then
+            CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %h: %s (%an)")
+          else
+            CHANGELOG=$(git log --pretty=format:"- %h: %s (%an)")
+          fi
+          
+          # Save to file for later use
+          echo "$CHANGELOG" > CHANGELOG_TEMP.txt
+          
+          # Output for display
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "✅ Changelog generated"
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          release_name: Release v${{ steps.version.outputs.version }}
+          body: |
+            # 🚀 Release v${{ steps.version.outputs.version }}
+
+            ## 📝 Changelog
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## 📦 Artifacts
+
+            - Build Date: ${{ github.event.head_commit.timestamp }}
+            - Commit: ${{ github.sha }}
+            - Author: ${{ github.actor }}
+
+            ## 🔗 Images
+
+            Docker images for this release:
+            - `ghcr.io/${{ github.repository_owner }}/api-gateway:v${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/product-service:v${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/user-service:v${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/order-service:v${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/payment-service:v${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/shipping-service:v${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/favourite-service:v${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/proxy-client:v${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/service-discovery:v${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/cloud-config:v${{ steps.version.outputs.version }}`
+
+            ## ✅ Quality Gates Passed
+
+            - Unit Tests: ✅
+            - Code Quality (SonarQube): ✅
+            - Container Build: ✅
+            - Kubernetes Deployment: ✅
+            - System Tests: ✅
+            - Smoke Tests: ✅
+
+          draft: false
+          prerelease: false
+
+      - name: Upload changelog as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: CHANGELOG_TEMP.txt
+          retention-days: 30
 
   post-deployment:
     name: Post Deployment Verification
     runs-on: self-hosted
-    needs: smoke-tests
+    needs: generate-release-notes
     if: always()
     steps:
       - name: Deployment Summary
