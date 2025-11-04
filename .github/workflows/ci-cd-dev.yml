@@ -1,4 +1,4 @@
-name: CI - Dev build
+name: CI - CD - Dev build
 
 permissions:
   contents: read
