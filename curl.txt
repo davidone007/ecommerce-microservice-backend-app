@@ -29,32 +29,5 @@ Proxy‑Client: http://localhost:8080/app/api/payments
 Directo: http://localhost:8400/payment-service/api/payments
 
 
-Gateway: http://localhost:8080/user-service/api/users
-Proxy‑Client: http://localhost:8080/app/api/users
-Directo: http://localhost:8700/user-service/api/users
-
-{
-  "userId": "123",
-  "firstName": "Alejandro",
-  "lastName": "Cordoba",
-  "imageUrl": "http://example.com/avatar.jpg",
-  "email": "alejandro@example.com",
-  "addressDtos": [
-    {
-      "fullAddress": "123 Main St",
-      "postalCode": "12345",
-      "city": "New York"
-    }
-  ],
-  "credential": {
-    "username": "johndoe",
-    "password": "securePassword123",
-    "roleBasedAuthority": "ROLE_USER",
-    "isEnabled": true,
-    "isAccountNonExpired": true,
-    "isAccountNonLocked": true,
-    "isCredentialsNonExpired": true
-  }
-}
 
 
