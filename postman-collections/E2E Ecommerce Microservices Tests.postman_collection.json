@@ -2063,48 +2063,7 @@
           },
           "response": []
         },
-        {
-          "name": "99.9 - Eliminar Usuario de Prueba",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200, 204, 400 or 404\", function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 400, 404]);",
-                  "});",
-                  "",
-                  "if (pm.response.code === 200 || pm.response.code === 204) {",
-                  "    console.log(\"✅ Usuario de prueba eliminado\");",
-                  "} else if (pm.response.code === 404) {",
-                  "    console.log(\"ℹ️  Usuario de prueba no encontrado\");",
-                  "} else {",
-                  "    console.log(\"⚠️  No se pudo eliminar el usuario (puede tener dependencias activas)\");",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/users/{{test_userId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "users", "{{test_userId}}"]
-            }
-          },
-          "response": []
-        },
+
         {
           "name": "99.10 - Eliminar Credenciales Admin",
           "event": [
@@ -2141,44 +2100,6 @@
               "host": ["localhost"],
               "port": "8080",
               "path": ["app", "api", "credentials", "{{admin_userId}}"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "99.11 - Eliminar Usuario Admin",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200, 204, 400 or 404\", function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 400, 404]);",
-                  "});",
-                  "",
-                  "if (pm.response.code === 200 || pm.response.code === 204) {",
-                  "    console.log(\"✅ Usuario admin eliminado\");",
-                  "} else if (pm.response.code === 404) {",
-                  "    console.log(\"ℹ️  Usuario admin no encontrado\");",
-                  "} else {",
-                  "    console.log(\"⚠️  No se pudo eliminar el usuario admin (puede tener dependencias activas)\");",
-                  "}",
-                  "",
-                  "console.log(\"✅ E2E-99 COMPLETADO: Limpieza finalizada (pueden quedar algunos datos si hay restricciones de integridad)\");"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:8080/app/api/users/{{admin_userId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "users", "{{admin_userId}}"]
             }
           },
           "response": []
