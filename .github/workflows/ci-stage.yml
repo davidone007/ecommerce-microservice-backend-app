@@ -1,4 +1,4 @@
-name: CI - Stage build (Integration tests + K8s deploy + E2E tests)
+name: CI - Stage build ( Integration tests + K8s deploy + E2E tests )
 
 permissions:
   contents: read
@@ -220,13 +220,13 @@ jobs:
       - name: Deploy using deploy-k8s.sh script
         run: |
           echo "🚀 Deploying services to Kubernetes using deploy-k8s.sh..."
-          
+
           # Use stage tag for deployment
           BRANCH_TAG="stage"
-          
+
           # Make the deploy script executable
           chmod +x ./scripts/deploy-k8s.sh
-          
+
           # Run the deploy script with the stage tag
           # The script will:
           # - Replace ${BRANCH_TAG} in YAML files with the provided tag
@@ -243,12 +243,12 @@ jobs:
           kubectl get services
           echo ""
           kubectl get pods
-          
+
           # Wait for all deployments to be ready
           echo ""
           echo "Waiting for all deployments to be ready..."
           SERVICES=("api-gateway" "cloud-config" "favourite-service" "order-service" "payment-service" "product-service" "proxy-client" "service-discovery" "shipping-service" "user-service")
-          
+
           for service in "${SERVICES[@]}"; do
             deployment="${service}-container"
             if kubectl get deployment "$deployment" 2>/dev/null; then
@@ -256,7 +256,7 @@ jobs:
               kubectl rollout status deployment/"$deployment" --timeout=5m || true
             fi
           done
-          
+
           echo "✅ Deployment verification complete"
 
   integration-tests:
@@ -279,7 +279,7 @@ jobs:
           echo "Waiting for services to be ready..."
           SECONDS_WAITED=0
           TIMEOUT=300
-          
+
           # Array of service endpoints to check
           declare -a ENDPOINTS=(
             "http://localhost:8080/app/api/products"
@@ -289,7 +289,7 @@ jobs:
             "http://localhost:8800/favourite-service/api/favourites"
             "http://localhost:8400/payment-service/api/payments"
           )
-          
+
           # Check all endpoints until they are ready or timeout
           while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
             ALL_READY=true
@@ -309,7 +309,7 @@ jobs:
             SECONDS_WAITED=$((SECONDS_WAITED+5))
             echo "Waiting for services... ($SECONDS_WAITED s / $TIMEOUT s)"
           done
-          
+
           echo "⚠️  Service health check timed out after $TIMEOUT seconds"
           echo "Checking pod status..."
           kubectl get pods
@@ -321,11 +321,11 @@ jobs:
           echo "🧪 Running integration tests (*IntegrationTest pattern) against live services..."
           echo "Target API: http://localhost:8080/app/api"
           echo ""
-          
+
           ./mvnw -B -T 1C verify \
             -Dtest="*IntegrationTest" \
             -DfailIfNoTests=false
-          
+
       - name: Upload integration test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -343,11 +343,11 @@ jobs:
           # Count test results
           TOTAL_TESTS=$(find . -name "*IntegrationTest*.xml" -exec grep -c "<testcase" {} + 2>/dev/null | awk '{sum+=$1} END {print sum}')
           FAILURES=$(find . -name "*IntegrationTest*.xml" -exec grep -c "<failure" {} + 2>/dev/null | awk '{sum+=$1} END {print sum}')
-          
+
           echo "Total tests executed: ${TOTAL_TESTS:-0}"
           echo "Failures: ${FAILURES:-0}"
           echo ""
-          
+
           if [ "$FAILURES" -gt 0 ]; then
             echo "⚠️  Some integration tests failed. Check artifacts for details."
           else
@@ -378,7 +378,7 @@ jobs:
           echo "Waiting for services to be ready..."
           SECONDS_WAITED=0
           TIMEOUT=300
-          
+
           # Array of service endpoints to check
           declare -a ENDPOINTS=(
             "http://localhost:8080/app/api/products"
@@ -388,7 +388,7 @@ jobs:
             "http://localhost:8800/favourite-service/api/favourites"
             "http://localhost:8400/payment-service/api/payments"
           )
-          
+
           # Check all endpoints until they are ready or timeout
           while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
             ALL_READY=true
@@ -408,7 +408,7 @@ jobs:
             SECONDS_WAITED=$((SECONDS_WAITED+5))
             echo "Waiting for services... ($SECONDS_WAITED s / $TIMEOUT s)"
           done
-          
+
           echo "⚠️  Service health check timed out after $TIMEOUT seconds"
           echo "Services may still be starting. Proceeding with tests..."
 
