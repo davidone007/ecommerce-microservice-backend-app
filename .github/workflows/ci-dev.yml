@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       # Deshabilitado completamente para self-hosted runners
-      # El caché local de Maven en ~/.m2 ya es persistente en self-hosted
+      # El caché local del Maven en ~/.m2 ya es persistente en self-hosted
       # - name: Cache Maven local repository
       #   if: runner.environment != 'self-hosted'
       #   uses: actions/cache@v4
