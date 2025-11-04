@@ -1,7 +1,7 @@
 name: CI - CD - Stage build ( Integration tests + K8s deploy + E2E tests )
 
 permissions:
-  contents: read
+  contents: write
   packages: write
   id-token: write
 
