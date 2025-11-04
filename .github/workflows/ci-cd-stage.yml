@@ -434,7 +434,7 @@ jobs:
       - name: Run E2E Tests with Postman Collection
         run: |
           echo "🧪 Running E2E tests with Postman collection..."
-          
+
           # Check if collection exists
           if [ ! -f "postman-collections/E2E Ecommerce Microservices Tests.postman_collection.json" ]; then
             echo "❌ Postman collection not found!"
@@ -442,10 +442,10 @@ jobs:
             ls -la postman-collections/ || echo "Directory not found"
             exit 1
           fi
-          
+
           # Create output directory for reports
           mkdir -p test-reports
-          
+
           # Run newman with full error output
           echo "Running Newman with local-stage environment..."
           if [ -f "postman-collections/local-stage.postman_environment.json" ]; then
@@ -466,7 +466,7 @@ jobs:
               --delay-request 500 \
               --timeout-request 10000 || true
           fi
-          
+
           echo "✅ Newman execution completed"
           echo "Generated reports:"
           ls -la test-reports/ 2>/dev/null || echo "No reports generated"
@@ -511,16 +511,16 @@ jobs:
           # Get the latest stage tag or generate a new version
           LATEST_TAG=$(git describe --tags --abbrev=0 --match "stage-*" 2>/dev/null || echo "stage-0.0.0")
           LATEST_VERSION=${LATEST_TAG#stage-}
-          
+
           # Parse version
           MAJOR=$(echo $LATEST_VERSION | cut -d. -f1)
           MINOR=$(echo $LATEST_VERSION | cut -d. -f2)
           PATCH=$(echo $LATEST_VERSION | cut -d. -f3)
-          
+
           # Increment patch version for stage
           NEW_PATCH=$((PATCH + 1))
           NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-          
+
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "previous_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
           echo "📌 Stage release version: $NEW_VERSION"
@@ -529,22 +529,22 @@ jobs:
         id: changelog
         run: |
           PREVIOUS_TAG=${{ steps.version.outputs.previous_tag }}
-          
+
           # Generate changelog from commits
           if [ "$PREVIOUS_TAG" != "stage-0.0.0" ]; then
             CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %h: %s (%an)")
           else
             CHANGELOG=$(git log --pretty=format:"- %h: %s (%an)")
           fi
-          
+
           # Save to file for later use
           echo "$CHANGELOG" > CHANGELOG_STAGE_TEMP.txt
-          
+
           # Output for display
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          
+
           echo "✅ Stage changelog generated"
 
       - name: Create GitHub Pre-Release (Stage)
