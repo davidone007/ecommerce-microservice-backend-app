@@ -33,6 +33,8 @@ jobs:
           distribution: temurin
           java-version: "11"
           cache: "maven"
+          # Deshabilitar caché integrada de setup-java en runners self-hosted
+          cache-dependency-path: ${{ runner.name != 'self-hosted' && '**/pom.xml' || '' }}
 
       - name: Build with Maven (run unit tests)
         run: |

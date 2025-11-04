@@ -45,6 +45,18 @@ kubectl get pods -A
 
 kubectl describe deployment api-gateway-container
 
+kubectl rollout restart deployment user-service-container
+kubectl rollout restart deployment order-service-container
+kubectl rollout restart deployment payment-service-container
+kubectl rollout restart deployment product-service-container
+kubectl rollout restart deployment shipping-service-container
+kubectl rollout restart deployment favourite-service-container
+
+
+kubectl port-forward svc/api-gateway-container 8080:8080
+
 ## Tests 
 
+
 cd "/Users/davidef/Desktop/ecommerce-microservice-backend-app copy" && ./mvnw test -Dtest="*ServiceImplTest"
+
