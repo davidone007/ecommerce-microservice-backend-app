@@ -1701,6 +1701,490 @@
         }
       ],
       "description": "Flujo completo de gestión de favoritos: agrega productos a favoritos, lista todos, consulta específico y elimina favoritos"
+    },
+    {
+      "name": "E2E-99: Cleanup - Eliminar Datos de Prueba",
+      "item": [
+        {
+          "name": "99.1 - Eliminar Favoritos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 204 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                  "});",
+                  "",
+                  "console.log(\"Favoritos eliminados\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/app/api/favourites/{{test_userId}}/{{test_productId1}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": [
+                "app",
+                "api",
+                "favourites",
+                "{{test_userId}}",
+                "{{test_productId1}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "99.2 - Eliminar Segundo Favorito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 204 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                  "});",
+                  "",
+                  "console.log(\"Segundo favorito eliminado\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/app/api/favourites/{{test_userId}}/{{test_productId2}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": [
+                "app",
+                "api",
+                "favourites",
+                "{{test_userId}}",
+                "{{test_productId2}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "99.3 - Cambiar Estado de Orden a CANCELLED",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 400 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log(\"Orden cambiada a CANCELLED\");",
+                  "} else {",
+                  "    console.log(\"No se pudo cambiar estado de orden (posiblemente ya no existe)\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderId\": {{test_orderId}},\n    \"orderDate\": \"02-11-2024__10:30:00:000000\",\n    \"orderDesc\": \"Compra de laptop y mouse\",\n    \"orderFee\": 979.98,\n    \"orderStatus\": \"CANCELLED\",\n    \"isActive\": false,\n    \"cart\": {\n        \"cartId\": {{test_cartId}}\n    }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/app/api/orders/{{test_orderId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["app", "api", "orders", "{{test_orderId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "99.3b - Eliminar Orden",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 204 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                  "});",
+                  "",
+                  "console.log(\"Orden eliminada o no existe\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/app/api/orders/{{test_orderId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["app", "api", "orders", "{{test_orderId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "99.4 - Eliminar Carrito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 204 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                  "});",
+                  "",
+                  "console.log(\"Carrito eliminado\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/app/api/carts/{{test_cartId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["app", "api", "carts", "{{test_cartId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "99.5 - Eliminar Producto 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 204 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                  "});",
+                  "",
+                  "console.log(\"Producto 1 eliminado\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/app/api/products/{{test_productId1}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["app", "api", "products", "{{test_productId1}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "99.6 - Eliminar Producto 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 204 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                  "});",
+                  "",
+                  "console.log(\"Producto 2 eliminado\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/app/api/products/{{test_productId2}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["app", "api", "products", "{{test_productId2}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "99.7 - Eliminar Categoría",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 204 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                  "});",
+                  "",
+                  "console.log(\"Categoría eliminada\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/app/api/categories/{{test_categoryId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["app", "api", "categories", "{{test_categoryId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "99.8 - Eliminar Credenciales del Usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 204 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                  "});",
+                  "",
+                  "console.log(\"Credenciales del usuario eliminadas\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/app/api/credentials/{{test_userId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["app", "api", "credentials", "{{test_userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "99.9 - Eliminar Usuario de Prueba",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 204, 400 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 400, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200 || pm.response.code === 204) {",
+                  "    console.log(\"✅ Usuario de prueba eliminado\");",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log(\"ℹ️  Usuario de prueba no encontrado\");",
+                  "} else {",
+                  "    console.log(\"⚠️  No se pudo eliminar el usuario (puede tener dependencias activas)\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/app/api/users/{{test_userId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["app", "api", "users", "{{test_userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "99.10 - Eliminar Credenciales Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 204, 400 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 400, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200 || pm.response.code === 204) {",
+                  "    console.log(\"✅ Credenciales admin eliminadas\");",
+                  "} else {",
+                  "    console.log(\"ℹ️  Credenciales admin no encontradas o no se pueden eliminar\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/app/api/credentials/{{admin_userId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["app", "api", "credentials", "{{admin_userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "99.11 - Eliminar Usuario Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200, 204, 400 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 400, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200 || pm.response.code === 204) {",
+                  "    console.log(\"✅ Usuario admin eliminado\");",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log(\"ℹ️  Usuario admin no encontrado\");",
+                  "} else {",
+                  "    console.log(\"⚠️  No se pudo eliminar el usuario admin (puede tener dependencias activas)\");",
+                  "}",
+                  "",
+                  "console.log(\"✅ E2E-99 COMPLETADO: Limpieza finalizada (pueden quedar algunos datos si hay restricciones de integridad)\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/app/api/users/{{admin_userId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["app", "api", "users", "{{admin_userId}}"]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Cleanup: Elimina todos los recursos creados durante los tests para permitir que la colección se ejecute nuevamente sin conflictos"
     }
   ],
   "variable": [
