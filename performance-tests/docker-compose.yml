@@ -1,0 +1,115 @@
+# Docker Compose para Pruebas de Rendimiento
+# ==========================================
+
+version: "3.8"
+
+services:
+  # Locust Master (para pruebas distribuidas)
+  locust-master:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ecommerce-locust:latest
+    container_name: locust-master
+    ports:
+      - "8089:8089" # Web UI
+      - "5557:5557" # Master communication
+    volumes:
+      - ./results:/performance-tests/results
+      - ./locustfile.py:/performance-tests/locustfile.py
+      - ./config:/performance-tests/config
+    environment:
+      - LOCUST_MODE=master
+      - LOCUST_MASTER_BIND_PORT=5557
+    command: >
+      --master
+      --web-host=0.0.0.0
+      --web-port=8089
+      --expect-workers=2
+    networks:
+      - performance-net
+
+  # Locust Worker 1
+  locust-worker-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ecommerce-locust:latest
+    container_name: locust-worker-1
+    volumes:
+      - ./locustfile.py:/performance-tests/locustfile.py
+      - ./config:/performance-tests/config
+    environment:
+      - LOCUST_MODE=worker
+      - LOCUST_MASTER_NODE_HOST=locust-master
+      - LOCUST_MASTER_NODE_PORT=5557
+    command: >
+      --worker
+      --master-host=locust-master
+      --master-port=5557
+    depends_on:
+      - locust-master
+    networks:
+      - performance-net
+
+  # Locust Worker 2
+  locust-worker-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ecommerce-locust:latest
+    container_name: locust-worker-2
+    volumes:
+      - ./locustfile.py:/performance-tests/locustfile.py
+      - ./config:/performance-tests/config
+    environment:
+      - LOCUST_MODE=worker
+      - LOCUST_MASTER_NODE_HOST=locust-master
+      - LOCUST_MASTER_NODE_PORT=5557
+    command: >
+      --worker
+      --master-host=locust-master
+      --master-port=5557
+    depends_on:
+      - locust-master
+    networks:
+      - performance-net
+
+  # Grafana para visualización (opcional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: locust-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - performance-net
+
+  # Prometheus para métricas (opcional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: locust-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-storage:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    networks:
+      - performance-net
+
+networks:
+  performance-net:
+    driver: bridge
+    # Conectar a la red de microservicios si están en el mismo host
+    external: false
+
+volumes:
+  grafana-storage:
+  prometheus-storage:
