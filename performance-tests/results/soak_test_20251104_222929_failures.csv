@@ -1,0 +1,28 @@
+Method,Name,Error,Occurrences
+POST,/app/api/favourites [ADD],CatchResponseError('Status code: 0'),8
+GET,/app/api/products [BROWSE],CatchResponseError('Status code: 0'),120
+GET,/app/api/products/[id] [VIEW DETAILS],CatchResponseError('Status code: 403'),118
+POST,/app/api/products [CREATE],CatchResponseError('Status code: 500'),33
+GET,/app/api/products/[id] [VIEW DETAILS],CatchResponseError('Status code: 0'),64
+POST,/app/api/credentials [CREATE ADMIN CREDS],"BadStatusCode('http://localhost:8080/app/api/credentials', code=400)",1
+GET,/app/api/products/[id] [VIEW DETAILS],CatchResponseError('Status code: 500'),62
+GET,/app/api/products/[id] [VIEW DETAILS],CatchResponseError('Status code: 400'),13
+POST,/app/api/users [CREATE],CatchResponseError('Status code: 500'),25
+POST,/app/api/products [CREATE],CatchResponseError('Status code: 0'),53
+POST,/app/api/products [CREATE],CatchResponseError('Status code: 403'),72
+POST,/app/api/carts [CREATE],CatchResponseError('Failed to create cart: 403'),99
+POST,/app/api/carts [CREATE],CatchResponseError('Failed to create cart: 0'),73
+POST,/app/api/carts [CREATE],CatchResponseError('Failed to create cart: 500'),72
+GET,/app/api/products [BROWSE],CatchResponseError('Status code: 403'),147
+POST,/app/api/products [CREATE],CatchResponseError('Status code: 400'),4
+GET,/app/api/favourites [VIEW],CatchResponseError('Status code: 0'),13
+POST,/app/api/carts [CREATE],CatchResponseError('Failed to create cart: 400'),5203
+GET,/app/api/favourites [VIEW],CatchResponseError('Status code: 500'),12
+POST,/app/api/favourites [ADD],CatchResponseError('Status code: 400'),1293
+POST,/app/api/users [CREATE],CatchResponseError('Status code: 0'),15
+GET,/app/api/products [BROWSE],CatchResponseError('Status code: 500'),89
+POST,/app/api/favourites [ADD],CatchResponseError('Status code: 500'),18
+POST,/app/api/favourites [ADD],CatchResponseError('Status code: 403'),31
+GET,/app/api/products [BROWSE],CatchResponseError('Status code: 400'),20
+POST,/app/api/users [CREATE],CatchResponseError('Status code: 403'),58
+GET,/app/api/favourites [VIEW],CatchResponseError('Status code: 403'),20

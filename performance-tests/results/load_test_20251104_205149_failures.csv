@@ -1,0 +1,10 @@
+Method,Name,Error,Occurrences
+POST,/app/api/favourites [ADD],CatchResponseError('Status code: 0'),2
+GET,/app/api/products [BROWSE],CatchResponseError('Status code: 0'),31
+GET,/app/api/products/[id] [VIEW DETAILS],CatchResponseError('Status code: 0'),23
+POST,/app/api/products [CREATE],CatchResponseError('Status code: 0'),8
+POST,/app/api/carts [CREATE],CatchResponseError('Failed to create cart: 0'),24
+GET,/app/api/favourites [VIEW],CatchResponseError('Status code: 0'),4
+POST,/app/api/carts [CREATE],CatchResponseError('Failed to create cart: 400'),937
+POST,/app/api/favourites [ADD],CatchResponseError('Status code: 400'),341
+POST,/app/api/users [CREATE],CatchResponseError('Status code: 0'),6
