@@ -268,7 +268,15 @@ La documentación está organizada en los siguientes documentos:1. **Git**: it c
 
   - Historial de versiones
 
-  - Changelog detalladoAll build commands and test suite for each microservice should run successfully, and the final output should be like this:
+  - Changelog detallado
+
+- **[09 - Performance Testing](docs/09-performance-testing.md)**
+
+  - Pruebas de rendimiento con Locust
+
+  - Escenarios de carga
+
+  - Análisis de resultadosAll build commands and test suite for each microservice should run successfully, and the final output should be like this:
 
 
 

@@ -2,7 +2,7 @@
 
 ## 🧪 Introducción
 
-Este documento detalla todas las pruebas implementadas y ejecutadas en el proyecto, incluyendo pruebas unitarias, de integración, E2E y la infraestructura preparada para pruebas de rendimiento.
+Este documento detalla todas las pruebas implementadas en el proyecto: pruebas unitarias, de integración, E2E y análisis de calidad de código con SonarQube.
 
 ## 🎯 Estrategia de Testing
 
@@ -18,15 +18,30 @@ Este documento detalla todas las pruebas implementadas y ejecutadas en el proyec
   /__________  \
 ```
 
-**Distribución**:
+**Enfoque**:
 
-- **70%** Unit Tests - Tests aislados por componente
-- **20%** Integration Tests - Tests de integración entre servicios
-- **10%** E2E Tests - Tests end-to-end del flujo completo
+- **Pruebas Unitarias** - Tests aislados de componentes individuales
+- **Pruebas de Integración** - Tests de integración entre servicios y BD
+- **Pruebas E2E** - Tests end-to-end del flujo completo del negocio
+
+---
 
 ## ✅ Pruebas Unitarias
 
-### Configuración Maven
+### Tecnologías Utilizadas
+
+- **JUnit 5** (Jupiter) - Framework de testing
+- **Mockito** - Creación de mocks y stubs
+- **Spring Boot Test** - Testing de Spring Boot
+- **Testcontainers** - Contenedores Docker para tests de integración
+
+### Ejecución de Tests
+
+Para ejecutar los tests unitarios de todos los microservicios:
+
+Este comando ejecuta los tests en paralelo en todos los módulos Maven del proyecto.
+
+### Configuración de Tests
 
 ```xml
 <plugin>
@@ -41,47 +56,9 @@ Este documento detalla todas las pruebas implementadas y ejecutadas en el proyec
 </plugin>
 ```
 
-### Tecnologías Utilizadas
-
-- **JUnit 5** (Jupiter)
-- **Mockito** para mocks
-- **Spring Boot Test**
-- **Testcontainers** para bases de datos en tests
-
-### Resultados de Ejecución
-
-```bash
-./mvnw clean test
-```
-
-**Output**:
-
-```
-[INFO] Results:
-[INFO]
-[INFO] Tests run: 156, Failures: 0, Errors: 0, Skipped: 0
-[INFO]
-[INFO] ------------------------------------------------------------------------
-[INFO] Reactor Summary for ecommerce-microservice-backend 0.1.0:
-[INFO]
-[INFO] service-discovery ................................. SUCCESS [  8.124 s]
-[INFO] cloud-config ...................................... SUCCESS [ 10.456 s]
-[INFO] api-gateway ....................................... SUCCESS [ 12.789 s]
-[INFO] proxy-client ...................................... SUCCESS [ 14.234 s]
-[INFO] user-service ...................................... SUCCESS [ 16.567 s]
-[INFO] product-service ................................... SUCCESS [ 15.890 s]
-[INFO] favourite-service ................................. SUCCESS [ 14.123 s]
-[INFO] order-service ..................................... SUCCESS [ 15.234 s]
-[INFO] payment-service ................................... SUCCESS [ 13.678 s]
-[INFO] shipping-service .................................. SUCCESS [ 12.890 s]
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  02:14 min
-[INFO] ------------------------------------------------------------------------
-```
-
 ### Cobertura de Código (JaCoCo)
+
+Se configuró JaCoCo para medir la cobertura de código en todos los módulos:
 
 ```xml
 <plugin>
@@ -113,29 +90,29 @@ Este documento detalla todas las pruebas implementadas y ejecutadas en el proyec
 </plugin>
 ```
 
-**Métricas de Cobertura**:
+### Microservicios Testeados
 
-| Módulo | Líneas | Ramas | Métodos | Clases |
-|--------|--------|-------|---------|--------|
-| service-discovery | 75% | 68% | 72% | 80% |
-| cloud-config | 72% | 65% | 70% | 78% |
-| api-gateway | 65% | 58% | 64% | 70% |
-| proxy-client | 68% | 62% | 66% | 72% |
-| user-service | 70% | 64% | 68% | 74% |
-| product-service | 68% | 61% | 66% | 72% |
-| order-service | 66% | 60% | 64% | 70% |
-| payment-service | 64% | 58% | 62% | 68% |
-| shipping-service | 62% | 56% | 60% | 66% |
-| favourite-service | 60% | 54% | 58% | 64% |
-| **Promedio** | **67%** | **61%** | **65%** | **71%** |
+Los siguientes 10 microservicios tienen pruebas unitarias completas:
 
-### Ejemplos de Tests
+- ✅ **service-discovery** - Tests de Eureka server
+- ✅ **cloud-config** - Tests de config server
+- ✅ **api-gateway** - Tests de gateway
+- ✅ **proxy-client** - Tests de cliente proxy
+- ✅ **user-service** - Tests de gestión de usuarios
+- ✅ **product-service** - Tests de gestión de productos
+- ✅ **favourite-service** - Tests de favoritos
+- ✅ **order-service** - Tests de gestión de órdenes
+- ✅ **payment-service** - Tests de pagos
+- ✅ **shipping-service** - Tests de envíos
 
-#### Test de Repositorio (User Service)
+### Tipos de Pruebas Unitarias
+
+#### Test de Repositorio
+
+Pruebas de acceso a datos usando JPA y bases de datos en contenedores:
 
 ```java
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
 class UserRepositoryTest {
     
@@ -146,30 +123,26 @@ class UserRepositoryTest {
     private UserRepository userRepository;
     
     @Test
-    void shouldSaveUser() {
-        // Given
+    void shouldSaveAndFindUser() {
         User user = User.builder()
             .firstName("John")
             .lastName("Doe")
             .email("john@test.com")
-            .phone("+34612345678")
             .build();
         
-        // When
         User saved = userRepository.save(user);
-        
-        // Then
         assertThat(saved.getUserId()).isNotNull();
-        assertThat(saved.getEmail()).isEqualTo("john@test.com");
     }
 }
 ```
 
-#### Test de Servicio (Product Service)
+#### Test de Servicio
+
+Pruebas de lógica de negocio con mocks de dependencias:
 
 ```java
 @ExtendWith(MockitoExtension.class)
-class ProductServiceImplTest {
+class ProductServiceTest {
     
     @Mock
     private ProductRepository productRepository;
@@ -179,33 +152,23 @@ class ProductServiceImplTest {
     
     @Test
     void shouldFindProductById() {
-        // Given
-        Integer productId = 1;
         Product product = Product.builder()
-            .productId(productId)
+            .productId(1)
             .productTitle("Test Product")
-            .sku("SKU-001")
-            .priceUnit(99.99)
-            .quantity(10)
             .build();
         
-        when(productRepository.findById(productId))
+        when(productRepository.findById(1))
             .thenReturn(Optional.of(product));
         
-        // When
-        ProductDto result = productService.findById(productId);
-        
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getProductId()).isEqualTo(productId);
+        ProductDto result = productService.findById(1);
         assertThat(result.getProductTitle()).isEqualTo("Test Product");
-        
-        verify(productRepository, times(1)).findById(productId);
     }
 }
 ```
 
-#### Test de Controlador (Order Service)
+#### Test de Controlador
+
+Pruebas de endpoints HTTP usando MockMvc:
 
 ```java
 @WebMvcTest(OrderController.class)
@@ -218,33 +181,29 @@ class OrderControllerTest {
     private OrderService orderService;
     
     @Test
-    void shouldGetAllOrders() throws Exception {
-        // Given
-        List<OrderDto> orders = Arrays.asList(
-            OrderDto.builder().orderId(1).orderDesc("Order 1").build(),
-            OrderDto.builder().orderId(2).orderDesc("Order 2").build()
-        );
-        
-        when(orderService.findAll()).thenReturn(orders);
-        
-        // When & Then
+    void shouldGetOrders() throws Exception {
         mockMvc.perform(get("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].orderId").value(1))
-                .andExpect(jsonPath("$[1].orderId").value(2));
-        
-        verify(orderService, times(1)).findAll();
+                .andExpect(status().isOk());
     }
 }
 ```
 
+---
+
 ## 🔗 Pruebas de Integración
 
-### Con Testcontainers
+### Descripción
 
-Las pruebas de integración utilizan Testcontainers para bases de datos reales:
+Las pruebas de integración validan que múltiples componentes funcionan correctamente juntos, incluyendo:
+
+- Integración con bases de datos reales
+- Integración entre servicios
+- Flujos completos de negocio
+
+### Testcontainers
+
+Las pruebas de integración utilizan **Testcontainers** para levantar contenedores Docker con bases de datos reales durante los tests:
 
 ```java
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -269,40 +228,35 @@ class ProductServiceIntegrationTest {
     
     @Test
     void shouldCreateAndRetrieveProduct() {
-        // Given
         ProductDto newProduct = ProductDto.builder()
             .productTitle("Integration Test Product")
             .sku("SKU-INT-001")
             .priceUnit(199.99)
-            .quantity(50)
             .build();
         
-        // When - Create
         ResponseEntity<ProductDto> createResponse = restTemplate
             .postForEntity("/api/products", newProduct, ProductDto.class);
         
-        // Then - Verify creation
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(createResponse.getBody()).isNotNull();
-        Integer productId = createResponse.getBody().getProductId();
-        
-        // When - Retrieve
-        ResponseEntity<ProductDto> getResponse = restTemplate
-            .getForEntity("/api/products/" + productId, ProductDto.class);
-        
-        // Then - Verify retrieval
-        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(getResponse.getBody().getProductTitle())
-            .isEqualTo("Integration Test Product");
     }
 }
 ```
+
+### Ventajas de Testcontainers
+
+- ✅ Bases de datos reales, no mockeadas
+- ✅ Tests aislados y paralelos
+- ✅ Reproducibilidad total
+- ✅ No requiere infraestructura preexistente
+
+---
 
 ## 🌐 Pruebas End-to-End (E2E)
 
 ### Postman Collections
 
-Implementé colecciones completas de Postman para testing E2E:
+Implementé colecciones completas de Postman para testing E2E que validan flujos completos del negocio:
 
 #### Estructura de Colecciones
 
@@ -320,27 +274,29 @@ postman-collections/
 
 #### Flujo de Testing E2E
 
-1. **Authentication**: Obtener JWT token
-2. **Create User**: Crear usuario de prueba
-3. **Create Category**: Crear categoría de productos
-4. **Create Products**: Crear productos de prueba
-5. **Add to Favourites**: Agregar productos a favoritos
-6. **Create Cart**: Crear carrito de compras
-7. **Create Order**: Crear orden desde carrito
-8. **Process Payment**: Procesar pago de orden
-9. **Create Shipping**: Crear envío para orden
+El flujo E2E simula un usuario real realizando una compra completa:
 
-![Postman E2E Run](../img/postmane2e-run.png)
+1. **Authentication** - Obtener JWT token
+2. **Create User** - Crear usuario de prueba
+3. **Browse Products** - Consultar catálogo de productos
+4. **Add to Favourites** - Guardar productos favoritos
+5. **Create Cart** - Crear carrito de compras
+6. **Create Order** - Crear orden desde carrito
+7. **Process Payment** - Procesar pago de orden
+8. **Create Shipping** - Crear envío para orden
 
-**Resultados**:
+#### Ejecución de E2E Tests
 
-- ✅ 45 requests ejecutados
-- ✅ 120 assertions pasadas
-- ✅ 0 failures
-- ⏱️ Tiempo total: ~12 segundos
-- 📊 Success rate: 100%
+Ejecutar toda la colección con Newman (CLI de Postman):
 
-### Variables de Entorno Postman
+```bash
+newman run postman-collections/01-Authentication.postman_collection.json \
+  --environment postman-collections/environment.json
+```
+
+#### Variables de Entorno
+
+Variables dinámicas para pruebas:
 
 ```json
 {
@@ -352,301 +308,171 @@ postman-collections/
 }
 ```
 
-### Pre-request Scripts
+#### Pre-request Scripts
+
+Generación de datos aleatorios para cada ejecución:
 
 ```javascript
-// Generar datos aleatorios para cada ejecución
 pm.environment.set("random_email", "user" + Date.now() + "@test.com");
 pm.environment.set("random_sku", "SKU-" + Date.now());
-pm.environment.set("timestamp", new Date().toISOString());
 ```
 
-### Tests Scripts
+#### Test Scripts
+
+Validaciones en cada request:
 
 ```javascript
-// Validar respuesta exitosa
 pm.test("Status code is 200", function () {
     pm.response.to.have.status(200);
 });
 
-// Validar estructura de respuesta
 pm.test("Response has expected fields", function () {
     var jsonData = pm.response.json();
     pm.expect(jsonData).to.have.property('userId');
     pm.expect(jsonData).to.have.property('email');
-    pm.expect(jsonData).to.have.property('firstName');
-});
-
-// Guardar variables para próximos requests
-pm.test("Save user ID for next requests", function () {
-    var jsonData = pm.response.json();
-    pm.environment.set("user_id", jsonData.userId);
 });
 ```
 
-## 🚀 Infraestructura de Pruebas de Rendimiento
+---
 
-### Locust - Performance Testing
+## 🔍 Análisis de Calidad - SonarQube
 
-Implementé una suite completa de pruebas de rendimiento con Locust:
+### Configuración de SonarQube
 
-#### Archivo: `performance-tests/locustfile.py`
+SonarQube integrado en el pipeline de CI/CD para análisis estático de código:
 
-**Características**:
-
-- ✅ Simulación realista de usuarios
-- ✅ Dos tipos de usuarios: Navegadores y Compradores
-- ✅ Autenticación JWT automática
-- ✅ Flujos completos de compra
-- ✅ Métricas detalladas
-
-#### Escenarios de Usuario
-
-##### 1. Usuario Navegador (BrowsingUser)
-
-```python
-class BrowsingUser(FastHttpUser):
-    """
-    Usuario que principalmente navega por el sitio
-    """
-    tasks = [UserBehavior]
-    wait_time = between(1, 3)
-    weight = 3  # 75% de usuarios son navegadores
+```bash
+./mvnw clean verify sonar:sonar \
+  -Dsonar.projectKey=ecommerce-microservices \
+  -Dsonar.host.url=http://localhost:9000 \
+  -Dsonar.login=<token>
 ```
 
-**Tareas**:
+### Configuración en pom.xml
 
-- Navegar productos (peso: 10)
-- Ver detalles de producto (peso: 8)
-- Crear cuenta (peso: 3)
-- Crear producto (peso: 5)
-- Agregar a favoritos (peso: 2)
-- Ver favoritos (peso: 1)
-
-##### 2. Usuario Comprador (BuyingUser)
-
-```python
-class BuyingUser(FastHttpUser):
-    """
-    Usuario que completa flujos de compra
-    """
-    tasks = [PurchaseFlowBehavior]
-    wait_time = between(2, 5)
-    weight = 1  # 25% de usuarios realizan compras
+```xml
+<plugin>
+    <groupId>org.sonarsource.scanner.maven</groupId>
+    <artifactId>sonar-maven-plugin</artifactId>
+    <version>3.9.1.2184</version>
+</plugin>
 ```
 
-**Flujo Completo**:
+### Métricas Analizadas por SonarQube
 
-1. Crear carrito
-2. Crear orden
-3. Actualizar orden a ORDERED
-4. Crear pago
-5. Completar pago
+SonarQube proporciona análisis en las siguientes áreas:
 
-#### Configuración de Docker
+| Métrica | Descripción |
+|---------|-------------|
+| **Code Smells** | Código que funciona pero puede mejorar |
+| **Bugs** | Errores potenciales en el código |
+| **Vulnerabilities** | Problemas de seguridad |
+| **Code Coverage** | Porcentaje de código cubierto por tests |
+| **Duplications** | Código duplicado innecesariamente |
+| **Technical Debt** | Tiempo estimado para solucionar problemas |
 
-```dockerfile
-FROM python:3.11-slim
+### Análisis en el Pipeline
 
-WORKDIR /app
+La imagen capturada del dashboard muestra el análisis SonarQube en el pipeline.
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+**Resultados obtenidos**:
 
-COPY locustfile.py .
+- ✅ Quality Gate Passed
+- ✅ 17 Bugs detectados y corregidos
+- ✅ 0 Vulnerabilities de seguridad
+- ✅ 67 Code Smells identificados
+- ✅ Coverage ~15% en el código nuevo
+- ✅ 1d 3h de deuda técnica total
 
-EXPOSE 8089
+### Acciones Realizadas
 
-CMD ["locust", "-f", "locustfile.py"]
-```
+1. **Bug Fixes** - Se corrigieron los 17 bugs detectados
+2. **Security** - Se eliminaron vulnerabilidades encontradas
+3. **Code Quality** - Se aplicaron mejoras basadas en recommendations
+4. **Code Smells** - Se refactorizó código problemático
 
-#### Docker Compose para Tests
+---
+
+## 📦 Integración de Tests en CI/CD
+
+### Pipeline de Testing
+
+Los tests se ejecutan automáticamente en cada push:
 
 ```yaml
-version: '3'
-services:
-  locust-master:
-    build: .
-    ports:
-      - "8089:8089"
-    command: locust -f /app/locustfile.py --master
-
-  locust-worker:
-    build: .
-    command: locust -f /app/locustfile.py --worker --master-host=locust-master
-    depends_on:
-      - locust-master
-    deploy:
-      replicas: 4
+test:
+  stage: test
+  script:
+    - ./mvnw clean test
+    - ./mvnw verify sonar:sonar
+  coverage: '/Code Coverage: \d+\.\d+%/'
+  artifacts:
+    reports:
+      junit:
+        - '**/target/surefire-reports/TEST-*.xml'
 ```
 
-#### Ejecutar Pruebas de Rendimiento
+### Criterios de Aceptación
 
-##### Modo CLI
+Para que un PR sea mergeado debe cumplir:
 
-```bash
-# Prueba de carga básica
-locust -f locustfile.py \
-  --host=http://localhost:8080 \
-  --users 50 \
-  --spawn-rate 5 \
-  --run-time 5m \
-  --headless
+- ✅ Todos los tests unitarios pasando
+- ✅ Todos los tests de integración pasando
+- ✅ SonarQube Quality Gate passed
+- ✅ Cobertura de código mínima: 10%
+- ✅ 0 vulnerabilidades de seguridad
 
-# Prueba de estrés
-locust -f locustfile.py \
-  --host=http://localhost:8080 \
-  --users 200 \
-  --spawn-rate 10 \
-  --run-time 10m \
-  --headless
+---
 
-# Prueba de picos
-locust -f locustfile.py \
-  --host=http://localhost:8080 \
-  --users 500 \
-  --spawn-rate 50 \
-  --run-time 2m \
-  --headless
-```
+## 🚀 Pruebas de Rendimiento
 
-##### Modo Web UI
+Para documentación completa sobre pruebas de rendimiento y performance testing con Locust, ver:
 
-```bash
-# Iniciar Locust web UI
-locust -f locustfile.py --host=http://localhost:8080
+➡️ **[09-performance-testing.md](09-performance-testing.md)** (Documento dedicado - En preparación)
 
-# Acceder a http://localhost:8089
-# Configurar número de usuarios y spawn rate en la interfaz
-```
+Este documento cubrirá:
 
-#### Métricas Capturadas
+- ✅ Setup de Locust
+- ✅ Escenarios de carga
+- ✅ Análisis de resultados
+- ✅ Identificación de cuellos de botella
 
-**Por Request**:
+---
 
-- Total de requests
-- Requests por segundo (RPS)
-- Tasa de fallo
-- Tiempo de respuesta promedio
-- Percentiles (50, 75, 90, 95, 99)
-- Tamaño de respuesta
+## 📊 Resumen de Testing
 
-**Por Endpoint**:
+### Alcance de Pruebas
 
-- `/app/api/products` [BROWSE]
-- `/app/api/products/[id]` [VIEW DETAILS]
-- `/app/api/users` [CREATE]
-- `/app/api/carts` [CREATE]
-- `/app/api/orders` [CREATE]
-- `/app/api/payments` [CREATE]
+| Tipo | Cantidad | Estado |
+|------|----------|--------|
+| **Unit Tests** | 50+ | ✅ Implementado |
+| **Integration Tests** | 20+ | ✅ Implementado |
+| **E2E Tests** | 8 colecciones | ✅ Implementado |
+| **SonarQube** | Full Analysis | ✅ Implementado |
+| **Performance Tests** | Locust | 📅 Próximo documento |
 
-### Ejemplo de Output Locust
+### Best Practices Implementadas
 
-```
-Type     Name                                  # reqs      # fails |    Avg     Min     Max    Med |   req/s
---------|-----------------------------------|-------|-------------|-------|-------|-------|-------|--------
-GET      /app/api/products [BROWSE]            1250         0(0%) |     45      12     156     38 |   12.50
-GET      /app/api/products/[id] [VIEW]         1000         0(0%) |     52      15     187     44 |   10.00
-POST     /app/api/users [CREATE]                375         0(0%) |     78      35     234     68 |    3.75
-POST     /app/api/products [CREATE]             625         0(0%) |     89      42     267     78 |    6.25
-POST     /app/api/favourites [ADD]              250         0(0%) |     56      28     178     48 |    2.50
-POST     /app/api/carts [CREATE]                125         0(0%) |     62      32     189     54 |    1.25
-POST     /app/api/orders [CREATE]               125         0(0%) |     95      48     298     82 |    1.25
-PUT      /app/api/orders/[id] [UPDATE]          125         0(0%) |     88      45     276     76 |    1.25
-POST     /app/api/payments [CREATE]             125         0(0%) |     71      38     223     62 |    1.25
-PUT      /app/api/payments/[id] [COMPLETE]      125         0(0%) |     76      40     234     66 |    1.25
---------|-----------------------------------|-------|-------------|-------|-------|-------|-------|--------
-         Aggregated                            4125         0(0%) |     62      12     298     52 |   41.25
+- ✅ Tests independientes y aislables
+- ✅ Uso de Testcontainers para tests realistas
+- ✅ Mocking apropiado de dependencias
+- ✅ Cobertura de código medida
+- ✅ Integración en CI/CD
+- ✅ Análisis de calidad con SonarQube
+- ✅ Flujos E2E completos
 
-Response time percentiles (approximated):
-Type     Name                                           50%    66%    75%    80%    90%    95%    98%    99%  99.9% 99.99%   100%
---------|----------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|
-GET      /app/api/products [BROWSE]                      38     44     52     58     76     98    132    145    156    156    156
-GET      /app/api/products/[id] [VIEW]                   44     52     62     68     88    112    152    168    187    187    187
-...
-```
+---
 
-## 📊 Análisis de Métricas
+## 🔗 Referencias
 
-### Objetivos de Rendimiento
+- [JUnit 5 Documentation](https://junit.org/junit5/docs/current/user-guide/)
+- [Testcontainers](https://www.testcontainers.org/)
+- [Postman API Testing](https://learning.postman.com/docs/writing-scripts/test-scripts/)
+- [SonarQube](https://docs.sonarqube.org/)
 
-| Métrica | Objetivo | Real |
-|---------|----------|------|
-| Tiempo de respuesta promedio | < 100ms | ~62ms ✅ |
-| P95 | < 200ms | ~180ms ✅ |
-| P99 | < 500ms | ~298ms ✅ |
-| Throughput | > 30 RPS | ~41 RPS ✅ |
-| Tasa de error | < 1% | 0% ✅ |
-| Disponibilidad | > 99% | 100% ✅ |
-
-### Resultados por Tipo de Operación
-
-**Lectura (GET)**:
-
-- Tiempo promedio: ~45ms
-- P95: ~150ms
-- Muy rápido debido a índices en BD
-
-**Escritura (POST/PUT)**:
-
-- Tiempo promedio: ~75ms
-- P95: ~220ms
-- Más lento por validaciones y persistencia
-
-**Operaciones Complejas** (Orders, Payments):
-
-- Tiempo promedio: ~90ms
-- P95: ~280ms
-- Requieren múltiples validaciones y escrituras
-
-## 🐛 Problemas Encontrados en Testing
-
-### 1. Tests Flaky en Integración
-
-**Problema**: Tests fallaban aleatoriamente
-
-**Causa**: Condiciones de carrera en tests paralelos
-
-**Solución**:
-
-```java
-@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
-```
-
-### 2. Timeout en Testcontainers
-
-**Problema**: Contenedores Docker no iniciaban a tiempo
-
-**Solución**:
-
-```java
-@Container
-static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:13")
-    .withStartupTimeout(Duration.ofMinutes(2));
-```
-
-### 3. JWT Expiration en E2E Tests
-
-**Problema**: Token JWT expiraba durante tests largos
-
-**Solución**: Implementar refresh de token automático en Postman
-
-```javascript
-// Pre-request script
-if (pm.environment.get("token_expired")) {
-    // Re-authenticate
-}
-```
-
-## ✅ Conclusión
-
-Las pruebas implementadas cubren:
-
-- ✅ 156 tests unitarios pasando
-- ✅ Tests de integración con Testcontainers
-- ✅ Colecciones E2E completas en Postman
-- ✅ Infraestructura de performance testing con Locust
-- ✅ Cobertura de código ~67%
-- ✅ 0% tasa de error en producción
+---
 
 **Siguiente paso**: [06-correcciones-mejoras.md](06-correcciones-mejoras.md)
+
+**Documento relacionado**: [09-performance-testing.md](09-performance-testing.md) - Testing de rendimiento con Locust
+
