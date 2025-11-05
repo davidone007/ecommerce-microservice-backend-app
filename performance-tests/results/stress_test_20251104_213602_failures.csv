@@ -1,0 +1,13 @@
+Method,Name,Error,Occurrences
+POST,/app/api/favourites [ADD],CatchResponseError('Status code: 0'),12
+GET,/app/api/products [BROWSE],CatchResponseError('Status code: 0'),55
+POST,/app/api/products [SETUP],"BadStatusCode('http://localhost:8080/app/api/products', code=400)",2
+GET,/app/api/products/[id] [VIEW DETAILS],CatchResponseError('Status code: 0'),38
+POST,/app/api/credentials [CREATE ADMIN CREDS],"BadStatusCode('http://localhost:8080/app/api/credentials', code=400)",2
+POST,/app/api/categories [CREATE],"BadStatusCode('http://localhost:8080/app/api/categories', code=400)",1
+POST,/app/api/products [CREATE],CatchResponseError('Status code: 0'),25
+POST,/app/api/carts [CREATE],CatchResponseError('Failed to create cart: 0'),50
+GET,/app/api/favourites [VIEW],CatchResponseError('Status code: 0'),18
+POST,/app/api/carts [CREATE],CatchResponseError('Failed to create cart: 400'),6715
+POST,/app/api/favourites [ADD],CatchResponseError('Status code: 400'),669
+POST,/app/api/users [CREATE],CatchResponseError('Status code: 0'),2
