@@ -92,165 +92,81 @@ Se configuró JaCoCo para medir la cobertura de código en todos los módulos:
 
 ### Microservicios Testeados
 
-Los siguientes 10 microservicios tienen pruebas unitarias completas:
 
-- ✅ **service-discovery** - Tests de Eureka server
-- ✅ **cloud-config** - Tests de config server
-- ✅ **api-gateway** - Tests de gateway
-- ✅ **proxy-client** - Tests de cliente proxy
-- ✅ **user-service** - Tests de gestión de usuarios
-- ✅ **product-service** - Tests de gestión de productos
-- ✅ **favourite-service** - Tests de favoritos
-- ✅ **order-service** - Tests de gestión de órdenes
-- ✅ **payment-service** - Tests de pagos
-- ✅ **shipping-service** - Tests de envíos
+Los siguientes microservicios tienen pruebas unitarias completas:
 
-### Tipos de Pruebas Unitarias
+#### **user-service**
+- ✅ **Pruebas Unitarias**: 5 tests en `UserServiceImplTest`
+- ✅ **Pruebas de Integración**: 0 tests
 
-#### Test de Repositorio
+#### **product-service**
+- ✅ **Pruebas Unitarias**: 5 tests en `ProductServiceImplTest`
+- ✅ **Pruebas de Integración**: 5 tests en `ProductServiceIntegrationTest`
 
-Pruebas de acceso a datos usando JPA y bases de datos en contenedores:
+#### **favourite-service**
+- ✅ **Pruebas Unitarias**: 5 tests en `FavouriteServiceImplTest`
+- ✅ **Pruebas de Integración**: 5 tests en `FavouriteUserProductIntegrationTest`
 
-```java
-@DataJpaTest
-@Testcontainers
-class UserRepositoryTest {
-    
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:13");
-    
-    @Autowired
-    private UserRepository userRepository;
-    
-    @Test
-    void shouldSaveAndFindUser() {
-        User user = User.builder()
-            .firstName("John")
-            .lastName("Doe")
-            .email("john@test.com")
-            .build();
-        
-        User saved = userRepository.save(user);
-        assertThat(saved.getUserId()).isNotNull();
-    }
-}
-```
+#### **order-service**
+- ✅ **Pruebas Unitarias**: 5 tests en `OrderServiceImplTest`
+- ✅ **Pruebas de Integración**: 5 tests en `OrderStatusCascadeIntegrationTest`
 
-#### Test de Servicio
+#### **payment-service**
+- ✅ **Pruebas Unitarias**: 5 tests en `PaymentServiceImplTest`
+- ✅ **Pruebas de Integración**: 5 tests en `PaymentOrderIntegrationTest`
 
-Pruebas de lógica de negocio con mocks de dependencias:
+#### **shipping-service**
+- ✅ **Pruebas Unitarias**: 5 tests en `OrderItemServiceImplTest`
+- ✅ **Pruebas de Integración**: 5 tests en `ShippingOrderProductIntegrationTest`
 
-```java
-@ExtendWith(MockitoExtension.class)
-class ProductServiceTest {
-    
-    @Mock
-    private ProductRepository productRepository;
-    
-    @InjectMocks
-    private ProductServiceImpl productService;
-    
-    @Test
-    void shouldFindProductById() {
-        Product product = Product.builder()
-            .productId(1)
-            .productTitle("Test Product")
-            .build();
-        
-        when(productRepository.findById(1))
-            .thenReturn(Optional.of(product));
-        
-        ProductDto result = productService.findById(1);
-        assertThat(result.getProductTitle()).isEqualTo("Test Product");
-    }
-}
-```
+### Resumen Total
 
-#### Test de Controlador
+| Microservicio | Pruebas Unitarias | Pruebas de Integración | Total |
+|---------------|-------------------|------------------------|-------|
+| **user-service** | 5 | 0 | 5 |
+| **product-service** | 5 | 5 | 10 |
+| **favourite-service** | 5 | 5 | 10 |
+| **order-service** | 5 | 5 | 10 |
+| **payment-service** | 5 | 5 | 10 |
+| **shipping-service** | 5 | 5 | 10 |
+| **TOTAL** | **30** | **25** | **55** |
 
-Pruebas de endpoints HTTP usando MockMvc:
+### Estructura de Pruebas
 
-```java
-@WebMvcTest(OrderController.class)
-class OrderControllerTest {
-    
-    @Autowired
-    private MockMvc mockMvc;
-    
-    @MockBean
-    private OrderService orderService;
-    
-    @Test
-    void shouldGetOrders() throws Exception {
-        mockMvc.perform(get("/api/orders")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
-}
-```
+#### Pruebas Unitarias (Service Layer)
+Ubicación: `{microservice}/src/test/java/com/selimhorri/app/service/impl/*ServiceImplTest.java`
 
----
+Estas pruebas validan la lógica de negocio aislada usando mocks de repositorios y dependencias:
+- Test de operaciones CRUD básicas
+- Validación de excepciones de negocio
+- Verificación de transformaciones DTO ↔ Entity
+- Uso de Mockito para aislar dependencias
 
-## 🔗 Pruebas de Integración
+#### Pruebas de Integración
+Ubicación: `{microservice}/src/test/java/com/selimhorri/app/integration/*IntegrationTest.java`
 
-### Descripción
-
-Las pruebas de integración validan que múltiples componentes funcionan correctamente juntos, incluyendo:
-
-- Integración con bases de datos reales
-- Integración entre servicios
+Estas pruebas validan la integración completa con:
+- Base de datos real (usando `@Transactional`)
+- Repositorios JPA sin mocks
 - Flujos completos de negocio
-
-### Testcontainers
-
-Las pruebas de integración utilizan **Testcontainers** para levantar contenedores Docker con bases de datos reales durante los tests:
-
-```java
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
-class ProductServiceIntegrationTest {
-    
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:13")
-        .withDatabaseName("test")
-        .withUsername("test")
-        .withPassword("test");
-    
-    @DynamicPropertySource
-    static void setProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
-    
-    @Autowired
-    private TestRestTemplate restTemplate;
-    
-    @Test
-    void shouldCreateAndRetrieveProduct() {
-        ProductDto newProduct = ProductDto.builder()
-            .productTitle("Integration Test Product")
-            .sku("SKU-INT-001")
-            .priceUnit(199.99)
-            .build();
-        
-        ResponseEntity<ProductDto> createResponse = restTemplate
-            .postForEntity("/api/products", newProduct, ProductDto.class);
-        
-        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(createResponse.getBody()).isNotNull();
-    }
-}
-```
-
-### Ventajas de Testcontainers
-
-- ✅ Bases de datos reales, no mockeadas
-- ✅ Tests aislados y paralelos
-- ✅ Reproducibilidad total
-- ✅ No requiere infraestructura preexistente
+- Validación de integridad referencial
 
 ---
+
+## 📊 Resumen de Testing
+
+### Alcance de Pruebas
+
+| Tipo | Cantidad | Estado |
+|------|----------|--------|
+| **Unit Tests** | 30 | ✅ Implementado |
+| **Integration Tests** | 25 | ✅ Implementado |
+| **E2E Tests** | 8 colecciones | ✅ Implementado |
+| **SonarQube** | Full Analysis | ✅ Implementado |
+
+
+---
+
 
 ## 🌐 Pruebas End-to-End (E2E)
 
@@ -258,19 +174,19 @@ class ProductServiceIntegrationTest {
 
 Implementé colecciones completas de Postman para testing E2E que validan flujos completos del negocio:
 
-#### Estructura de Colecciones
+#### Imagen del run
 
-```
-postman-collections/
-├── 01-Authentication.postman_collection.json
-├── 02-Users.postman_collection.json
-├── 03-Products.postman_collection.json
-├── 04-Categories.postman_collection.json
-├── 05-Favourites.postman_collection.json
-├── 06-Carts-Orders.postman_collection.json
-├── 07-Payments.postman_collection.json
-└── 08-Shipping.postman_collection.json
-```
+![Postman](../img/postmane2e-run.png)
+
+#### Imagen de las colecciones 
+
+![Postman](../img/postman.png)
+
+![Postman](../img/coleccion1.png)
+
+![Postman](../img/coleccion2.png)
+
+
 
 #### Flujo de Testing E2E
 
@@ -384,12 +300,13 @@ La imagen capturada del dashboard muestra el análisis SonarQube en el pipeline.
 - ✅ Coverage ~15% en el código nuevo
 - ✅ 1d 3h de deuda técnica total
 
-### Acciones Realizadas
+#### Imagen de sonnar 
 
-1. **Bug Fixes** - Se corrigieron los 17 bugs detectados
-2. **Security** - Se eliminaron vulnerabilidades encontradas
-3. **Code Quality** - Se aplicaron mejoras basadas en recommendations
-4. **Code Smells** - Se refactorizó código problemático
+![Sonnar](../img/sonnar.png)
+
+
+
+
 
 ---
 
