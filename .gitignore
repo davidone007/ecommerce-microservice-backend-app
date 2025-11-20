@@ -48,6 +48,47 @@ secrets/
 ## Local actions runner
 actions-runner/
 
+## Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+**/*.tfstate
+**/*.tfstate.backup
+**/*.tfvars
+**/*.tfvars.json
+**/override.tf
+**/override.tf.json
+**/*_override.tf
+**/*_override.tf.json
+**/.terraformrc
+**/terraform.rc
+**/crash.log
+**/crash.*.log
+**/override.tf.json
+*.tfplan
+
+## Docker
+.dockerignore
+docker-compose.override.yml
+
+## Performance & Load tests
+performance-tests/results/
+performance-tests/*.log
+performance-tests/**/*.log
 
 
 
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+
+# OS files
+.DS_Store
