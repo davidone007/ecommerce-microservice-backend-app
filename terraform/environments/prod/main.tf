@@ -6,14 +6,13 @@ module "aks" {
   dns_prefix          = var.dns_prefix
   node_count          = var.node_count
   vm_size             = var.vm_size
-  tags                = var.tags
 }
 
 module "helm_release" {
   source       = "../../modules/helm-release"
   release_name = "ecommerce-microservices"
   chart_path   = "../../../helm/ecommerce-microservices"
-  namespace    = "stage"
+  namespace    = "prod"
   values_file  = "values.yaml"
 
   depends_on = [module.aks]

@@ -13,5 +13,5 @@ spec:
     - protocol: TCP
       port: {{ $val.port }}
       targetPort: {{ $val.port }}
-  type: ClusterIP
+  type: {{ default "ClusterIP" $val.type }}
 {{- end }}

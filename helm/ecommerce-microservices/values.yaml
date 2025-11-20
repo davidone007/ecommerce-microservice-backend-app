@@ -31,6 +31,7 @@ services:
   api-gateway:
     name: api-gateway-container
     image: api-gateway
+    type: LoadBalancer
     port: 8080
     env:
       - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE

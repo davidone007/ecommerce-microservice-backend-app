@@ -1,7 +1,7 @@
 variable "resource_group_name" {
   description = "Name of the resource group"
   type        = string
-  default     = "ecommerce-stage-rg"
+  default     = "ecommerce-rg-stage"
 }
 
 variable "location" {
@@ -13,7 +13,7 @@ variable "location" {
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
-  default     = "ecommerce-stage-aks"
+  default     = "ecommerce-aks-stage"
 }
 
 variable "dns_prefix" {
@@ -25,13 +25,13 @@ variable "dns_prefix" {
 variable "node_count" {
   description = "Number of nodes in the default node pool"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "vm_size" {
   description = "VM size for the nodes"
   type        = string
-  default     = "Standard_DS2_v2"
+  default     = "Standard_E2_v3"
 }
 
 variable "tags" {
