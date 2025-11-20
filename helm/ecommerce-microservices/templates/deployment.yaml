@@ -27,6 +27,7 @@ spec:
           {{- else }}
           image: "{{ $.Values.global.imageRegistry }}/{{ $val.image }}:{{ default $.Values.global.imageTag $val.tag }}"
           {{- end }}
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: {{ $val.port }}
               protocol: TCP

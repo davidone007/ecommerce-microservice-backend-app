@@ -96,12 +96,17 @@ full_setup() {
     
     echo ""
     echo "Se usará el tag: $TAG"
+    # Preguntar namespace
+    echo "Ingresa el namespace donde desplegaremos (default: dev):"
+    read -p "Namespace: " NAMESPACE
+    NAMESPACE="${NAMESPACE:-dev}"
+    export NAMESPACE
     echo ""
     
     # Paso 1: Construir imágenes
     print_step "Paso 1/4: Construir imágenes Docker"
     cd "$PROJECT_DIR"
-    bash scripts/build-images.sh
+    bash scripts/build-images.sh "$TAG"
     print_success "Imágenes construidas"
     
     echo ""
@@ -117,7 +122,7 @@ full_setup() {
     
     # Paso 3: Cargar imágenes
     print_step "Paso 3/4: Cargar imágenes en Minikube"
-    bash scripts/load-images-minikube.sh
+    bash scripts/load-images-minikube.sh "$TAG"
     print_success "Imágenes cargadas"
     
     echo ""
@@ -125,7 +130,7 @@ full_setup() {
     
     # Paso 4: Desplegar servicios
     print_step "Paso 4/4: Desplegar servicios"
-    bash scripts/deploy-k8s.sh "$TAG"
+    bash scripts/deploy-k8s.sh "$TAG" "$NAMESPACE"
     print_success "Servicios desplegados"
     
     print_header "✨ SETUP COMPLETADO"
@@ -141,13 +146,19 @@ start_minikube_only() {
 build_images_only() {
     print_header "🐳 CONSTRUYENDO IMÁGENES"
     cd "$PROJECT_DIR"
-    bash scripts/build-images.sh
+    echo "Ingresa el tag de las imágenes a construir (default: latest):"
+    read -p "Tag: " TAG
+    TAG="${TAG:-latest}"
+    bash scripts/build-images.sh "$TAG"
 }
 
 load_images_only() {
     print_header "🐳 CARGANDO IMÁGENES"
     cd "$PROJECT_DIR"
-    bash scripts/load-images-minikube.sh
+    echo "Ingresa el tag de las imágenes a cargar en Minikube (default: latest):"
+    read -p "Tag: " TAG
+    TAG="${TAG:-latest}"
+    bash scripts/load-images-minikube.sh "$TAG"
 }
 
 deploy_only() {
@@ -157,8 +168,12 @@ deploy_only() {
     echo "Ingresa el tag de las imágenes a desplegar (default: latest):"
     read -p "Tag: " TAG
     TAG="${TAG:-latest}"
-    
-    bash scripts/deploy-k8s.sh "$TAG"
+
+    echo "Ingresa el namespace donde desplegar (default: dev):"
+    read -p "Namespace: " NAMESPACE
+    NAMESPACE="${NAMESPACE:-dev}"
+
+    bash scripts/deploy-k8s.sh "$TAG" "$NAMESPACE"
 }
 
 show_status() {
