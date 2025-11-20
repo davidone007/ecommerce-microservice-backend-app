@@ -317,6 +317,97 @@ curl -k https://localhost:8080/actuator/health -s | jq
 
 Ver [Release Notes completas](docs/08-release-notes.md)
 
+## 📌 Metodología Ágil, Gestión del Proyecto y Estrategia de Branching
+
+El desarrollo de este sistema se gestionó utilizando una **metodología ágil basada en Scrum adaptado**, apoyada con un **tablero Kanban dentro de GitHub Projects**. Esta combinación permite mantener una planificación clara mediante Historias de Usuario (HU) y al mismo tiempo un flujo continuo y visual del progreso.
+
+---
+
+## 🟩 Metodología Ágil Implementada
+
+### ✔ Historias de Usuario (HU)
+
+Se definieron **11 Historias de Usuario**, abarcando:
+
+* Infraestructura con Terraform
+* Modularización IaC
+* Multiambientes (dev, stage, prod)
+* Backend remoto de Terraform
+* Despliegue con Helm
+* Configuración de probes
+* Pipelines CI/CD
+* Seguridad (SonarQube, Trivy)
+* Pruebas completas (unitarias, integración, E2E, rendimiento)
+* Observabilidad (Prometheus, Grafana, ELK, Jaeger)
+* Preparación de la presentación final
+
+Cada HU incluye descripción y criterios de aceptación claros.
+
+---
+
+## 🟨 Gestión con GitHub Projects
+
+Se configuró un tablero tipo **Kanban**, con las columnas:
+
+* **Backlog**
+* **To Do**
+* **In Progress**
+* **In Review**
+* **Done**
+
+Todas las HU fueron creadas como **GitHub Issues** y vinculadas al tablero.
+El avance del proyecto se controla moviendo cada HU a través de estas columnas según su estado.
+
+### Beneficios:
+
+* Visualización completa del progreso
+* Seguimiento granular por HU
+* Trazabilidad exacta para CI/CD y desarrollo
+
+---
+
+## 🟦 Estrategia de Branching (GitHub Flow Adaptado)
+
+Se utilizó **GitHub Flow** pero adaptado a ambientes múltiples (dev, stage, prod).
+
+### Ramas principales:
+
+* **main → Producción**
+* **stage → Preproducción**
+* **dev → Desarrollo**
+* **feature/HU-xx → Trabajo específico**
+
+### Flujo de trabajo:
+
+1. Crear rama `feature/HUxx-nombre` desde `dev`.
+2. Desarrollar la HU.
+3. Hacer Pull Request hacia `dev`.
+4. Cuando se valida: merge `dev → stage`.
+5. Con aprobación manual: `stage → main`.
+
+Este flujo permite **promoción controlada**, despliegues seguros y trazabilidad completa.
+
+---
+
+## 🧩 Fases del Proyecto
+
+### **Fase 1: Infraestructura y Despliegue Base**
+
+* HU1 – Terraform IaC
+* HU2 – Modularización
+* HU3 – Ambientes
+* HU4 – Backend remoto
+* HU5 – Despliegue con Helm
+
+### **Fase 2: Calidad, Seguridad y Observabilidad**
+
+* HU6 – Probes
+* HU7 – CI/CD
+* HU8 – Seguridad y análisis de calidad
+* HU9 – Pruebas completas
+* HU10 – Observabilidad
+* HU11 – Presentación final
+
 ## 📸 Capturas de Pantalla
 
 ### Docker Compose - Servicios Levantados
