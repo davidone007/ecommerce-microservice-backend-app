@@ -15,13 +15,14 @@ NC='\033[0m'
 REGISTRY="ghcr.io/davidone007"
 SERVICE_NAME="${1}"
 BRANCH_TAG="${2:-latest}"
+NAMESPACE="${3:-dev}"
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Validar entrada
 if [ -z "$SERVICE_NAME" ]; then
     echo -e "${BLUE}🔨 Script de Compilación, Build y Carga de Servicio${NC}"
     echo ""
-    echo "Uso: $0 <service-name> [tag]"
+    echo "Uso: $0 <service-name> [tag] [namespace]"
     echo ""
     echo "Servicios disponibles:"
     echo "   - service-discovery"
@@ -47,6 +48,7 @@ echo "📍 Base directory: $BASE_DIR"
 echo "🎯 Servicio: $SERVICE_NAME"
 echo "📦 Registry: $REGISTRY"
 echo "🏷️  Tag: $BRANCH_TAG"
+echo "🌐 Namespace: $NAMESPACE"
 echo ""
 
 # Validar que el servicio existe
@@ -162,27 +164,27 @@ echo ""
 
 DEPLOYMENT_NAME="${SERVICE_NAME}-container"
 
-if kubectl get deployment "$DEPLOYMENT_NAME" &> /dev/null; then
+if kubectl get deployment "$DEPLOYMENT_NAME" -n "$NAMESPACE" &> /dev/null; then
     echo "🔄 Restarting deployment: $DEPLOYMENT_NAME"
     echo ""
     
     # Forzar re-despliegue
-    kubectl rollout restart deployment/"$DEPLOYMENT_NAME"
+    kubectl rollout restart deployment/"$DEPLOYMENT_NAME" -n "$NAMESPACE"
     
     echo ""
     echo "⏳ Esperando a que el pod esté listo (máximo 2 minutos)..."
-    if kubectl rollout status deployment/"$DEPLOYMENT_NAME" --timeout=120s; then
+    if kubectl rollout status deployment/"$DEPLOYMENT_NAME" -n "$NAMESPACE" --timeout=120s; then
         echo -e "${GREEN}✅ Deployment actualizado exitosamente${NC}"
     else
         echo -e "${YELLOW}⚠️  Timeout esperando el deployment${NC}"
         echo "Revisa el estado con:"
-        echo "   kubectl get pods | grep $SERVICE_NAME"
-        echo "   kubectl describe pod <pod-name>"
+        echo "   kubectl get pods -n $NAMESPACE | grep $SERVICE_NAME"
+        echo "   kubectl describe pod <pod-name> -n $NAMESPACE"
     fi
 else
-    echo -e "${YELLOW}⚠️  Deployment no encontrado: $DEPLOYMENT_NAME${NC}"
+    echo -e "${YELLOW}⚠️  Deployment no encontrado: $DEPLOYMENT_NAME en namespace $NAMESPACE${NC}"
     echo "Asegúrate de que está desplegado en Kubernetes"
-    echo "Verifica con: kubectl get deployments"
+    echo "Verifica con: kubectl get deployments -n $NAMESPACE"
 fi
 
 echo ""
@@ -202,19 +204,19 @@ docker images "$IMAGE_NAME" --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}
 echo ""
 
 echo "Pod en Kubernetes:"
-kubectl get pods -l "io.kompose.service=${SERVICE_NAME}-container" -o wide
+kubectl get pods -n "$NAMESPACE" -l "io.kompose.service=${SERVICE_NAME}-container" -o wide
 echo ""
 
 echo -e "${BLUE}📚 Comandos útiles:${NC}"
 echo ""
 echo "Ver logs del servicio:"
-echo "  kubectl logs -f deployment/${SERVICE_NAME}-container"
+echo "  kubectl logs -f deployment/${SERVICE_NAME}-container -n $NAMESPACE"
 echo ""
 echo "Describir el pod:"
-echo "  kubectl describe pod <pod-name>"
+echo "  kubectl describe pod <pod-name> -n $NAMESPACE"
 echo ""
 echo "Port forwarding:"
-echo "  kubectl port-forward svc/${SERVICE_NAME}-container <port>"
+echo "  kubectl port-forward svc/${SERVICE_NAME}-container <port> -n $NAMESPACE"
 echo ""
 
 echo -e "${GREEN}✨ ¡Listo!${NC}"

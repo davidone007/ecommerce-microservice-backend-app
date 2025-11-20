@@ -11,7 +11,7 @@ NC='\033[0m' # No Color
 
 # Configuración
 REGISTRY="ghcr.io/davidone007"
-BRANCH_TAG="${BRANCH_TAG:-latest}"
+BRANCH_TAG="${1:-latest}"
 SERVICES=(
     "service-discovery"
     "cloud-config"

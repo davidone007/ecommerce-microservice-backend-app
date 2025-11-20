@@ -31,7 +31,7 @@ spec:
                 echo "waiting for eureka..."
                 sleep 2
               done
-              until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do
+              until curl -sS http://Implementar backend remoto para el estado de Terraformoud-config-container:9296/ >/dev/null 2>&1; do
                 echo "waiting for cloud-config..."
                 sleep 2
               done

@@ -2,6 +2,9 @@
 
 # Script para hacer port-forward de todos los servicios en Kubernetes usando nohup
 
+# Leer namespace del primer argumento, por defecto "dev"
+NAMESPACE="${1:-dev}"
+
 # Array de servicios con sus puertos (formato: "servicio:puerto-local:puerto-remoto")
 SERVICES=(
     "api-gateway-container:8080:8080"
@@ -33,8 +36,8 @@ for service_config in "${SERVICES[@]}"; do
     ports="${local_port}:${remote_port}"
     log_file="port-forward-logs/${service}-portforward.log"
     
-    echo "🔄 Port-forward para $service en puertos $ports"
-    nohup kubectl port-forward "svc/$service" "$ports" > "$log_file" 2>&1 &
+    echo "🔄 Port-forward para $service en puertos $ports (namespace: $NAMESPACE)"
+    nohup kubectl port-forward "svc/$service" "$ports" -n "$NAMESPACE" > "$log_file" 2>&1 &
     pid=$!
     echo "$service:$pid" >> port-forward-pids.txt
     sleep 1  # Pequeña pausa entre cada comando

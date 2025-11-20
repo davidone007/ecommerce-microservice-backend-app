@@ -13,11 +13,13 @@ NC='\033[0m'
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 K8S_DIR="$BASE_DIR/k8s"
 BRANCH_TAG="${1:-latest}"
+NAMESPACE="${2:-dev}"
 
 echo -e "${BLUE}🚀 Script de Despliegue en Kubernetes${NC}"
 echo ""
 echo "📍 Base directory: $BASE_DIR"
 echo "🏷️  Branch tag: $BRANCH_TAG"
+echo "🌐 Namespace: $NAMESPACE"
 echo ""
 
 # Validar que exista el directorio k8s
@@ -135,11 +137,11 @@ fi
 
 echo ""
 
-# Aplicar los archivos YAML en el namespace default
-echo -e "${BLUE}🚀 Desplegando servicios en namespace default...${NC}"
+# Aplicar los archivos YAML en el namespace especificado
+echo -e "${BLUE}🚀 Desplegando servicios en namespace $NAMESPACE...${NC}"
 echo ""
 
-if kubectl apply -f "$TEMP_DIR"; then
+if kubectl apply -f "$TEMP_DIR" -n "$NAMESPACE"; then
     echo -e "${GREEN}✅ Archivos desplegados exitosamente${NC}"
 else
     echo -e "${RED}❌ Error al desplegar archivos${NC}"
@@ -152,7 +154,7 @@ echo ""
 # Mostrar estado de los pods
 echo -e "${BLUE}📊 Estado de los pods:${NC}"
 echo ""
-kubectl get pods -o wide
+kubectl get pods -o wide -n "$NAMESPACE"
 
 echo ""
 echo -e "${BLUE}═══════════════════════════════════════════════${NC}"
