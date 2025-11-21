@@ -8,7 +8,7 @@ resource "helm_release" "sonarqube" {
 
   set {
     name  = "service.type"
-    value = "LoadBalancer"
+    value = var.service_type
   }
 
   set {

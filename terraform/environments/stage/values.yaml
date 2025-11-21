@@ -1,2 +1,6 @@
 global:
   imageTag: stage
+
+services:
+  api-gateway:
+    type: ClusterIP
