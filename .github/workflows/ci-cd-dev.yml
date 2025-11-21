@@ -47,24 +47,16 @@ jobs:
 
       - name: SonarQube analysis
         env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          # If secrets are not configured, skip Sonar analysis so CI won't fail.
-          if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_TOKEN" ]; then
-            echo "Skipping SonarQube analysis: SONAR_HOST_URL or SONAR_TOKEN not set as secrets"
+          # Skip SonarQube analysis in dev environment
+          # SonarQube analysis only runs in stage and prod where infrastructure is deployed
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "⏭️  Skipping SonarQube analysis: SONAR_TOKEN not set as secret"
             exit 0
           fi
-
-          chmod +x ./mvnw
-          # Run Sonar analysis using Maven Sonar plugin. For multi-module projects the plugin
-          # will analyze modules from the root pom. The aggregated JaCoCo XML is passed to Sonar.
-          ./mvnw -B -DskipTests=true sonar:sonar \
-          -Dsonar.host.url="$SONAR_HOST_URL" \
-          -Dsonar.login="$SONAR_TOKEN" \
-          -Dsonar.projectKey="ecommerce" \
-          -Dsonar.projectName="ecommerce" \
-          -Dsonar.coverage.jacoco.xmlReportPaths="**/target/site/jacoco/jacoco.xml,**/target/site/jacoco-aggregate/jacoco.xml"
+          echo "⏭️  SonarQube analysis is disabled for dev environment"
+          echo "    (Only runs in stage and prod pipelines)"
 
       - name: Upload test reports
         if: always()
