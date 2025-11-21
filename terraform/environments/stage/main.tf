@@ -21,6 +21,7 @@ module "helm_release" {
 
 module "sonarqube" {
   source = "../../modules/sonarqube"
+  service_type = "ClusterIP"
 
   depends_on = [module.aks]
 }
