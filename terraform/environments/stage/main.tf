@@ -18,3 +18,9 @@ module "helm_release" {
 
   depends_on = [module.aks]
 }
+
+module "sonarqube" {
+  source = "../../modules/sonarqube"
+
+  depends_on = [module.aks]
+}

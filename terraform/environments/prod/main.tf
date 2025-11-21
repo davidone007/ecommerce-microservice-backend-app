@@ -17,3 +17,4 @@ module "helm_release" {
 
   depends_on = [module.aks]
 }
+
