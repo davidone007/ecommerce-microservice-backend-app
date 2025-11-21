@@ -7,9 +7,9 @@ permissions:
 
 on:
   push:
-    branches: [stage]
+    branches: [stage, "ops/feat/*"]
   pull_request:
-    branches: [stage]
+    branches: [stage, "ops/feat/*"]
 
 jobs:
   maven-build:
