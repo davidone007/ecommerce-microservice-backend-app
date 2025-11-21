@@ -13,7 +13,7 @@ on:
 jobs:
   maven-build:
     name: Build (Maven)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,52 +44,6 @@ jobs:
           # so that modules without matching tests don't fail the aggregated build.
           ./mvnw -B -T 1C verify -Dtest="*ServiceImplTest" -DfailIfNoTests=false
 
-      - name: Ensure SonarQube available (start local if missing)
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          # If secrets not configured, skip starting local Sonar and the check will be performed later by the Sonar step
-          if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_TOKEN" ]; then
-            echo "SONAR_HOST_URL or SONAR_TOKEN not set; skipping Sonar availability check/startup"
-            exit 0
-          fi
-
-          echo "Checking SonarQube at $SONAR_HOST_URL"
-          if curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1; then
-            echo "SonarQube is reachable"
-            exit 0
-          fi
-
-          echo "SonarQube not reachable. Attempting to start local Sonar using docker-compose.sonar.yml"
-          # Try docker compose (modern) then docker-compose (legacy)
-          if command -v docker >/dev/null 2>&1; then
-            if command -v docker-compose >/dev/null 2>&1; then
-              DOCKER_COMPOSE_CMD="docker-compose"
-            else
-              DOCKER_COMPOSE_CMD="docker compose"
-            fi
-            echo "Using: $DOCKER_COMPOSE_CMD"
-            # Start Sonar stack from repo root
-            $DOCKER_COMPOSE_CMD -f docker-compose.sonar.yml up -d
-          else
-            echo "Docker not available on runner; cannot start local Sonar. Proceeding and letting Sonar analysis step handle unreachable host."
-            exit 0
-          fi
-
-          # wait for Sonar to become healthy (timeout 180s)
-          SECONDS_WAITED=0
-          until curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1 || [ $SECONDS_WAITED -ge 180 ]; do
-            sleep 5
-            SECONDS_WAITED=$((SECONDS_WAITED+5))
-            echo "Waiting for SonarQube... ($SECONDS_WAITED s)"
-          done
-
-          if curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1; then
-            echo "SonarQube is up after startup"
-          else
-            echo "Timed out waiting for SonarQube to start. Proceeding and letting Sonar analysis step run (it may fail)."
-          fi
 
       - name: SonarQube analysis
         env:

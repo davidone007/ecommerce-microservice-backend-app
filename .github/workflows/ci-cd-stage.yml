@@ -14,7 +14,7 @@ on:
 jobs:
   maven-build:
     name: Build (Maven)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,49 +34,6 @@ jobs:
           ./mvnw -B -T 1C verify \
             -Dtest="*ServiceImplTest" \
             -DfailIfNoTests=false
-
-      - name: Ensure SonarQube available (start local if missing)
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_TOKEN" ]; then
-            echo "SONAR_HOST_URL or SONAR_TOKEN not set; skipping Sonar availability check/startup"
-            exit 0
-          fi
-
-          echo "Checking SonarQube at $SONAR_HOST_URL"
-          if curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1; then
-            echo "SonarQube is reachable"
-            exit 0
-          fi
-
-          echo "SonarQube not reachable. Attempting to start local Sonar using docker-compose.sonar.yml"
-          if command -v docker >/dev/null 2>&1; then
-            if command -v docker-compose >/dev/null 2>&1; then
-              DOCKER_COMPOSE_CMD="docker-compose"
-            else
-              DOCKER_COMPOSE_CMD="docker compose"
-            fi
-            echo "Using: $DOCKER_COMPOSE_CMD"
-            $DOCKER_COMPOSE_CMD -f docker-compose.sonar.yml up -d
-          else
-            echo "Docker not available on runner; cannot start local Sonar. Proceeding and letting Sonar analysis step handle unreachable host."
-            exit 0
-          fi
-
-          SECONDS_WAITED=0
-          until curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1 || [ $SECONDS_WAITED -ge 180 ]; do
-            sleep 5
-            SECONDS_WAITED=$((SECONDS_WAITED+5))
-            echo "Waiting for SonarQube... ($SECONDS_WAITED s)"
-          done
-
-          if curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1; then
-            echo "SonarQube is up after startup"
-          else
-            echo "Timed out waiting for SonarQube to start. Proceeding and letting Sonar analysis step run (it may fail)."
-          fi
 
       - name: SonarQube analysis
         env:
@@ -199,76 +156,48 @@ jobs:
 
   kubernetes-deploy:
     name: Deploy to Kubernetes
-    runs-on: self-hosted
-    needs: docker-build
+    runs-on: ubuntu-latest
+    needs: [docker-build, infrastructure-deploy]
     if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure kubectl
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ecommerce-rg-stage
+          cluster-name: ecommerce-aks-stage
+
+      - name: Restart Deployments to pick up new image
         run: |
-          # Ensure kubectl is available
-          if ! command -v kubectl &> /dev/null; then
-            echo "kubectl not found. Installing..."
-            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-            chmod +x kubectl
-            sudo mv kubectl /usr/local/bin/
-          fi
-
-          # Check if kubeconfig is configured
-          if [ ! -f ~/.kube/config ] && [ -z "$KUBECONFIG" ]; then
-            echo "⚠️  WARNING: kubeconfig not found and KUBECONFIG not set."
-            echo "Please ensure kubectl is configured for your Kubernetes cluster."
-            echo "For local testing, ensure KUBECONFIG points to your cluster config file."
-            exit 1
-          fi
-
-      - name: Deploy using deploy-k8s.sh script
-        run: |
-          echo "🚀 Deploying services to Kubernetes using deploy-k8s.sh..."
-
-          # Use stage tag for deployment
-          BRANCH_TAG="stage"
-
-          # Make the deploy script executable
-          chmod +x ./scripts/deploy-k8s.sh
-
-          # Run the deploy script with the stage tag
-          # The script will:
-          # - Replace ${BRANCH_TAG} in YAML files with the provided tag
-          # - Add imagePullPolicy: IfNotPresent
-          # - Apply all manifests
-          # - Wait for rollouts
-          ./scripts/deploy-k8s.sh "$BRANCH_TAG"
+          echo "🚀 Restarting deployments in stage namespace to pull new images..."
+          kubectl rollout restart deployment -n stage
+          
+          echo "Waiting for rollouts to complete..."
+          kubectl rollout status deployment/api-gateway-container -n stage --timeout=5m
+          kubectl rollout status deployment/product-service-container -n stage --timeout=5m
+          # Add other services if needed, or just wait a bit
+          
+          echo "✅ Deployment updated"
 
       - name: Verify deployment
         run: |
           echo "📋 Kubernetes deployment status:"
-          kubectl get deployments
+          kubectl get deployments -n stage
           echo ""
-          kubectl get services
+          kubectl get services -n stage
           echo ""
-          kubectl get pods
-
-          # Wait for all deployments to be ready
-          echo ""
-          echo "Waiting for all deployments to be ready..."
-          SERVICES=("api-gateway" "cloud-config" "favourite-service" "order-service" "payment-service" "product-service" "proxy-client" "service-discovery" "shipping-service" "user-service")
-
-          for service in "${SERVICES[@]}"; do
-            deployment="${service}-container"
-            if kubectl get deployment "$deployment" 2>/dev/null; then
-              echo "Waiting for $deployment to be ready..."
-              kubectl rollout status deployment/"$deployment" --timeout=5m || true
-            fi
-          done
-
-          echo "✅ Deployment verification complete"
+          kubectl get pods -n stage
 
   integration-tests:
     name: Run Integration Tests
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: kubernetes-deploy
     if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
     steps:
@@ -280,6 +209,25 @@ jobs:
         with:
           distribution: temurin
           java-version: "11"
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ecommerce-rg-stage
+          cluster-name: ecommerce-aks-stage
+
+      - name: Port Forward Services
+        run: |
+          chmod +x ./scripts/port-forward-all-services-nohup.sh
+          ./scripts/port-forward-all-services-nohup.sh stage
+          
+          # Wait a bit for port-forwards to establish
+          sleep 10
 
       - name: Wait for API Gateway to be ready
         run: |
@@ -319,7 +267,7 @@ jobs:
 
           echo "⚠️  Service health check timed out after $TIMEOUT seconds"
           echo "Checking pod status..."
-          kubectl get pods
+          kubectl get pods -n stage
           exit 1
 
       - name: Run Integration Tests against deployed services
@@ -332,6 +280,16 @@ jobs:
           ./mvnw -B -T 1C verify \
             -Dtest="*IntegrationTest" \
             -DfailIfNoTests=false
+
+      - name: Stop Port Forwarding
+        if: always()
+        run: |
+          if [ -f ./scripts/stop-port-forward-all-services-nohup.sh ]; then
+            chmod +x ./scripts/stop-port-forward-all-services-nohup.sh
+            ./scripts/stop-port-forward-all-services-nohup.sh
+          else
+            pkill kubectl || true
+          fi
 
       - name: Upload integration test reports
         if: always()
@@ -363,7 +321,7 @@ jobs:
 
   e2e-tests:
     name: Run E2E Tests (Postman)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: integration-tests
     if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
     steps:
@@ -379,6 +337,25 @@ jobs:
         run: |
           npm install -g newman
           npm install -g newman-reporter-htmlextra
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ecommerce-rg-stage
+          cluster-name: ecommerce-aks-stage
+
+      - name: Port Forward Services
+        run: |
+          chmod +x ./scripts/port-forward-all-services-nohup.sh
+          ./scripts/port-forward-all-services-nohup.sh stage
+          
+          # Wait a bit for port-forwards to establish
+          sleep 10
 
       - name: Wait for services
         run: |
@@ -470,6 +447,16 @@ jobs:
           echo "✅ Newman execution completed"
           echo "Generated reports:"
           ls -la test-reports/ 2>/dev/null || echo "No reports generated"
+
+      - name: Stop Port Forwarding
+        if: always()
+        run: |
+          if [ -f ./scripts/stop-port-forward-all-services-nohup.sh ]; then
+            chmod +x ./scripts/stop-port-forward-all-services-nohup.sh
+            ./scripts/stop-port-forward-all-services-nohup.sh
+          else
+            pkill kubectl || true
+          fi
 
       - name: Upload E2E test report
         if: always()
@@ -601,3 +588,30 @@ jobs:
           name: stage-release-notes
           path: CHANGELOG_STAGE_TEMP.txt
           retention-days: 30
+
+  infrastructure-deploy:
+    name: Deploy Infrastructure (Terraform)
+    runs-on: ubuntu-latest
+    needs: maven-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.7"
+
+      - name: Terraform Init
+        working-directory: ./terraform/environments/stage
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: ./terraform/environments/stage
+        run: terraform apply -auto-approve
