@@ -65,7 +65,7 @@ jobs:
           fi
 
           chmod +x ./mvnw
-          ./mvnw -B -DskipTests=true sonar:sonar \
+          ./mvnw -B -DskipTests=true org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar \
           -Dsonar.host.url="$SONAR_HOST_URL" \
           -Dsonar.login="$SONAR_TOKEN" \
           -Dsonar.projectKey="ecommerce" \
