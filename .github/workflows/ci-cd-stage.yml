@@ -19,11 +19,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "11"
+          java-version: "17"
 
       - name: Build with Maven (compile + unit tests only)
         run: |
@@ -65,7 +65,7 @@ jobs:
           fi
 
           chmod +x ./mvnw
-          ./mvnw -B -DskipTests=true org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar \
+          ./mvnw -B -DskipTests=true sonar:sonar \
           -Dsonar.host.url="$SONAR_HOST_URL" \
           -Dsonar.login="$SONAR_TOKEN" \
           -Dsonar.projectKey="ecommerce" \
