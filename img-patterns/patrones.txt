@@ -1,0 +1,3 @@
+Configuración Centralizada con Hot Reload: ✅ Probado cambiando propiedades en Git y refrescando sin reiniciar.
+Feature Toggle: ✅ Probado habilitando/deshabilitando el borrado de productos en caliente.
+Resilience (Circuit Breaker): ✅ Probado obteniendo respuesta de fallback cuando el servicio está caído.

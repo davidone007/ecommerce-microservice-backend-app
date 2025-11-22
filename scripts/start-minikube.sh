@@ -7,7 +7,7 @@ set -e
 echo "🚀 Iniciando Minikube..."
 
 # Parámetros de configuración
-MEMORY=16384
+MEMORY=20000
 CPUS=4
 DRIVER="docker" # o "hyperkit" en Mac
 
