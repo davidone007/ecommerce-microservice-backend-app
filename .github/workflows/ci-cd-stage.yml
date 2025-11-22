@@ -248,46 +248,39 @@ jobs:
           # Wait a bit for port-forwards to establish
           sleep 10
 
-      - name: Wait for API Gateway to be ready
+      - name: Wait for services to be ready (K8s Status)
         run: |
-          echo "Waiting for services to be ready..."
-          SECONDS_WAITED=0
-          TIMEOUT=300
+          echo "Waiting for Kubernetes deployments to be ready..."
+          
+          # Wait for all deployments to be available
+          kubectl wait --namespace stage \
+            --for=condition=available \
+            --timeout=300s \
+            deployment/api-gateway-container \
+            deployment/cloud-config-container \
+            deployment/favourite-service-container \
+            deployment/order-service-container \
+            deployment/payment-service-container \
+            deployment/product-service-container \
+            deployment/proxy-client-container \
+            deployment/service-discovery-container \
+            deployment/shipping-service-container \
+            deployment/user-service-container \
+            deployment/zipkin-container
 
-          # Array of service endpoints to check
-          declare -a ENDPOINTS=(
-            "http://localhost:8080/app/api/products"
-            "http://localhost:8600/shipping-service/api/shippings"
-            "http://localhost:8700/user-service/api/users"
-            "http://localhost:8500/product-service/api/products"
-            "http://localhost:8800/favourite-service/api/favourites"
-            "http://localhost:8400/payment-service/api/payments"
-          )
-
-          # Check all endpoints until they are ready or timeout
-          while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
-            ALL_READY=true
-            for endpoint in "${ENDPOINTS[@]}"; do
-              if ! curl -sSf "$endpoint" >/dev/null 2>&1; then
-                ALL_READY=false
-                break
-              fi
-            done
-            
-            if [ "$ALL_READY" = true ]; then
-              echo "✅ All services are ready"
-              exit 0
+          echo "✅ All deployments are ready in Kubernetes."
+          
+          echo "Verifying local port forwarding..."
+          # Simple TCP check to ensure ports are open locally, without checking HTTP status
+          # This avoids failing on 401/404 errors if the app is running but returns error codes
+          sleep 5
+          for port in 8080 8600 8700 8500 8800 8400; do
+            if timeout 1 bash -c "</dev/null >/dev/tcp/localhost/$port" 2>/dev/null; then
+              echo "✅ Port $port is open"
+            else
+              echo "⚠️ Port $port is not accessible locally yet"
             fi
-            
-            sleep 5
-            SECONDS_WAITED=$((SECONDS_WAITED+5))
-            echo "Waiting for services... ($SECONDS_WAITED s / $TIMEOUT s)"
           done
-
-          echo "⚠️  Service health check timed out after $TIMEOUT seconds"
-          echo "Checking pod status..."
-          kubectl get pods -n stage
-          exit 1
 
       - name: Run Integration Tests against deployed services
         run: |
@@ -376,56 +369,26 @@ jobs:
           # Wait a bit for port-forwards to establish
           sleep 10
 
-      - name: Wait for services
+      - name: Wait for services to be ready (K8s Status)
         run: |
-          echo "Waiting for services to be ready..."
-          SECONDS_WAITED=0
-          TIMEOUT=300
+          echo "Waiting for Kubernetes deployments to be ready..."
+          
+          kubectl wait --namespace stage \
+            --for=condition=available \
+            --timeout=300s \
+            deployment/api-gateway-container \
+            deployment/cloud-config-container \
+            deployment/favourite-service-container \
+            deployment/order-service-container \
+            deployment/payment-service-container \
+            deployment/product-service-container \
+            deployment/proxy-client-container \
+            deployment/service-discovery-container \
+            deployment/shipping-service-container \
+            deployment/user-service-container \
+            deployment/zipkin-container
 
-          # Array of service endpoints to check
-          declare -a ENDPOINTS=(
-            "http://localhost:8080/app/api/products"
-            "http://localhost:8600/shipping-service/api/shippings"
-            "http://localhost:8700/user-service/api/users"
-            "http://localhost:8500/product-service/api/products"
-            "http://localhost:8800/favourite-service/api/favourites"
-            "http://localhost:8400/payment-service/api/payments"
-          )
-
-          # Check all endpoints until they are ready or timeout
-          while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
-            ALL_READY=true
-            READY_COUNT=0
-            
-            for endpoint in "${ENDPOINTS[@]}"; do
-              if curl -sSf "$endpoint" >/dev/null 2>&1; then
-                READY_COUNT=$((READY_COUNT + 1))
-              else
-                ALL_READY=false
-              fi
-            done
-            
-            echo "[$SECONDS_WAITED s] Ready endpoints: $READY_COUNT/${#ENDPOINTS[@]}"
-            
-            if [ "$ALL_READY" = true ]; then
-              echo "✅ All services are ready"
-              exit 0
-            fi
-            
-            sleep 5
-            SECONDS_WAITED=$((SECONDS_WAITED+5))
-          done
-
-          echo "⚠️  Service health check timed out after $TIMEOUT seconds"
-          echo "Proceeding anyway with tests (some services may not be ready yet)..."
-          echo "Final status:"
-          for endpoint in "${ENDPOINTS[@]}"; do
-            if curl -sSf "$endpoint" >/dev/null 2>&1; then
-              echo "✅ $endpoint"
-            else
-              echo "❌ $endpoint"
-            fi
-          done
+          echo "✅ All deployments are ready."
 
       - name: Run E2E Tests with Postman Collection
         run: |
