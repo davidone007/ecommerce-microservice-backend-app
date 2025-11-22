@@ -17,12 +17,10 @@ services:
     image: cloud-config
     port: 9296
     env:
-      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
       - name: SPRING_PROFILES_ACTIVE
         value: dev
-      - name: JAVA_TOOL_OPTIONS
-        value: "-Deureka.client.serviceUrl.defaultZone=http://service-discovery-container:8761/eureka/"
       - name: SPRING_ZIPKIN_BASE_URL
         value: http://zipkin-container:9411
     initContainers:
@@ -36,9 +34,9 @@ services:
     type: LoadBalancer
     port: 8080
     env:
-      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
-      - name: EUREKA_INSTANCE_HOSTNAME
+      - name: EUREKA_INSTANCE
         value: api-gateway-container
       - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
         value: "false"
@@ -48,8 +46,6 @@ services:
         value: "true"
       - name: SPRING_PROFILES_ACTIVE
         value: dev
-      - name: JAVA_TOOL_OPTIONS
-        value: "-Deureka.client.serviceUrl.defaultZone=http://service-discovery-container:8761/eureka/"
       - name: SPRING_CONFIG_IMPORT
         value: optional:configserver:http://cloud-config-container:9296/
       - name: SPRING_ZIPKIN_BASE_URL
@@ -76,9 +72,9 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
-      - name: EUREKA_INSTANCE_HOSTNAME
+      - name: EUREKA_INSTANCE
         value: order-service-container
       - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
         value: "false"
@@ -104,9 +100,9 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
-      - name: EUREKA_INSTANCE_HOSTNAME
+      - name: EUREKA_INSTANCE
         value: payment-service-container
       - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
         value: "false"
@@ -132,9 +128,9 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
-      - name: EUREKA_INSTANCE_HOSTNAME
+      - name: EUREKA_INSTANCE
         value: product-service-container
       - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
         value: "false"
@@ -160,9 +156,9 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
-      - name: EUREKA_INSTANCE_HOSTNAME
+      - name: EUREKA_INSTANCE
         value: favourite-service-container
       - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
         value: "false"
@@ -188,9 +184,9 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
-      - name: EUREKA_INSTANCE_HOSTNAME
+      - name: EUREKA_INSTANCE
         value: proxy-client-container
       - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
         value: "false"
@@ -216,9 +212,9 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
-      - name: EUREKA_INSTANCE_HOSTNAME
+      - name: EUREKA_INSTANCE
         value: shipping-service-container
       - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
         value: "false"
@@ -244,9 +240,9 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
-      - name: EUREKA_INSTANCE_HOSTNAME
+      - name: EUREKA_INSTANCE
         value: user-service-container
       - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
         value: "false"
