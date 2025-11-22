@@ -284,13 +284,12 @@ jobs:
           resource-group: ecommerce-rg-stage
           cluster-name: ecommerce-aks-stage
 
-      - name: Port Forward Services
+      - name: Port Forward API Gateway
         run: |
-          chmod +x ./scripts/port-forward-all-services-nohup.sh
-          ./scripts/port-forward-all-services-nohup.sh stage
-          
-          # Wait a bit for port-forwards to establish
+          echo "Starting port-forward for API Gateway..."
+          kubectl port-forward svc/api-gateway-container 8080:8080 -n stage &
           sleep 10
+
 
       - name: Wait for services
         run: |
