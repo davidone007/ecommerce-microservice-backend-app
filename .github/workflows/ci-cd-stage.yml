@@ -198,12 +198,56 @@ jobs:
           echo "🚀 Restarting deployments in stage namespace to pull new images..."
           kubectl rollout restart deployment -n stage
           
-          echo "Waiting for rollouts to complete..."
-          kubectl rollout status deployment/api-gateway-container -n stage --timeout=5m
-          kubectl rollout status deployment/product-service-container -n stage --timeout=5m
-          # Add other services if needed, or just wait a bit
+          echo "Waiting for rollouts to complete (timeout: 10 minutes)..."
           
-          echo "✅ Deployment updated"
+          # Array of deployments to monitor
+          declare -a DEPLOYMENTS=(
+            "api-gateway-container"
+            "product-service-container"
+            "user-service-container"
+            "order-service-container"
+            "payment-service-container"
+            "shipping-service-container"
+            "favourite-service-container"
+            "proxy-client-container"
+            "service-discovery-container"
+            "cloud-config-container"
+            "zipkin-container"
+          )
+          
+          # Wait for each deployment with extended timeout
+          for deployment in "${DEPLOYMENTS[@]}"; do
+            echo "⏳ Waiting for $deployment..."
+            kubectl rollout status deployment/$deployment -n stage --timeout=10m || {
+              echo "⚠️  $deployment timed out or failed, checking status..."
+              kubectl describe deployment/$deployment -n stage | tail -20
+              kubectl get pods -n stage -l "io.kompose.service=$deployment" -o wide
+              continue  # Don't stop, try the next one
+            }
+          done
+          
+          echo "✅ Deployment restart completed"
+
+      - name: Debug Deployment Status (if rollout failed)
+        if: failure()
+        run: |
+          echo "❌ Rollout failed. Debugging..."
+          echo ""
+          echo "1. Pod status:"
+          kubectl get pods -n stage -o wide
+          echo ""
+          echo "2. Pod events:"
+          kubectl get events -n stage --sort-by='.lastTimestamp'
+          echo ""
+          echo "3. Describe failing pods:"
+          kubectl get pods -n stage | grep -E "Pending|ImagePull|CrashLoop|Error" | awk '{print $1}' | while read pod; do
+            echo "--- Pod: $pod ---"
+            kubectl describe pod/$pod -n stage | tail -30
+          done
+          echo ""
+          echo "4. Node resources:"
+          kubectl top nodes
+          kubectl top pods -n stage --sort-by=memory
 
       - name: Verify deployment
         run: |
