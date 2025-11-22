@@ -1,6 +1,9 @@
 package com.selimhorri.app.integration;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -8,11 +11,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import com.selimhorri.app.domain.OrderItem;
 import com.selimhorri.app.domain.OrderItemId;
+import com.selimhorri.app.dto.OrderDto;
 import com.selimhorri.app.dto.OrderItemDto;
+import com.selimhorri.app.dto.OrderStatus;
+import com.selimhorri.app.dto.ProductDto;
 import com.selimhorri.app.exception.wrapper.OrderItemNotFoundException;
 import com.selimhorri.app.repository.OrderItemRepository;
 import com.selimhorri.app.service.OrderItemService;
@@ -22,7 +30,7 @@ import com.selimhorri.app.service.OrderItemService;
  * Valida la comunicación con Order Service y Product Service.
  */
 @SpringBootTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @Transactional
 @DisplayName("Shipping-Order-Product Integration Tests")
 class ShippingOrderProductIntegrationTest {
@@ -33,18 +41,38 @@ class ShippingOrderProductIntegrationTest {
 	@Autowired
 	private OrderItemRepository orderItemRepository;
 
+	@MockBean
+	private RestTemplate restTemplate;
+
 	private OrderItem testOrderItem;
 
 	@BeforeEach
 	void setUp() {
 		// Crear un order item de prueba en la BD
 		testOrderItem = OrderItem.builder()
-			.orderId(1)
-			.productId(1)
-			.orderedQuantity(5)
-			.isActive(true)
-			.build();
+				.orderId(1)
+				.productId(1)
+				.orderedQuantity(5)
+				.isActive(true)
+				.build();
 		testOrderItem = orderItemRepository.save(testOrderItem);
+
+		// Mock external services
+		ProductDto mockProduct = ProductDto.builder()
+				.productId(testOrderItem.getProductId())
+				.productTitle("Test Product")
+				.build();
+
+		OrderDto mockOrder = OrderDto.builder()
+				.orderId(testOrderItem.getOrderId())
+				.orderStatus(OrderStatus.ORDERED.name())
+				.build();
+
+		when(restTemplate.getForObject(anyString(), eq(ProductDto.class)))
+				.thenReturn(mockProduct);
+
+		when(restTemplate.getForObject(anyString(), eq(OrderDto.class)))
+				.thenReturn(mockOrder);
 	}
 
 	@Test
@@ -68,16 +96,17 @@ class ShippingOrderProductIntegrationTest {
 
 		// Assert - Validar que retorna una lista
 		assertNotNull(activeItems, "Should return a non-null list");
-		// La lista puede estar vacía si los servicios externos no devuelven datos válidos
+		// La lista puede estar vacía si los servicios externos no devuelven datos
+		// válidos
 	}
 
 	@Test
 	@DisplayName("Integration Test 3: Debe lanzar excepción cuando order item no existe")
 	void testFindById_ThrowsExceptionWhenNotFound() {
 		// Act & Assert
-		OrderItemNotFoundException exception = assertThrows(OrderItemNotFoundException.class, 
-			() -> orderItemService.findById(99999, 99999),
-			"Should throw OrderItemNotFoundException for non-existent ID");
+		OrderItemNotFoundException exception = assertThrows(OrderItemNotFoundException.class,
+				() -> orderItemService.findById(99999, 99999),
+				"Should throw OrderItemNotFoundException for non-existent ID");
 		assertNotNull(exception);
 	}
 
