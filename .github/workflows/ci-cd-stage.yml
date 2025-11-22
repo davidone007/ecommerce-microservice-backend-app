@@ -284,81 +284,53 @@ jobs:
           resource-group: ecommerce-rg-stage
           cluster-name: ecommerce-aks-stage
 
-      - name: Port Forward Services
+      - name: Start kubectl proxy
         run: |
-          echo "Starting port-forwards for all services..."
+          echo "Starting kubectl proxy (more stable than port-forward)..."
           
-          # Verify services exist before port-forwarding
+          # Verify services exist
           echo "Verifying services exist in stage namespace..."
           kubectl get svc -n stage | grep -E "(product-service|user-service|shipping-service|order-service|payment-service|favourite-service)" || true
           
-          # Port-forward each service individually for direct access
-          echo "Starting port-forwards..."
-          kubectl port-forward svc/product-service-container 8500:8500 -n stage > /tmp/product.log 2>&1 &
-          PF1_PID=$!
-          sleep 2
+          # Start kubectl proxy in background
+          kubectl proxy --port=8001 > /tmp/kubectl-proxy.log 2>&1 &
+          PROXY_PID=$!
           
-          kubectl port-forward svc/user-service-container 8700:8700 -n stage > /tmp/user.log 2>&1 &
-          PF2_PID=$!
-          sleep 2
-          
-          kubectl port-forward svc/shipping-service-container 8600:8600 -n stage > /tmp/shipping.log 2>&1 &
-          PF3_PID=$!
-          sleep 2
-          
-          kubectl port-forward svc/order-service-container 8300:8300 -n stage > /tmp/order.log 2>&1 &
-          PF4_PID=$!
-          sleep 2
-          
-          kubectl port-forward svc/payment-service-container 8400:8400 -n stage > /tmp/payment.log 2>&1 &
-          PF5_PID=$!
-          sleep 2
-          
-          kubectl port-forward svc/favourite-service-container 8800:8800 -n stage > /tmp/favourite.log 2>&1 &
-          PF6_PID=$!
-          sleep 2
-          
-          # Verify port-forward processes are running
-          echo "Checking port-forward processes..."
-          ps aux | grep "kubectl port-forward" | grep -v grep || echo "⚠️  No kubectl port-forward processes found"
-          
-          # Wait a bit more and verify connections
+          # Wait for proxy to be ready
           sleep 5
           
-          # Verify port-forwards are actually working by checking if ports are listening
-          echo "Verifying port-forward connections..."
-          for port in 8500 8700 8600 8300 8400 8800; do
-            if timeout 2 bash -c "echo > /dev/tcp/localhost/$port" 2>/dev/null; then
-              echo "✅ Port $port is listening"
-            else
-              echo "❌ Port $port is NOT listening"
-              echo "Checking logs for port $port..."
-              case $port in
-                8500) cat /tmp/product.log 2>/dev/null || echo "No log file" ;;
-                8700) cat /tmp/user.log 2>/dev/null || echo "No log file" ;;
-                8600) cat /tmp/shipping.log 2>/dev/null || echo "No log file" ;;
-                8300) cat /tmp/order.log 2>/dev/null || echo "No log file" ;;
-                8400) cat /tmp/payment.log 2>/dev/null || echo "No log file" ;;
-                8800) cat /tmp/favourite.log 2>/dev/null || echo "No log file" ;;
-              esac
-            fi
-          done
+          # Verify proxy is running
+          if ps -p $PROXY_PID > /dev/null; then
+            echo "✅ kubectl proxy is running (PID: $PROXY_PID)"
+          else
+            echo "❌ kubectl proxy failed to start"
+            cat /tmp/kubectl-proxy.log
+            exit 1
+          fi
           
-          echo "✅ Port-forward setup completed"
+          # Verify proxy endpoint is accessible
+          if curl -s http://localhost:8001/api/v1/namespaces/stage/services > /dev/null; then
+            echo "✅ kubectl proxy is accessible"
+          else
+            echo "❌ kubectl proxy is not accessible"
+            cat /tmp/kubectl-proxy.log
+            exit 1
+          fi
 
       - name: Wait for services
         run: |
-          echo "Waiting for services to be ready..."
+          echo "Waiting for services to be ready via kubectl proxy..."
           SECONDS_WAITED=0
           TIMEOUT=300
 
-          # Direct service endpoints (bypassing API Gateway)
+          # Service endpoints via kubectl proxy
+          # Format: http://localhost:8001/api/v1/namespaces/{namespace}/services/{service-name}:{port}/proxy/{path}
           declare -a ENDPOINTS=(
-            "http://localhost:8500/product-service/api/products"
-            "http://localhost:8700/user-service/api/users"
-            "http://localhost:8600/shipping-service/api/shippings"
-            "http://localhost:8800/favourite-service/api/favourites"
-            "http://localhost:8400/payment-service/api/payments"
+            "http://localhost:8001/api/v1/namespaces/stage/services/product-service-container:8500/proxy/product-service/api/products"
+            "http://localhost:8001/api/v1/namespaces/stage/services/user-service-container:8700/proxy/user-service/api/users"
+            "http://localhost:8001/api/v1/namespaces/stage/services/shipping-service-container:8600/proxy/shipping-service/api/shippings"
+            "http://localhost:8001/api/v1/namespaces/stage/services/favourite-service-container:8800/proxy/favourite-service/api/favourites"
+            "http://localhost:8001/api/v1/namespaces/stage/services/payment-service-container:8400/proxy/payment-service/api/payments"
           )
 
           while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
@@ -409,10 +381,10 @@ jobs:
             -Dtest="*IntegrationTest" \
             -DfailIfNoTests=false
 
-      - name: Stop Port Forwarding
+      - name: Stop kubectl proxy
         if: always()
         run: |
-          pkill kubectl || true
+          pkill -f "kubectl proxy" || true
 
 
       - name: Upload integration test reports
@@ -473,81 +445,53 @@ jobs:
           resource-group: ecommerce-rg-stage
           cluster-name: ecommerce-aks-stage
 
-      - name: Port Forward Services
+      - name: Start kubectl proxy
         run: |
-          echo "Starting port-forwards for all services..."
+          echo "Starting kubectl proxy (more stable than port-forward)..."
           
-          # Verify services exist before port-forwarding
+          # Verify services exist
           echo "Verifying services exist in stage namespace..."
           kubectl get svc -n stage | grep -E "(product-service|user-service|shipping-service|order-service|payment-service|favourite-service)" || true
           
-          # Port-forward each service individually for direct access
-          echo "Starting port-forwards..."
-          kubectl port-forward svc/product-service-container 8500:8500 -n stage > /tmp/product.log 2>&1 &
-          PF1_PID=$!
-          sleep 2
+          # Start kubectl proxy in background
+          kubectl proxy --port=8001 > /tmp/kubectl-proxy.log 2>&1 &
+          PROXY_PID=$!
           
-          kubectl port-forward svc/user-service-container 8700:8700 -n stage > /tmp/user.log 2>&1 &
-          PF2_PID=$!
-          sleep 2
-          
-          kubectl port-forward svc/shipping-service-container 8600:8600 -n stage > /tmp/shipping.log 2>&1 &
-          PF3_PID=$!
-          sleep 2
-          
-          kubectl port-forward svc/order-service-container 8300:8300 -n stage > /tmp/order.log 2>&1 &
-          PF4_PID=$!
-          sleep 2
-          
-          kubectl port-forward svc/payment-service-container 8400:8400 -n stage > /tmp/payment.log 2>&1 &
-          PF5_PID=$!
-          sleep 2
-          
-          kubectl port-forward svc/favourite-service-container 8800:8800 -n stage > /tmp/favourite.log 2>&1 &
-          PF6_PID=$!
-          sleep 2
-          
-          # Verify port-forward processes are running
-          echo "Checking port-forward processes..."
-          ps aux | grep "kubectl port-forward" | grep -v grep || echo "⚠️  No kubectl port-forward processes found"
-          
-          # Wait a bit more and verify connections
+          # Wait for proxy to be ready
           sleep 5
           
-          # Verify port-forwards are actually working by checking if ports are listening
-          echo "Verifying port-forward connections..."
-          for port in 8500 8700 8600 8300 8400 8800; do
-            if timeout 2 bash -c "echo > /dev/tcp/localhost/$port" 2>/dev/null; then
-              echo "✅ Port $port is listening"
-            else
-              echo "❌ Port $port is NOT listening"
-              echo "Checking logs for port $port..."
-              case $port in
-                8500) cat /tmp/product.log 2>/dev/null || echo "No log file" ;;
-                8700) cat /tmp/user.log 2>/dev/null || echo "No log file" ;;
-                8600) cat /tmp/shipping.log 2>/dev/null || echo "No log file" ;;
-                8300) cat /tmp/order.log 2>/dev/null || echo "No log file" ;;
-                8400) cat /tmp/payment.log 2>/dev/null || echo "No log file" ;;
-                8800) cat /tmp/favourite.log 2>/dev/null || echo "No log file" ;;
-              esac
-            fi
-          done
+          # Verify proxy is running
+          if ps -p $PROXY_PID > /dev/null; then
+            echo "✅ kubectl proxy is running (PID: $PROXY_PID)"
+          else
+            echo "❌ kubectl proxy failed to start"
+            cat /tmp/kubectl-proxy.log
+            exit 1
+          fi
           
-          echo "✅ Port-forward setup completed"
+          # Verify proxy endpoint is accessible
+          if curl -s http://localhost:8001/api/v1/namespaces/stage/services > /dev/null; then
+            echo "✅ kubectl proxy is accessible"
+          else
+            echo "❌ kubectl proxy is not accessible"
+            cat /tmp/kubectl-proxy.log
+            exit 1
+          fi
 
       - name: Wait for services
         run: |
-          echo "Waiting for services to be ready..."
+          echo "Waiting for services to be ready via kubectl proxy..."
           SECONDS_WAITED=0
           TIMEOUT=300
 
-          # Direct service endpoints (bypassing API Gateway)
+          # Service endpoints via kubectl proxy
+          # Format: http://localhost:8001/api/v1/namespaces/{namespace}/services/{service-name}:{port}/proxy/{path}
           declare -a ENDPOINTS=(
-            "http://localhost:8500/product-service/api/products"
-            "http://localhost:8700/user-service/api/users"
-            "http://localhost:8600/shipping-service/api/shippings"
-            "http://localhost:8800/favourite-service/api/favourites"
-            "http://localhost:8400/payment-service/api/payments"
+            "http://localhost:8001/api/v1/namespaces/stage/services/product-service-container:8500/proxy/product-service/api/products"
+            "http://localhost:8001/api/v1/namespaces/stage/services/user-service-container:8700/proxy/user-service/api/users"
+            "http://localhost:8001/api/v1/namespaces/stage/services/shipping-service-container:8600/proxy/shipping-service/api/shippings"
+            "http://localhost:8001/api/v1/namespaces/stage/services/favourite-service-container:8800/proxy/favourite-service/api/favourites"
+            "http://localhost:8001/api/v1/namespaces/stage/services/payment-service-container:8400/proxy/payment-service/api/payments"
           )
 
           while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
@@ -627,15 +571,10 @@ jobs:
           echo "Generated reports:"
           ls -la test-reports/ 2>/dev/null || echo "No reports generated"
 
-      - name: Stop Port Forwarding
+      - name: Stop kubectl proxy
         if: always()
         run: |
-          if [ -f ./scripts/stop-port-forward-all-services-nohup.sh ]; then
-            chmod +x ./scripts/stop-port-forward-all-services-nohup.sh
-            ./scripts/stop-port-forward-all-services-nohup.sh
-          else
-            pkill kubectl || true
-          fi
+          pkill -f "kubectl proxy" || true
 
       - name: Upload E2E test report
         if: always()
