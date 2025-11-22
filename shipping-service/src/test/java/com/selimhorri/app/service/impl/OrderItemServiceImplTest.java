@@ -51,39 +51,39 @@ class OrderItemServiceImplTest {
 	@BeforeEach
 	void setUp() {
 		testOrderItem = OrderItem.builder()
-			.orderId(1)
-			.productId(1)
-			.orderedQuantity(5)
-			.isActive(true)
-			.build();
+				.orderId(1)
+				.productId(1)
+				.orderedQuantity(5)
+				.isActive(true)
+				.build();
 
 		testOrderItemDto = OrderItemDto.builder()
-			.orderId(1)
-			.productId(1)
-			.orderedQuantity(5)
-			.build();
+				.orderId(1)
+				.productId(1)
+				.orderedQuantity(5)
+				.build();
 
 		// Mock order
 		mockOrderDto = OrderDto.builder()
-			.orderId(1)
-			.orderStatus(OrderStatus.ORDERED.name())
-			.build();
+				.orderId(1)
+				.orderStatus(OrderStatus.ORDERED.name())
+				.build();
 
 		// Mock product
 		mockProductDto = ProductDto.builder()
-			.productId(1)
-			.quantity(10)
-			.build();
+				.productId(1)
+				.quantity(10)
+				.build();
 	}
 
 	@Test
 	@DisplayName("Test 1: Debe guardar un item de orden exitosamente")
 	void testSave_Success() {
 		// Arrange - Mock RestTemplate calls for order and product verification
-		when(restTemplate.getForObject(contains("order-service"), eq(OrderDto.class)))
-			.thenReturn(mockOrderDto);
-		when(restTemplate.getForObject(contains("product-service"), eq(ProductDto.class)))
-			.thenReturn(mockProductDto);
+		when(restTemplate.getForObject(anyString(), eq(OrderDto.class)))
+				.thenReturn(mockOrderDto);
+		when(restTemplate.getForObject(anyString(), eq(ProductDto.class)))
+				.thenReturn(mockProductDto);
 		when(orderItemRepository.save(any(OrderItem.class))).thenReturn(testOrderItem);
 
 		// Act
@@ -100,10 +100,10 @@ class OrderItemServiceImplTest {
 		// Arrange
 		OrderItemId id = new OrderItemId(1, 1);
 		when(orderItemRepository.findById(id)).thenReturn(Optional.of(testOrderItem));
-		when(restTemplate.getForObject(contains("product-service"), eq(ProductDto.class)))
-			.thenReturn(mockProductDto);
-		when(restTemplate.getForObject(contains("order-service"), eq(OrderDto.class)))
-			.thenReturn(mockOrderDto);
+		when(restTemplate.getForObject(anyString(), eq(ProductDto.class)))
+				.thenReturn(mockProductDto);
+		when(restTemplate.getForObject(anyString(), eq(OrderDto.class)))
+				.thenReturn(mockOrderDto);
 
 		// Act
 		OrderItemDto result = orderItemService.findById(1, 1);
@@ -130,18 +130,18 @@ class OrderItemServiceImplTest {
 	void testFindAll_Success() {
 		// Arrange
 		OrderItem orderItem2 = OrderItem.builder()
-			.orderId(2)
-			.productId(2)
-			.orderedQuantity(3)
-			.isActive(true)
-			.build();
+				.orderId(2)
+				.productId(2)
+				.orderedQuantity(3)
+				.isActive(true)
+				.build();
 
 		List<OrderItem> orderItemList = Arrays.asList(testOrderItem, orderItem2);
 		when(orderItemRepository.findByIsActiveTrue()).thenReturn(orderItemList);
 		when(restTemplate.getForObject(anyString(), eq(ProductDto.class)))
-			.thenReturn(mockProductDto);
+				.thenReturn(mockProductDto);
 		when(restTemplate.getForObject(anyString(), eq(OrderDto.class)))
-			.thenReturn(mockOrderDto);
+				.thenReturn(mockOrderDto);
 
 		// Act
 		List<OrderItemDto> result = orderItemService.findAll();
@@ -158,7 +158,7 @@ class OrderItemServiceImplTest {
 		// Arrange
 		OrderItemId id = new OrderItemId(1, 1);
 		when(orderItemRepository.findById(id))
-			.thenReturn(Optional.of(testOrderItem));
+				.thenReturn(Optional.of(testOrderItem));
 		when(orderItemRepository.save(any(OrderItem.class))).thenReturn(testOrderItem);
 
 		// Act
