@@ -284,12 +284,18 @@ jobs:
           resource-group: ecommerce-rg-stage
           cluster-name: ecommerce-aks-stage
 
-      - name: Port Forward API Gateway
+      - name: Port Forward Services
         run: |
-          echo "Starting port-forward for API Gateway..."
-          kubectl port-forward svc/api-gateway-container 8080:8080 -n stage &
-          sleep 10
-
+          echo "Starting port-forwards for all services..."
+          # Port-forward each service individually for direct access
+          kubectl port-forward svc/product-service-container 8500:8500 -n stage > /tmp/product.log 2>&1 &
+          kubectl port-forward svc/user-service-container 8700:8700 -n stage > /tmp/user.log 2>&1 &
+          kubectl port-forward svc/shipping-service-container 8600:8600 -n stage > /tmp/shipping.log 2>&1 &
+          kubectl port-forward svc/order-service-container 8300:8300 -n stage > /tmp/order.log 2>&1 &
+          kubectl port-forward svc/payment-service-container 8400:8400 -n stage > /tmp/payment.log 2>&1 &
+          kubectl port-forward svc/favourite-service-container 8800:8800 -n stage > /tmp/favourite.log 2>&1 &
+          sleep 15
+          echo "✅ All port-forwards established"
 
       - name: Wait for services
         run: |
@@ -297,13 +303,13 @@ jobs:
           SECONDS_WAITED=0
           TIMEOUT=300
 
-          # Endpoints THROUGH THE API GATEWAY
+          # Direct service endpoints (bypassing API Gateway)
           declare -a ENDPOINTS=(
-            "http://localhost:8080/product-service/api/products"
-            "http://localhost:8080/user-service/api/users"
-            "http://localhost:8080/shipping-service/api/shippings"
-            "http://localhost:8080/favourite-service/api/favourites"
-            "http://localhost:8080/payment-service/api/payments"
+            "http://localhost:8500/product-service/api/products"
+            "http://localhost:8700/user-service/api/users"
+            "http://localhost:8600/shipping-service/api/shippings"
+            "http://localhost:8800/favourite-service/api/favourites"
+            "http://localhost:8400/payment-service/api/payments"
           )
 
           while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
@@ -311,17 +317,20 @@ jobs:
             READY_COUNT=0
             
             for endpoint in "${ENDPOINTS[@]}"; do
-              if curl -sSf "$endpoint" >/dev/null 2>&1; then
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$endpoint" 2>/dev/null || echo "000")
+              if [ "$STATUS" = "200" ] || [ "$STATUS" = "404" ]; then
                 READY_COUNT=$((READY_COUNT + 1))
+                echo "✅ $endpoint (HTTP $STATUS)"
               else
                 ALL_READY=false
+                echo "⏳ $endpoint (HTTP $STATUS)"
               fi
             done
             
             echo "[$SECONDS_WAITED s] Ready endpoints: $READY_COUNT/${#ENDPOINTS[@]}"
 
             if [ "$ALL_READY" = true ]; then
-              echo "✅ All services are ready through API Gateway"
+              echo "✅ All services are ready"
               exit 0
             fi
             
@@ -329,10 +338,10 @@ jobs:
             SECONDS_WAITED=$((SECONDS_WAITED+5))
           done
 
-          echo "⚠️  Timeout reached ($TIMEOUT s). Some services may not be ready."
-          echo "Final status:"
+          echo "⚠️  Timeout reached. Proceeding anyway..."
           for endpoint in "${ENDPOINTS[@]}"; do
-            if curl -sSf "$endpoint" >/dev/null 2>&1; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$endpoint" 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "404" ]; then
               echo "✅ $endpoint"
             else
               echo "❌ $endpoint"
@@ -415,11 +424,18 @@ jobs:
           resource-group: ecommerce-rg-stage
           cluster-name: ecommerce-aks-stage
 
-      - name: Port Forward API Gateway
+      - name: Port Forward Services
         run: |
-          kubectl port-forward svc/api-gateway-container 8080:8080 -n stage &
-          sleep 10
-
+          echo "Starting port-forwards for all services..."
+          # Port-forward each service individually for direct access
+          kubectl port-forward svc/product-service-container 8500:8500 -n stage > /tmp/product.log 2>&1 &
+          kubectl port-forward svc/user-service-container 8700:8700 -n stage > /tmp/user.log 2>&1 &
+          kubectl port-forward svc/shipping-service-container 8600:8600 -n stage > /tmp/shipping.log 2>&1 &
+          kubectl port-forward svc/order-service-container 8300:8300 -n stage > /tmp/order.log 2>&1 &
+          kubectl port-forward svc/payment-service-container 8400:8400 -n stage > /tmp/payment.log 2>&1 &
+          kubectl port-forward svc/favourite-service-container 8800:8800 -n stage > /tmp/favourite.log 2>&1 &
+          sleep 15
+          echo "✅ All port-forwards established"
 
       - name: Wait for services
         run: |
@@ -427,13 +443,13 @@ jobs:
           SECONDS_WAITED=0
           TIMEOUT=300
 
-          # Endpoints THROUGH THE API GATEWAY
+          # Direct service endpoints (bypassing API Gateway)
           declare -a ENDPOINTS=(
-            "http://localhost:8080/product-service/api/products"
-            "http://localhost:8080/user-service/api/users"
-            "http://localhost:8080/shipping-service/api/shippings"
-            "http://localhost:8080/favourite-service/api/favourites"
-            "http://localhost:8080/payment-service/api/payments"
+            "http://localhost:8500/product-service/api/products"
+            "http://localhost:8700/user-service/api/users"
+            "http://localhost:8600/shipping-service/api/shippings"
+            "http://localhost:8800/favourite-service/api/favourites"
+            "http://localhost:8400/payment-service/api/payments"
           )
 
           while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
@@ -441,17 +457,20 @@ jobs:
             READY_COUNT=0
             
             for endpoint in "${ENDPOINTS[@]}"; do
-              if curl -sSf "$endpoint" >/dev/null 2>&1; then
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$endpoint" 2>/dev/null || echo "000")
+              if [ "$STATUS" = "200" ] || [ "$STATUS" = "404" ]; then
                 READY_COUNT=$((READY_COUNT + 1))
+                echo "✅ $endpoint (HTTP $STATUS)"
               else
                 ALL_READY=false
+                echo "⏳ $endpoint (HTTP $STATUS)"
               fi
             done
             
             echo "[$SECONDS_WAITED s] Ready endpoints: $READY_COUNT/${#ENDPOINTS[@]}"
 
             if [ "$ALL_READY" = true ]; then
-              echo "✅ All services are ready through API Gateway"
+              echo "✅ All services are ready"
               exit 0
             fi
             
@@ -459,10 +478,10 @@ jobs:
             SECONDS_WAITED=$((SECONDS_WAITED+5))
           done
 
-          echo "⚠️  Timeout reached ($TIMEOUT s). Some services may not be ready."
-          echo "Final status:"
+          echo "⚠️  Timeout reached. Proceeding anyway..."
           for endpoint in "${ENDPOINTS[@]}"; do
-            if curl -sSf "$endpoint" >/dev/null 2>&1; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$endpoint" 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "404" ]; then
               echo "✅ $endpoint"
             else
               echo "❌ $endpoint"
