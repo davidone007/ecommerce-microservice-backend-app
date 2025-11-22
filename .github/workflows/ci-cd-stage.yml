@@ -150,7 +150,7 @@ jobs:
             type=sha,prefix=,format=long
 
       - name: Build and push
-        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/stage'
+        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/feat/'))
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -177,7 +177,7 @@ jobs:
     name: Deploy to Kubernetes
     runs-on: ubuntu-latest
     needs: [docker-build, infrastructure-deploy]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/feat/'))
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -218,7 +218,7 @@ jobs:
     name: Run Integration Tests
     runs-on: ubuntu-latest
     needs: kubernetes-deploy
-    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/feat/'))
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -342,7 +342,7 @@ jobs:
     name: Run E2E Tests (Postman)
     runs-on: ubuntu-latest
     needs: integration-tests
-    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/feat/'))
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -612,7 +612,7 @@ jobs:
     name: Deploy Infrastructure (Terraform)
     runs-on: ubuntu-latest
     needs: maven-build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/feat/'))
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -639,7 +639,7 @@ jobs:
     name: Run Performance Tests (Locust)
     runs-on: ubuntu-latest
     needs: e2e-tests
-    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/feat/'))
     steps:
       - name: Checkout
         uses: actions/checkout@v4
