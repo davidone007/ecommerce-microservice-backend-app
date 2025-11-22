@@ -44,6 +44,11 @@ spring:
         uri: lb://PRODUCT-SERVICE
         predicates:
         - Path=/product-service/**
+        filters:
+        - name: CircuitBreaker
+          args:
+            name: apiGateway
+            fallbackUri: forward:/fallback/product
       - id: SHIPPING-SERVICE
         uri: lb://SHIPPING-SERVICE
         predicates:
