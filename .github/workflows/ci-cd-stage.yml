@@ -825,43 +825,56 @@ jobs:
           resource-group: ecommerce-rg-stage
           cluster-name: ecommerce-aks-stage
 
-      - name: Port Forward Services
+      - name: Get API Gateway External IP
+        id: perf-get-ip
         run: |
-          chmod +x ./scripts/port-forward-all-services-nohup.sh
-          ./scripts/port-forward-all-services-nohup.sh stage
-          
-          # Wait a bit for port-forwards to establish
-          sleep 10
+          echo "Getting API Gateway External IP..."
+          EXTERNAL_IP=""
+          while [ -z "$EXTERNAL_IP" ]; do
+            echo "Waiting for External IP..."
+            EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            [ -z "$EXTERNAL_IP" ] && sleep 10
+          done
+          echo "API Gateway IP: $EXTERNAL_IP"
+          echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_ENV
 
       - name: Wait for API Gateway
         run: |
-          echo "Waiting for API Gateway..."
-          timeout 60s bash -c 'until curl -s http://localhost:8080/actuator/health > /dev/null; do sleep 2; done'
-          echo "API Gateway is ready"
+          echo "Waiting for API Gateway at $EXTERNAL_IP..."
+          SECONDS_WAITED=0
+          TIMEOUT=300
+          HEALTH_URL="http://$EXTERNAL_IP:8080/actuator/health"
+
+          until curl -fsS "$HEALTH_URL" > /dev/null || [ $SECONDS_WAITED -ge $TIMEOUT ]; do
+            echo "⏳ Still waiting ($SECONDS_WAITED s)..."
+            sleep 5
+            SECONDS_WAITED=$((SECONDS_WAITED+5))
+          done
+
+          if ! curl -fsS "$HEALTH_URL" > /dev/null; then
+            echo "❌ API Gateway not ready after $TIMEOUT seconds"
+            exit 1
+          fi
+
+          echo "✅ API Gateway is ready"
 
       - name: Run Locust Tests
         working-directory: ./performance-tests
         run: |
+          if [ -z "$EXTERNAL_IP" ]; then
+            echo "❌ EXTERNAL_IP is not set"
+            exit 1
+          fi
+
           mkdir -p results
-          # Run a quick smoke test (headless)
           locust -f locustfile.py \
             --headless \
             --users 10 \
             --spawn-rate 2 \
             --run-time 1m \
-            --host http://localhost:8080 \
+            --host "http://$EXTERNAL_IP:8080" \
             --html results/report.html \
             --csv results/stats
-
-      - name: Stop Port Forwarding
-        if: always()
-        run: |
-          if [ -f ./scripts/stop-port-forward-all-services-nohup.sh ]; then
-            chmod +x ./scripts/stop-port-forward-all-services-nohup.sh
-            ./scripts/stop-port-forward-all-services-nohup.sh
-          else
-            pkill kubectl || true
-          fi
 
       - name: Upload Performance Results
         if: always()
