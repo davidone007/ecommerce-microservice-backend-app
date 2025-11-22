@@ -3,4 +3,4 @@ global:
 
 services:
   api-gateway:
-    type: ClusterIP
+    type: LoadBalancer

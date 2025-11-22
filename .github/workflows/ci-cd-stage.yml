@@ -284,53 +284,32 @@ jobs:
           resource-group: ecommerce-rg-stage
           cluster-name: ecommerce-aks-stage
 
-      - name: Start kubectl proxy
+      - name: Get API Gateway External IP
+        id: get-ip
         run: |
-          echo "Starting kubectl proxy (more stable than port-forward)..."
-          
-          # Verify services exist
-          echo "Verifying services exist in stage namespace..."
-          kubectl get svc -n stage | grep -E "(product-service|user-service|shipping-service|order-service|payment-service|favourite-service)" || true
-          
-          # Start kubectl proxy in background
-          kubectl proxy --port=8001 > /tmp/kubectl-proxy.log 2>&1 &
-          PROXY_PID=$!
-          
-          # Wait for proxy to be ready
-          sleep 5
-          
-          # Verify proxy is running
-          if ps -p $PROXY_PID > /dev/null; then
-            echo "✅ kubectl proxy is running (PID: $PROXY_PID)"
-          else
-            echo "❌ kubectl proxy failed to start"
-            cat /tmp/kubectl-proxy.log
-            exit 1
-          fi
-          
-          # Verify proxy endpoint is accessible
-          if curl -s http://localhost:8001/api/v1/namespaces/stage/services > /dev/null; then
-            echo "✅ kubectl proxy is accessible"
-          else
-            echo "❌ kubectl proxy is not accessible"
-            cat /tmp/kubectl-proxy.log
-            exit 1
-          fi
+          echo "Getting API Gateway External IP..."
+          EXTERNAL_IP=""
+          while [ -z "$EXTERNAL_IP" ]; do
+            echo "Waiting for External IP..."
+            EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            [ -z "$EXTERNAL_IP" ] && sleep 10
+          done
+          echo "API Gateway IP: $EXTERNAL_IP"
+          echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_ENV
 
       - name: Wait for services
         run: |
-          echo "Waiting for services to be ready via kubectl proxy..."
+          echo "Waiting for services to be ready via API Gateway ($EXTERNAL_IP)..."
           SECONDS_WAITED=0
           TIMEOUT=300
 
-          # Service endpoints via kubectl proxy
-          # Format: http://localhost:8001/api/v1/namespaces/{namespace}/services/{service-name}:{port}/proxy/{path}
+          # Service endpoints via API Gateway
           declare -a ENDPOINTS=(
-            "http://localhost:8001/api/v1/namespaces/stage/services/product-service-container:8500/proxy/product-service/api/products"
-            "http://localhost:8001/api/v1/namespaces/stage/services/user-service-container:8700/proxy/user-service/api/users"
-            "http://localhost:8001/api/v1/namespaces/stage/services/shipping-service-container:8600/proxy/shipping-service/api/shippings"
-            "http://localhost:8001/api/v1/namespaces/stage/services/favourite-service-container:8800/proxy/favourite-service/api/favourites"
-            "http://localhost:8001/api/v1/namespaces/stage/services/payment-service-container:8400/proxy/payment-service/api/payments"
+            "http://$EXTERNAL_IP:8080/product-service/api/products"
+            "http://$EXTERNAL_IP:8080/user-service/api/users"
+            "http://$EXTERNAL_IP:8080/shipping-service/api/shippings"
+            "http://$EXTERNAL_IP:8080/favourite-service/api/favourites"
+            "http://$EXTERNAL_IP:8080/payment-service/api/payments"
           )
 
           while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
@@ -374,17 +353,13 @@ jobs:
         run: |
           chmod +x ./mvnw
           echo "🧪 Running integration tests (*IntegrationTest pattern) against live services..."
-          echo "Target API: http://localhost:8080/app/api"
+          echo "Target API: http://$EXTERNAL_IP:8080/app/api"
           echo ""
 
           ./mvnw -B -T 1C verify \
             -Dtest="*IntegrationTest" \
-            -DfailIfNoTests=false
-
-      - name: Stop kubectl proxy
-        if: always()
-        run: |
-          pkill -f "kubectl proxy" || true
+            -DfailIfNoTests=false \
+            -Dgateway.url="http://$EXTERNAL_IP:8080"
 
 
       - name: Upload integration test reports
@@ -445,53 +420,32 @@ jobs:
           resource-group: ecommerce-rg-stage
           cluster-name: ecommerce-aks-stage
 
-      - name: Start kubectl proxy
+      - name: Get API Gateway External IP
+        id: get-ip
         run: |
-          echo "Starting kubectl proxy (more stable than port-forward)..."
-          
-          # Verify services exist
-          echo "Verifying services exist in stage namespace..."
-          kubectl get svc -n stage | grep -E "(product-service|user-service|shipping-service|order-service|payment-service|favourite-service)" || true
-          
-          # Start kubectl proxy in background
-          kubectl proxy --port=8001 > /tmp/kubectl-proxy.log 2>&1 &
-          PROXY_PID=$!
-          
-          # Wait for proxy to be ready
-          sleep 5
-          
-          # Verify proxy is running
-          if ps -p $PROXY_PID > /dev/null; then
-            echo "✅ kubectl proxy is running (PID: $PROXY_PID)"
-          else
-            echo "❌ kubectl proxy failed to start"
-            cat /tmp/kubectl-proxy.log
-            exit 1
-          fi
-          
-          # Verify proxy endpoint is accessible
-          if curl -s http://localhost:8001/api/v1/namespaces/stage/services > /dev/null; then
-            echo "✅ kubectl proxy is accessible"
-          else
-            echo "❌ kubectl proxy is not accessible"
-            cat /tmp/kubectl-proxy.log
-            exit 1
-          fi
+          echo "Getting API Gateway External IP..."
+          EXTERNAL_IP=""
+          while [ -z "$EXTERNAL_IP" ]; do
+            echo "Waiting for External IP..."
+            EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            [ -z "$EXTERNAL_IP" ] && sleep 10
+          done
+          echo "API Gateway IP: $EXTERNAL_IP"
+          echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_ENV
 
       - name: Wait for services
         run: |
-          echo "Waiting for services to be ready via kubectl proxy..."
+          echo "Waiting for services to be ready via API Gateway ($EXTERNAL_IP)..."
           SECONDS_WAITED=0
           TIMEOUT=300
 
-          # Service endpoints via kubectl proxy
-          # Format: http://localhost:8001/api/v1/namespaces/{namespace}/services/{service-name}:{port}/proxy/{path}
+          # Service endpoints via API Gateway
           declare -a ENDPOINTS=(
-            "http://localhost:8001/api/v1/namespaces/stage/services/product-service-container:8500/proxy/product-service/api/products"
-            "http://localhost:8001/api/v1/namespaces/stage/services/user-service-container:8700/proxy/user-service/api/users"
-            "http://localhost:8001/api/v1/namespaces/stage/services/shipping-service-container:8600/proxy/shipping-service/api/shippings"
-            "http://localhost:8001/api/v1/namespaces/stage/services/favourite-service-container:8800/proxy/favourite-service/api/favourites"
-            "http://localhost:8001/api/v1/namespaces/stage/services/payment-service-container:8400/proxy/payment-service/api/payments"
+            "http://$EXTERNAL_IP:8080/product-service/api/products"
+            "http://$EXTERNAL_IP:8080/user-service/api/users"
+            "http://$EXTERNAL_IP:8080/shipping-service/api/shippings"
+            "http://$EXTERNAL_IP:8080/favourite-service/api/favourites"
+            "http://$EXTERNAL_IP:8080/payment-service/api/payments"
           )
 
           while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
@@ -530,10 +484,10 @@ jobs:
             fi
           done
 
-
       - name: Run E2E Tests with Postman Collection
         run: |
           echo "🧪 Running E2E tests with Postman collection..."
+          echo "Target API: http://$EXTERNAL_IP:8080"
 
           # Check if collection exists
           if [ ! -f "postman-collections/E2E Ecommerce Microservices Tests.postman_collection.json" ]; then
@@ -551,6 +505,8 @@ jobs:
           if [ -f "postman-collections/local-stage.postman_environment.json" ]; then
             newman run "postman-collections/E2E Ecommerce Microservices Tests.postman_collection.json" \
               --environment "postman-collections/local-stage.postman_environment.json" \
+              --env-var "baseUrl=http://$EXTERNAL_IP:8080" \
+              --env-var "gatewayUrl=http://$EXTERNAL_IP:8080" \
               --reporters cli,json,htmlextra \
               --reporter-htmlextra-export "test-reports/e2e-test-report.html" \
               --reporter-json-export "test-reports/e2e-test-report.json" \
@@ -560,6 +516,8 @@ jobs:
             echo "⚠️  Environment file not found, trying with globals..."
             newman run "postman-collections/E2E Ecommerce Microservices Tests.postman_collection.json" \
               --globals "postman-collections/globals.json" \
+              --env-var "baseUrl=http://$EXTERNAL_IP:8080" \
+              --env-var "gatewayUrl=http://$EXTERNAL_IP:8080" \
               --reporters cli,json,htmlextra \
               --reporter-htmlextra-export "test-reports/e2e-test-report.html" \
               --reporter-json-export "test-reports/e2e-test-report.json" \
@@ -570,11 +528,6 @@ jobs:
           echo "✅ Newman execution completed"
           echo "Generated reports:"
           ls -la test-reports/ 2>/dev/null || echo "No reports generated"
-
-      - name: Stop kubectl proxy
-        if: always()
-        run: |
-          pkill -f "kubectl proxy" || true
 
       - name: Upload E2E test report
         if: always()
