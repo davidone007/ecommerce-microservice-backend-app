@@ -55,6 +55,8 @@ spec:
               value: optional:configserver:http://cloud-config-container:9296/
             - name: SPRING_PROFILES_ACTIVE
               value: dev
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Deureka.client.serviceUrl.defaultZone=http://service-discovery-container:8761/eureka/"
             - name: SPRING_ZIPKIN_BASE_URL
               value: http://zipkin-container:9411
           image: ghcr.io/davidone007/api-gateway:${BRANCH_TAG}
