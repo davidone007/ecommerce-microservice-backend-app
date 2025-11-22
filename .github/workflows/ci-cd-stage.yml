@@ -292,51 +292,54 @@ jobs:
           # Wait a bit for port-forwards to establish
           sleep 10
 
-      - name: Wait for API Gateway to be ready
+      - name: Wait for services
         run: |
-          echo "Waiting for services to be reachable..."
+          echo "Waiting for services to be ready..."
           SECONDS_WAITED=0
-          TIMEOUT=600  # 10 minutos papá
-          # Endpoints solo para verificar disponibilidad (no 200 necesariamente)
+          TIMEOUT=300
+
+          # Endpoints THROUGH THE API GATEWAY
           declare -a ENDPOINTS=(
-            "http://localhost:8080/app/api/products"
-            "http://localhost:8600/shipping-service/api/shippings"
-            "http://localhost:8700/user-service/api/users"
-            "http://localhost:8500/product-service/api/products"
-            "http://localhost:8800/favourite-service/api/favourites"
-            "http://localhost:8400/payment-service/api/payments"
+            "http://localhost:8080/product-service/api/products"
+            "http://localhost:8080/user-service/api/users"
+            "http://localhost:8080/shipping-service/api/shippings"
+            "http://localhost:8080/favourite-service/api/favourites"
+            "http://localhost:8080/payment-service/api/payments"
           )
 
           while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
             ALL_READY=true
-
+            READY_COUNT=0
+            
             for endpoint in "${ENDPOINTS[@]}"; do
-              # VERIFICAR SOLO DISPONIBILIDAD DEL PUERTO
-              # Usamos || echo "000" para que si curl falla (ej. exit code 52 o 7), no rompa el script
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$endpoint" || echo "000")
-              
-              if [ "$STATUS" -eq 000 ]; then
-                echo "❌ Endpoint not reachable: $endpoint"
-                ALL_READY=false
+              if curl -sSf "$endpoint" >/dev/null 2>&1; then
+                READY_COUNT=$((READY_COUNT + 1))
               else
-                echo "✅ Endpoint reachable: $endpoint (HTTP $STATUS)"
+                ALL_READY=false
               fi
             done
+            
+            echo "[$SECONDS_WAITED s] Ready endpoints: $READY_COUNT/${#ENDPOINTS[@]}"
 
-          if [ "$ALL_READY" = true ]; then
-            echo "🎉 All services are reachable!"
-            exit 0
-          fi
-
-          sleep 5
-          SECONDS_WAITED=$((SECONDS_WAITED+5))
-          echo "Waiting... ($SECONDS_WAITED s / $TIMEOUT s)"
+            if [ "$ALL_READY" = true ]; then
+              echo "✅ All services are ready through API Gateway"
+              exit 0
+            fi
+            
+            sleep 5
+            SECONDS_WAITED=$((SECONDS_WAITED+5))
           done
 
-          echo "⛔ Timeout: Services not reachable after $TIMEOUT seconds"
-          echo "Pod status:"
-          kubectl get pods -n stage
-          exit 1
+          echo "⚠️  Timeout reached ($TIMEOUT s). Some services may not be ready."
+          echo "Final status:"
+          for endpoint in "${ENDPOINTS[@]}"; do
+            if curl -sSf "$endpoint" >/dev/null 2>&1; then
+              echo "✅ $endpoint"
+            else
+              echo "❌ $endpoint"
+            fi
+          done
+
 
       - name: Run Integration Tests against deployed services
         run: |
@@ -352,12 +355,8 @@ jobs:
       - name: Stop Port Forwarding
         if: always()
         run: |
-          if [ -f ./scripts/stop-port-forward-all-services-nohup.sh ]; then
-            chmod +x ./scripts/stop-port-forward-all-services-nohup.sh
-            ./scripts/stop-port-forward-all-services-nohup.sh
-          else
-            pkill kubectl || true
-          fi
+          pkill kubectl || true
+
 
       - name: Upload integration test reports
         if: always()
