@@ -159,32 +159,62 @@ echo ""
 # ============================================================================
 # PASO 5: Reiniciar deployment en Kubernetes
 # ============================================================================
-echo -e "${BLUE}🔄 Paso 5: Reiniciando deployment en Kubernetes...${NC}"
+echo -e "${BLUE}🔄 Paso 5: Actualizando deployment con Helm...${NC}"
 echo ""
 
-DEPLOYMENT_NAME="${SERVICE_NAME}-container"
+RELEASE_NAME="ecommerce-local"
+CHART_PATH="$BASE_DIR/helm/ecommerce-microservices"
+VALUES_FILE="$CHART_PATH/values.yaml"
 
-if kubectl get deployment "$DEPLOYMENT_NAME" -n "$NAMESPACE" &> /dev/null; then
-    echo "🔄 Restarting deployment: $DEPLOYMENT_NAME"
-    echo ""
-    
-    # Forzar re-despliegue
-    kubectl rollout restart deployment/"$DEPLOYMENT_NAME" -n "$NAMESPACE"
-    
-    echo ""
-    echo "⏳ Esperando a que el pod esté listo (máximo 2 minutos)..."
-    if kubectl rollout status deployment/"$DEPLOYMENT_NAME" -n "$NAMESPACE" --timeout=120s; then
-        echo -e "${GREEN}✅ Deployment actualizado exitosamente${NC}"
+# Verificar helm
+if ! command -v helm &> /dev/null; then
+    echo -e "${RED}❌ helm no está instalado${NC}"
+    exit 1
+fi
+
+echo "🚀 Actualizando servicio $SERVICE_NAME a tag $BRANCH_TAG..."
+
+# Usamos helm upgrade para actualizar solo la imagen de este servicio
+# Si el release existe, usamos --reuse-values para mantener otras configuraciones
+# Si no existe, instalamos desde cero
+
+if helm list -n "$NAMESPACE" | grep -q "$RELEASE_NAME"; then
+    echo "   Release encontrado, actualizando..."
+    if helm upgrade "$RELEASE_NAME" "$CHART_PATH" \
+        --namespace "$NAMESPACE" \
+        --reuse-values \
+        --set services.${SERVICE_NAME}.tag="$BRANCH_TAG"; then
+        echo -e "${GREEN}✅ Helm upgrade exitoso${NC}"
     else
-        echo -e "${YELLOW}⚠️  Timeout esperando el deployment${NC}"
-        echo "Revisa el estado con:"
-        echo "   kubectl get pods -n $NAMESPACE | grep $SERVICE_NAME"
-        echo "   kubectl describe pod <pod-name> -n $NAMESPACE"
+        echo -e "${RED}❌ Error en Helm upgrade${NC}"
+        exit 1
     fi
 else
-    echo -e "${YELLOW}⚠️  Deployment no encontrado: $DEPLOYMENT_NAME en namespace $NAMESPACE${NC}"
-    echo "Asegúrate de que está desplegado en Kubernetes"
-    echo "Verifica con: kubectl get deployments -n $NAMESPACE"
+    echo "   Release no encontrado, instalando..."
+    if helm upgrade --install "$RELEASE_NAME" "$CHART_PATH" \
+        -f "$VALUES_FILE" \
+        --namespace "$NAMESPACE" \
+        --create-namespace \
+        --set services.${SERVICE_NAME}.tag="$BRANCH_TAG"; then
+        echo -e "${GREEN}✅ Helm install exitoso${NC}"
+    else
+        echo -e "${RED}❌ Error en Helm install${NC}"
+        exit 1
+    fi
+fi
+
+echo ""
+echo "⏳ Esperando a que el pod esté listo (máximo 2 minutos)..."
+# El nombre del deployment suele ser el nombre del servicio + "-container" según el chart
+DEPLOYMENT_NAME="${SERVICE_NAME}-container"
+
+if kubectl rollout status deployment/"$DEPLOYMENT_NAME" -n "$NAMESPACE" --timeout=120s; then
+    echo -e "${GREEN}✅ Deployment actualizado exitosamente${NC}"
+else
+    echo -e "${YELLOW}⚠️  Timeout esperando el deployment${NC}"
+    echo "Revisa el estado con:"
+    echo "   kubectl get pods -n $NAMESPACE | grep $SERVICE_NAME"
+    echo "   kubectl describe pod <pod-name> -n $NAMESPACE"
 fi
 
 echo ""

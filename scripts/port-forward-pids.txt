@@ -1,0 +1,11 @@
+api-gateway-container:69736
+cloud-config-container:69749
+favourite-service-container:69759
+order-service-container:69769
+payment-service-container:69772
+product-service-container:69783
+proxy-client-container:69792
+service-discovery-container:69798
+shipping-service-container:69809
+user-service-container:69815
+zipkin-container:69826
