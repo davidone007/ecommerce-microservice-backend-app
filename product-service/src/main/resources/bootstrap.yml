@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: product-service
+  cloud:
+    config:
+      uri: ${SPRING_CONFIG_IMPORT:http://localhost:9296}
+      fail-fast: false
+  profiles:
+    active: dev

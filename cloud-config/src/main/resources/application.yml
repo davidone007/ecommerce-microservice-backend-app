@@ -11,8 +11,16 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/SelimHorri/cloud-config-server
+          uri: https://github.com/davidone007/cloud-config-server
           clone-on-start: true
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8761/eureka/}
+  instance:
+    hostname: ${EUREKA_INSTANCE:cloud-config}
+    prefer-ip-address: ${EUREKA_INSTANCE_PREFER-IP-ADDRESS:false}
 
 resilience4j:
   circuitbreaker:

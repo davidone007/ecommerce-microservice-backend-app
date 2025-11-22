@@ -17,12 +17,26 @@ services:
     image: cloud-config
     port: 9296
     env:
+      - name: EUREKA_CLIENT_ENABLED
+        value: "true"
+      - name: EUREKA_CLIENT_FETCH-REGISTRY
+        value: "true"
       - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
+      - name: EUREKA_INSTANCE
+        value: cloud-config-container
+      - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+        value: "false"
+      - name: RIBBON_EUREKA_ENABLED
+        value: "true"
       - name: SPRING_PROFILES_ACTIVE
         value: dev
       - name: SPRING_ZIPKIN_BASE_URL
         value: http://zipkin-container:9411
+    
+  
+      
+      
     initContainers:
       - name: wait-for-eureka
         image: curlimages/curl:7.85.0
