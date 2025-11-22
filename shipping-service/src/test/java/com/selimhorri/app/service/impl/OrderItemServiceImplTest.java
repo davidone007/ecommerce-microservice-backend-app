@@ -80,9 +80,9 @@ class OrderItemServiceImplTest {
 	@DisplayName("Test 1: Debe guardar un item de orden exitosamente")
 	void testSave_Success() {
 		// Arrange - Mock RestTemplate calls for order and product verification
-		when(restTemplate.getForObject(anyString(), eq(OrderDto.class)))
+		when(restTemplate.getForObject(contains("order-service"), eq(OrderDto.class)))
 				.thenReturn(mockOrderDto);
-		when(restTemplate.getForObject(anyString(), eq(ProductDto.class)))
+		when(restTemplate.getForObject(contains("product-service"), eq(ProductDto.class)))
 				.thenReturn(mockProductDto);
 		when(orderItemRepository.save(any(OrderItem.class))).thenReturn(testOrderItem);
 
@@ -100,9 +100,9 @@ class OrderItemServiceImplTest {
 		// Arrange
 		OrderItemId id = new OrderItemId(1, 1);
 		when(orderItemRepository.findById(id)).thenReturn(Optional.of(testOrderItem));
-		when(restTemplate.getForObject(anyString(), eq(ProductDto.class)))
+		when(restTemplate.getForObject(contains("product-service"), eq(ProductDto.class)))
 				.thenReturn(mockProductDto);
-		when(restTemplate.getForObject(anyString(), eq(OrderDto.class)))
+		when(restTemplate.getForObject(contains("order-service"), eq(OrderDto.class)))
 				.thenReturn(mockOrderDto);
 
 		// Act
