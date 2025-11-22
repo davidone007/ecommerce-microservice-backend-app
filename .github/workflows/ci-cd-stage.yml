@@ -268,13 +268,15 @@ jobs:
 
             for endpoint in "${ENDPOINTS[@]}"; do
               # VERIFICAR SOLO DISPONIBILIDAD DEL PUERTO
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$endpoint")
-            if [ "$STATUS" -eq 000 ]; then
-              echo "❌ Endpoint not reachable: $endpoint"
-              ALL_READY=false
-            else
-              echo "✅ Endpoint reachable: $endpoint (HTTP $STATUS)"
-            fi
+              # Usamos || echo "000" para que si curl falla (ej. exit code 52 o 7), no rompa el script
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$endpoint" || echo "000")
+              
+              if [ "$STATUS" -eq 000 ]; then
+                echo "❌ Endpoint not reachable: $endpoint"
+                ALL_READY=false
+              else
+                echo "✅ Endpoint reachable: $endpoint (HTTP $STATUS)"
+              fi
             done
 
           if [ "$ALL_READY" = true ]; then
@@ -291,7 +293,7 @@ jobs:
           echo "Pod status:"
           kubectl get pods -n stage
           exit 1
-          
+
       - name: Run Integration Tests against deployed services
         run: |
           chmod +x ./mvnw
