@@ -373,13 +373,11 @@ jobs:
           resource-group: ecommerce-rg-stage
           cluster-name: ecommerce-aks-stage
 
-      - name: Port Forward Services
+      - name: Port Forward API Gateway
         run: |
-          chmod +x ./scripts/port-forward-all-services-nohup.sh
-          ./scripts/port-forward-all-services-nohup.sh stage
-          
-          # Wait a bit for port-forwards to establish
+          kubectl port-forward svc/api-gateway-container 8080:8080 -n stage &
           sleep 10
+
 
       - name: Wait for services
         run: |
@@ -387,17 +385,15 @@ jobs:
           SECONDS_WAITED=0
           TIMEOUT=300
 
-          # Array of service endpoints to check
+          # Endpoints THROUGH THE API GATEWAY
           declare -a ENDPOINTS=(
-            "http://localhost:8080/app/api/products"
-            "http://localhost:8600/shipping-service/api/shippings"
-            "http://localhost:8700/user-service/api/users"
-            "http://localhost:8500/product-service/api/products"
-            "http://localhost:8800/favourite-service/api/favourites"
-            "http://localhost:8400/payment-service/api/payments"
+            "http://localhost:8080/product-service/api/products"
+            "http://localhost:8080/user-service/api/users"
+            "http://localhost:8080/shipping-service/api/shippings"
+            "http://localhost:8080/favourite-service/api/favourites"
+            "http://localhost:8080/payment-service/api/payments"
           )
 
-          # Check all endpoints until they are ready or timeout
           while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
             ALL_READY=true
             READY_COUNT=0
@@ -411,9 +407,9 @@ jobs:
             done
             
             echo "[$SECONDS_WAITED s] Ready endpoints: $READY_COUNT/${#ENDPOINTS[@]}"
-            
+
             if [ "$ALL_READY" = true ]; then
-              echo "✅ All services are ready"
+              echo "✅ All services are ready through API Gateway"
               exit 0
             fi
             
@@ -421,8 +417,7 @@ jobs:
             SECONDS_WAITED=$((SECONDS_WAITED+5))
           done
 
-          echo "⚠️  Service health check timed out after $TIMEOUT seconds"
-          echo "Proceeding anyway with tests (some services may not be ready yet)..."
+          echo "⚠️  Timeout reached ($TIMEOUT s). Some services may not be ready."
           echo "Final status:"
           for endpoint in "${ENDPOINTS[@]}"; do
             if curl -sSf "$endpoint" >/dev/null 2>&1; then
@@ -431,6 +426,7 @@ jobs:
               echo "❌ $endpoint"
             fi
           done
+
 
       - name: Run E2E Tests with Postman Collection
         run: |
