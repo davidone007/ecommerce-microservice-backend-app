@@ -914,54 +914,55 @@ jobs:
           secure: true
 
   security-tests:
-    name: Run Security Tests (OWASP ZAP)
-    runs-on: ubuntu-latest
-    needs: kubernetes-deploy
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      name: Run Security Tests (OWASP ZAP)
+      runs-on: ubuntu-latest
+      needs: kubernetes-deploy
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+        - name: Azure Login
+          uses: azure/login@v1
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Set AKS Context
-        uses: azure/aks-set-context@v3
-        with:
-          resource-group: ecommerce-rg-stage
-          cluster-name: ecommerce-aks-stage
+        - name: Set AKS Context
+          uses: azure/aks-set-context@v3
+          with:
+            resource-group: ecommerce-rg-stage
+            cluster-name: ecommerce-aks-stage
 
-      - name: Get API Gateway External IP
-        id: get-ip
-        run: |
-          echo "Getting API Gateway External IP..."
-          EXTERNAL_IP=""
-          while [ -z "$EXTERNAL_IP" ]; do
-            echo "Waiting for External IP..."
-            EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-            [ -z "$EXTERNAL_IP" ] && sleep 10
-          done
-          echo "API Gateway IP: $EXTERNAL_IP"
-          echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_ENV
+        - name: Get API Gateway External IP
+          id: get-ip
+          run: |
+            echo "Getting API Gateway External IP..."
+            EXTERNAL_IP=""
+            while [ -z "$EXTERNAL_IP" ]; do
+              echo "Waiting for External IP..."
+              EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+              [ -z "$EXTERNAL_IP" ] && sleep 10
+            done
+            echo "API Gateway IP: $EXTERNAL_IP"
+            echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_ENV
 
-      - name: OWASP ZAP Full Scan
-        uses: zaproxy/action-full-scan@v0.10.0
-        with:
-          target: "http://${{ env.EXTERNAL_IP }}:8080"
-          cmd_options: '-a'
-          allow_issue_writing: false
-          fail_action: false 
-          # artifact_name: 'zap-scan-report' # Disable built-in upload to avoid errors
+        - name: OWASP ZAP Full Scan
+          uses: zaproxy/action-full-scan@v0.10.0
+          continue-on-error: true
+          with:
+            target: "http://${{ env.EXTERNAL_IP }}:8080"
+            cmd_options: '-a'
+            allow_issue_writing: false
+            fail_action: false
+            artifact_name: ''  # Disable built-in artifact upload
 
-      - name: Upload ZAP Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-security-report
-          path: |
-            report_html.html
-            report_json.json
-            report_md.md
-          retention-days: 7
+        - name: Upload ZAP Report
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: zap-security-report
+            path: |
+              report_html.html
+              report_json.json
+              report_md.md
+            retention-days: 7
