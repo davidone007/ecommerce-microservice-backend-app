@@ -916,8 +916,8 @@ jobs:
   security-tests:
       name: Run Security Tests (OWASP ZAP)
       runs-on: ubuntu-latest
-      needs: kubernetes-deploy
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
+      needs: performance-tests
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/'))
       steps:
         - name: Checkout
           uses: actions/checkout@v4
@@ -951,22 +951,26 @@ jobs:
           run: |
             docker pull ghcr.io/zaproxy/zaproxy:stable
             
-            docker run -v ${{ github.workspace }}:/zap/wrk/:rw \
+            # Create reports directory
+            mkdir -p ${{ github.workspace }}/zap-reports
+            
+            docker run -v ${{ github.workspace }}/zap-reports:/zap/wrk/:rw \
               -t ghcr.io/zaproxy/zaproxy:stable \
               zap-full-scan.py \
               -t http://${{ env.EXTERNAL_IP }}:8080 \
-              -J report_json.json \
-              -w report_md.md \
-              -r report_html.html \
+              -J /zap/wrk/report_json.json \
+              -w /zap/wrk/report_md.md \
+              -r /zap/wrk/report_html.html \
               -a || echo "ZAP scan completed with warnings"
+            
+            # List generated files
+            echo "Generated reports:"
+            ls -lh ${{ github.workspace }}/zap-reports/
 
         - name: Upload ZAP Report
           if: always()
           uses: actions/upload-artifact@v4
           with:
             name: zap-security-report
-            path: |
-              report_html.html
-              report_json.json
-              report_md.md
+            path: zap-reports/
             retention-days: 7
