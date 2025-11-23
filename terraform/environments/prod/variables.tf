@@ -35,3 +35,15 @@ variable "vm_size" {
 
 }
 
+variable "email" {
+  description = "Email address for Let's Encrypt notifications"
+  type        = string
+  default     = "davidecazaran@gmail.com"
+}
+
+variable "key_vault_name" {
+  description = "Name of the Key Vault"
+  type        = string
+  default     = "ecommerce-kv-prod-001"
+}
+
