@@ -951,16 +951,17 @@ jobs:
           run: |
             docker pull ghcr.io/zaproxy/zaproxy:stable
             
-            # Create reports directory
+            # Create reports directory with wide permissions
             mkdir -p ${{ github.workspace }}/zap-reports
+            chmod 777 ${{ github.workspace }}/zap-reports
             
             docker run -v ${{ github.workspace }}/zap-reports:/zap/wrk/:rw \
               -t ghcr.io/zaproxy/zaproxy:stable \
               zap-full-scan.py \
               -t http://${{ env.EXTERNAL_IP }}:8080 \
-              -J /zap/wrk/report_json.json \
-              -w /zap/wrk/report_md.md \
-              -r /zap/wrk/report_html.html \
+              -J report_json.json \
+              -w report_md.md \
+              -r report_html.html \
               -a || echo "ZAP scan completed with warnings"
             
             # List generated files
