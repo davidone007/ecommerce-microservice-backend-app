@@ -70,7 +70,6 @@ jobs:
           -Dsonar.login="$SONAR_TOKEN" \
           -Dsonar.projectKey="ecommerce" \
           -Dsonar.projectName="ecommerce" \
-          -Dsonar.java.binaries="**/target/classes" \
           -Dsonar.coverage.jacoco.xmlReportPaths="**/target/site/jacoco/jacoco.xml,**/target/site/jacoco-aggregate/jacoco.xml"
 
       - name: Upload test reports
