@@ -33,5 +33,27 @@ spec:
               protocol: TCP
           env:
             {{- toYaml $val.env | nindent 12 }}
+            {{- if $.Values.secrets.enabled }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: password
+            {{- end }}
+          {{- if $.Values.secrets.enabled }}
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+          {{- end }}
+      {{- if $.Values.secrets.enabled }}
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-kvname-user-msi"
+      {{- end }}
       restartPolicy: Always
 {{- end }}

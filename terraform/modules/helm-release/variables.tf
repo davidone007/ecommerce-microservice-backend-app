@@ -18,3 +18,9 @@ variable "values_file" {
   description = "Path to the values.yaml file"
   type        = string
 }
+
+variable "extra_values" {
+  description = "Extra values to pass to the Helm chart"
+  type        = string
+  default     = ""
+}
