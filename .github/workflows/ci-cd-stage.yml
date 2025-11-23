@@ -65,11 +65,12 @@ jobs:
           fi
 
           chmod +x ./mvnw
-          ./mvnw -B -DskipTests=true sonar:sonar \
+          ./mvnw -B -DskipTests=true org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
           -Dsonar.host.url="$SONAR_HOST_URL" \
           -Dsonar.login="$SONAR_TOKEN" \
           -Dsonar.projectKey="ecommerce" \
           -Dsonar.projectName="ecommerce" \
+          -Dsonar.java.binaries="**/target/classes" \
           -Dsonar.coverage.jacoco.xmlReportPaths="**/target/site/jacoco/jacoco.xml,**/target/site/jacoco-aggregate/jacoco.xml"
 
       - name: Upload test reports
