@@ -48,6 +48,7 @@ Este proyecto implementa un sistema completo de **e-commerce** basado en arquite
 #### 🧪 Testing
 - Implementación de pruebas de integración
 - Configuración de Postman collections para E2E testing
+- **Pruebas de Seguridad (OWASP ZAP)**: Escaneo automatizado de vulnerabilidades en el pipeline CI/CD.
 - Preparación de infraestructura para pruebas de rendimiento con Locust
 
 ### 📦 Código Base Original
