@@ -17,7 +17,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @Component
 public class JwtUtilImpl implements JwtUtil {
 
-	private static final String SECRET_KEY = "secret";
+	@org.springframework.beans.factory.annotation.Value("${jwt.secret:secret}")
+	private String secretKey;
 
 	@Override
 	public String extractUsername(final String token) {
@@ -36,7 +37,7 @@ public class JwtUtilImpl implements JwtUtil {
 	}
 
 	private Claims extractAllClaims(final String token) {
-		return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+		return Jwts.parser().setSigningKey(this.secretKey).parseClaimsJws(token).getBody();
 	}
 
 	private Boolean isTokenExpired(final String token) {
@@ -56,7 +57,7 @@ public class JwtUtilImpl implements JwtUtil {
 				.setSubject(subject)
 				.setIssuedAt(new Date(System.currentTimeMillis()))
 				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
-				.signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+				.signWith(SignatureAlgorithm.HS256, this.secretKey)
 				.compact();
 	}
 
@@ -66,6 +67,7 @@ public class JwtUtilImpl implements JwtUtil {
 		return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
 	}
 
+	@Override
 	public String extractUserId(final String token) {
 		return extractClaims(token, claims -> claims.get("userId", String.class));
 	}
