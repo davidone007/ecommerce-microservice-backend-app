@@ -2,6 +2,23 @@ global:
   imageRegistry: ghcr.io/davidone007
   imageTag: stage
 
+ingress:
+  enabled: false
+  host: ecommerce.example.com
+  tls:
+    enabled: true
+    secretName: ecommerce-tls-secret
+
+secrets:
+  enabled: true
+  keyVaultName: "" # Injected by Terraform
+  tenantId: ""     # Injected by Terraform
+  objects:
+    - secretName: database-secret
+      data:
+        - objectName: database-password
+          key: password
+
 services:
   service-discovery:
     name: service-discovery-container
@@ -45,7 +62,7 @@ services:
   api-gateway:
     name: api-gateway-container
     image: api-gateway
-    type: LoadBalancer
+    type: ClusterIP
     port: 8080
     env:
       - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE

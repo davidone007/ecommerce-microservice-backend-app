@@ -22,7 +22,7 @@ kubectl get svc api-gateway-container -n prod
 
 # 5. Probar API Gateway en Prod (reemplazar con IP real)
 # curl -v http://<EXTERNAL-IP>:8080/actuator/health
-# curl -v http://<EXTERNAL-IP>:8080/product-service/api/products
+# curl -v http://48.195.193.180:8080/product-service/api/products
 
 # 6. Port forward Eureka en Prod
 kubectl port-forward svc/service-discovery-container 8761:8761 -n prod
