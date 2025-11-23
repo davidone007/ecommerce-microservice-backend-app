@@ -695,7 +695,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           release_branches: stage
           tag_prefix: stage-
-          dry_run: true
+          dry_run: false
           default_bump: patch
 
       - name: Output Version & Changelog
