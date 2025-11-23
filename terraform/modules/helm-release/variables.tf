@@ -11,10 +11,21 @@ variable "chart_path" {
 variable "namespace" {
   description = "Kubernetes namespace"
   type        = string
-  default     = "default"
 }
 
 variable "values_file" {
-  description = "Path to the values.yaml file"
+  description = "Path to the values file"
   type        = string
+}
+
+variable "set_values" {
+  description = "Map of values to set"
+  type        = map(string)
+  default     = {}
+}
+
+variable "timeout" {
+  description = "Timeout in seconds for the Helm release"
+  type        = number
+  default     = 300
 }

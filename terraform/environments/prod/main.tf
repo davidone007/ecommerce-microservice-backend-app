@@ -29,6 +29,7 @@ module "helm_release" {
   chart_path   = "../../../helm/ecommerce-microservices"
   namespace    = "prod"
   values_file  = "values.yaml"
+  timeout      = 1200
 
   depends_on = [module.aks, module.cert_manager, module.ingress_nginx]
 }

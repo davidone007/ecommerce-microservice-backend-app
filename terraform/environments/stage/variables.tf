@@ -43,3 +43,10 @@ variable "tags" {
   }
 }
 
+variable "jwt_secret_value" {
+  description = "Value of the JWT secret"
+  type        = string
+  sensitive   = true
+  default     = "mysecretkey-stage"
+}
+

@@ -4,7 +4,7 @@ global:
 
 ingress:
   enabled: true
-  host: ecommerce.134.33.222.57.nip.io
+  host: ecommerce.172.210.123.215.nip.io
   tls:
     enabled: true
     secretName: ecommerce-tls-secret
