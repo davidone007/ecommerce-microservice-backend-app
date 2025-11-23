@@ -20,6 +20,7 @@ import com.selimhorri.app.dto.OrderDto;
 import com.selimhorri.app.dto.response.collection.DtoCollectionResponse;
 import com.selimhorri.app.service.OrderService;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderResource {
 
 	private final OrderService orderService;
+	private final MeterRegistry meterRegistry;
 
 	@GetMapping
 	public ResponseEntity<DtoCollectionResponse<OrderDto>> findAll() {
@@ -48,6 +50,7 @@ public class OrderResource {
 	public ResponseEntity<OrderDto> save(
 			@RequestBody @NotNull(message = "Input must not be NULL") @Valid final OrderDto orderDto) {
 		log.info("*** OrderDto, resource; save order *");
+		this.meterRegistry.counter("orders.placed").increment();
 		return ResponseEntity.ok(this.orderService.save(orderDto));
 	}
 

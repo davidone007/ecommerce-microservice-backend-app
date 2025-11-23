@@ -1,4 +1,4 @@
-minikube start --memory 19500 --cpus 6 --driver=docker
+minikube start --memory 13500 --cpus 6 --driver=docker
 
 
 scripts/build-in-minikube.sh -t stage all
