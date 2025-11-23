@@ -41,9 +41,10 @@ variable "email" {
   default     = "davidecazaran@gmail.com"
 }
 
-variable "key_vault_name" {
-  description = "Name of the Key Vault"
+variable "jwt_secret_value" {
+  description = "Value of the JWT secret"
   type        = string
-  default     = "ecommerce-kv-prod-001"
+  sensitive   = true
+  default     = "mysecretkey" # In a real scenario, this should be passed via -var or environment variable
 }
 

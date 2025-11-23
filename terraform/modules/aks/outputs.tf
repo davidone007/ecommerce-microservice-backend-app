@@ -27,10 +27,10 @@ output "cluster_ca_certificate" {
   value = azurerm_kubernetes_cluster.aks.kube_config.0.cluster_ca_certificate
 }
 
-output "key_vault_secrets_provider_object_id" {
+output "key_vault_secrets_provider_identity_object_id" {
   value = azurerm_kubernetes_cluster.aks.key_vault_secrets_provider[0].secret_identity[0].object_id
 }
 
-output "tenant_id" {
-  value = azurerm_kubernetes_cluster.aks.identity[0].tenant_id
+output "key_vault_secrets_provider_identity_client_id" {
+  value = azurerm_kubernetes_cluster.aks.key_vault_secrets_provider[0].secret_identity[0].client_id
 }
