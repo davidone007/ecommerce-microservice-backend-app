@@ -18,3 +18,9 @@ variable "values_file" {
   description = "Path to the values.yaml file"
   type        = string
 }
+
+variable "set_values" {
+  description = "Map of values to set using --set"
+  type        = map(string)
+  default     = {}
+}

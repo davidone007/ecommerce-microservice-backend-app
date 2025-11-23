@@ -7,4 +7,12 @@ resource "helm_release" "ecommerce" {
   values = [
     file(var.values_file)
   ]
+
+  dynamic "set" {
+    for_each = var.set_values
+    content {
+      name  = set.key
+      value = set.value
+    }
+  }
 }

@@ -1,0 +1,33 @@
+#Stage
+terraform init 
+#Desplegar AKS primero 
+terraform apply -target=module.aks -auto-approve
+#Volverlo a hacer con el secreto y para desplegar el resto 
+terraform apply -var="jwt_secret_value=secret123" -auto-approve
+
+
+
+
+#Prod
+terraform init
+#Desplegar AKS primero
+terraform apply -target=module.aks -auto-approve
+#Volverlo a hacer con el secreto y para desplegar el resto
+terraform apply -var="jwt_secret_value=secret123" -auto-approve
+#La ip quedo fija de prod es esta:
+172.210.123.215
+#Si se llega a borrar crearlo con 
+az network public-ip create --resource-group MC_ecommerce-rg-prod_ecommerce-aks-prod_eastus --name kubernetes-static-ip --sku Standard
+az network public-ip show --resource-group MC_ecommerce-rg-prod_ecommerce-aks-prod_eastus --name kubernetes-static-ip --query ipAddress -o tsv
+y toca reemplazar en
+/Users/davidef/Desktop/ecommerce-microservice-backend-appC/terraform/environments/prod/values.yaml
+/Users/davidef/Desktop/ecommerce-microservice-backend-appC/terraform/modules/ingress-nginx/main.tf
+poner ecommerce.xxx.nip.io
+
+
+
+
+
+
+
+
