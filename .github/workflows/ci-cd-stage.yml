@@ -7,9 +7,9 @@ permissions:
 
 on:
   push:
-    branches: [stage, "ops/feat/*"]
+    branches: [stage, "ops/feat/*", "ops/fix/*"]
   pull_request:
-    branches: [stage, "ops/feat/*"]
+    branches: [stage, "ops/feat/*", "ops/fix/*"]
 
 jobs:
   maven-build:
@@ -150,7 +150,7 @@ jobs:
             type=sha,prefix=,format=long
 
       - name: Build and push
-        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/pipelines'))
+        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -162,7 +162,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Run Trivy vulnerability scanner
-        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/pipelines'))
+        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:stage'
@@ -188,7 +188,7 @@ jobs:
       name: Deploy to Kubernetes
       runs-on: ubuntu-latest
       needs: [docker-build, infrastructure-deploy]
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/pipelinesnes'))
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
       steps:
         - name: Checkout
           uses: actions/checkout@v4
@@ -379,7 +379,7 @@ jobs:
     name: Run Integration Tests
     runs-on: ubuntu-latest
     needs: kubernetes-deploy
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/pipelines'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -511,7 +511,7 @@ jobs:
     name: Run E2E Tests (Postman)
     runs-on: ubuntu-latest
     needs: integration-tests
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/pipelines'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -808,7 +808,7 @@ jobs:
       name: Run Performance Tests (Locust)
       runs-on: ubuntu-latest
       needs: e2e-tests
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/feat/'))
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
       steps:
         - name: Checkout
           uses: actions/checkout@v4
