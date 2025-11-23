@@ -5,7 +5,6 @@ resource "helm_release" "ecommerce" {
   create_namespace = true
 
   values = [
-    file(var.values_file),
-    var.extra_values
+    file(var.values_file)
   ]
 }

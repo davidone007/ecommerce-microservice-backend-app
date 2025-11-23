@@ -2,22 +2,18 @@ global:
   imageRegistry: ghcr.io/davidone007
   imageTag: stage
 
+keyVault:
+  enabled: true
+  name: "ecommerce-kv"
+  tenantId: ""
+  userAssignedIdentityID: ""
+
 ingress:
   enabled: false
   host: ecommerce.example.com
   tls:
     enabled: true
     secretName: ecommerce-tls-secret
-
-secrets:
-  enabled: true
-  keyVaultName: "" # Injected by Terraform
-  tenantId: ""     # Injected by Terraform
-  objects:
-    - secretName: database-secret
-      data:
-        - objectName: database-password
-          key: password
 
 services:
   service-discovery:
@@ -211,6 +207,11 @@ services:
     image: proxy-client
     port: 8900
     env:
+      - name: JWT_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: jwt-secret-csi
+            key: jwt-secret
       - name: EUREKA_CLIENT_ENABLED
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
