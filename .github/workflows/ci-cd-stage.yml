@@ -916,7 +916,7 @@ jobs:
   security-tests:
     name: Run Security Tests (OWASP ZAP)
     runs-on: ubuntu-latest
-    needs: e2e-tests
+    needs: kubernetes-deploy
     if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
     steps:
       - name: Checkout
@@ -953,7 +953,7 @@ jobs:
           cmd_options: '-a'
           allow_issue_writing: false
           fail_action: false 
-          artifact_name: 'zap-scan-report'
+          # artifact_name: 'zap-scan-report' # Disable built-in upload to avoid errors
 
       - name: Upload ZAP Report
         if: always()
@@ -961,7 +961,7 @@ jobs:
         with:
           name: zap-security-report
           path: |
-            zap-scan-report.html
-            zap-scan-report.json
-            zap-scan-report.md
+            report_html.html
+            report_json.json
+            report_md.md
           retention-days: 7
