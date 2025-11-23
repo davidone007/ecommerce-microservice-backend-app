@@ -203,64 +203,193 @@ jobs:
     name: Deploy to Kubernetes (Production)
     runs-on: self-hosted
     needs: docker-build
+    environment: production
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+          - name: Checkout
+            uses: actions/checkout@v4
 
-      - name: Configure kubectl
-        run: |
-          # Ensure kubectl is available
-          if ! command -v kubectl &> /dev/null; then
-            echo "kubectl not found. Installing..."
-            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-            chmod +x kubectl
-            sudo mv kubectl /usr/local/bin/
-          fi
+          - name: Azure Login
+            uses: azure/login@v1
+            with:
+              creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-          # Check if kubeconfig is configured
-          if [ ! -f ~/.kube/config ] && [ -z "$KUBECONFIG" ]; then
-            echo "⚠️  WARNING: kubeconfig not found and KUBECONFIG not set."
-            echo "Please ensure kubectl is configured for your Kubernetes cluster."
-            exit 1
-          fi
+          - name: Set AKS Context
+            uses: azure/aks-set-context@v3
+            with:
+              resource-group: ecommerce-rg-stage
+              cluster-name: ecommerce-aks-stage
 
-      - name: Deploy using deploy-k8s.sh script
-        run: |
-          echo "🚀 Deploying services to Kubernetes (Production)..."
+          - name: Update image tags in deployments (selective)
+            run: |
+              echo "🚀 Updating only application service deployments..."
+              
+              # Lista ESPECÍFICA de tus servicios de aplicación (NO infraestructura)
+              declare -a APP_DEPLOYMENTS=(
+                "api-gateway-container"
+                "product-service-container"
+                "user-service-container"
+                "order-service-container"
+                "payment-service-container"
+                "shipping-service-container"
+                "favourite-service-container"
+                "proxy-client-container"
+                "service-discovery-container"
+                "cloud-config-container"
+              )
+              
+              IMAGE_TAG="stage"
+              REGISTRY="ghcr.io/${{ github.repository_owner }}"
+              
+              # Actualizar cada deployment individualmente
+              for deployment in "${APP_DEPLOYMENTS[@]}"; do
+                # Extraer el nombre del servicio (sin el sufijo -container)
+                SERVICE_NAME="${deployment%-container}"
+                
+                echo "📦 Updating $deployment with image tag: $IMAGE_TAG"
+                
+                # Verificar si el deployment existe
+                if kubectl get deployment "$deployment" -n stage &> /dev/null; then
+                  # Actualizar la imagen del contenedor
+                  kubectl set image deployment/"$deployment" \
+                    "$deployment=$REGISTRY/$SERVICE_NAME:$IMAGE_TAG" \
+                    -n stage
+                  
+                  echo "✅ Updated $deployment"
+                else
+                  echo "⚠️  Deployment $deployment not found, skipping..."
+                fi
+              done
 
-          # Use latest tag for production deployment
-          BRANCH_TAG="latest"
+          - name: Wait for rollouts with proper timeout
+            run: |
+              echo "⏳ Waiting for rollouts to complete..."
+              
+              declare -a APP_DEPLOYMENTS=(
+                "api-gateway-container"
+                "product-service-container"
+                "user-service-container"
+                "order-service-container"
+                "payment-service-container"
+                "shipping-service-container"
+                "favourite-service-container"
+                "proxy-client-container"
+                "service-discovery-container"
+                "cloud-config-container"
+              )
+              
+              FAILED_DEPLOYMENTS=()
+              
+              for deployment in "${APP_DEPLOYMENTS[@]}"; do
+                if kubectl get deployment "$deployment" -n stage &> /dev/null; then
+                  echo "⏳ Waiting for $deployment rollout..."
+                  
+                  if kubectl rollout status deployment/"$deployment" -n stage --timeout=10m; then
+                    echo "✅ $deployment rolled out successfully"
+                  else
+                    echo "❌ $deployment rollout failed or timed out"
+                    FAILED_DEPLOYMENTS+=("$deployment")
+                    
+                    # Debug information
+                    echo "--- Debugging $deployment ---"
+                    kubectl describe deployment/"$deployment" -n stage | tail -30
+                    kubectl get pods -n stage -l "io.kompose.service=$deployment" -o wide
+                  fi
+                fi
+              done
+              
+              # Check if any deployments failed
+              if [ ${#FAILED_DEPLOYMENTS[@]} -gt 0 ]; then
+                echo ""
+                echo "❌ The following deployments failed:"
+                printf '%s\n' "${FAILED_DEPLOYMENTS[@]}"
+                exit 1
+              fi
+              
+              echo ""
+              echo "✅ All application deployments completed successfully"
 
-          # Make the deploy script executable
-          chmod +x ./scripts/deploy-k8s.sh
+          - name: Verify services are accessible
+            run: |
+              echo "🔍 Verifying service endpoints..."
+              
+              # Wait a bit for services to stabilize
+              sleep 30
+              
+              # Get API Gateway External IP
+              EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+              
+              if [ -z "$EXTERNAL_IP" ]; then
+                echo "⚠️  Could not get External IP, checking service status..."
+                kubectl get svc -n stage
+                exit 1
+              fi
+              
+              echo "API Gateway IP: $EXTERNAL_IP"
+              
+              # Quick health check
+              HEALTH_URL="http://$EXTERNAL_IP:8080/actuator/health"
+              echo "Checking health endpoint: $HEALTH_URL"
+              
+              RETRIES=0
+              MAX_RETRIES=10
+              
+              while [ $RETRIES -lt $MAX_RETRIES ]; do
+                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
+                
+                if [ "$HTTP_CODE" = "200" ]; then
+                  echo "✅ API Gateway is healthy (HTTP $HTTP_CODE)"
+                  break
+                else
+                  echo "⏳ Waiting for API Gateway... (HTTP $HTTP_CODE) - Retry $((RETRIES+1))/$MAX_RETRIES"
+                  sleep 10
+                  RETRIES=$((RETRIES+1))
+                fi
+              done
+              
+              if [ $RETRIES -eq $MAX_RETRIES ]; then
+                echo "❌ API Gateway health check failed after $MAX_RETRIES retries"
+                exit 1
+              fi
 
-          # Run the deploy script with the latest tag
-          ./scripts/deploy-k8s.sh "$BRANCH_TAG"
+          - name: Debug Deployment Status (if rollout failed)
+            if: failure()
+            run: |
+              echo "❌ Deployment failed. Debugging..."
+              echo ""
+              echo "1. All deployments:"
+              kubectl get deployments -n stage -o wide
+              echo ""
+              echo "2. Pod status:"
+              kubectl get pods -n stage -o wide
+              echo ""
+              echo "3. Recent events:"
+              kubectl get events -n stage --sort-by='.lastTimestamp' | tail -50
+              echo ""
+              echo "4. Services status:"
+              kubectl get services -n stage
+              echo ""
+              echo "5. Failing pods details:"
+              kubectl get pods -n stage | grep -E "Pending|ImagePull|CrashLoop|Error|0/" | awk '{print $1}' | while read pod; do
+                echo "--- Pod: $pod ---"
+                kubectl describe pod/"$pod" -n stage | tail -50
+                echo ""
+                kubectl logs "$pod" -n stage --tail=50 2>/dev/null || echo "No logs available"
+                echo ""
+              done
 
-      - name: Verify deployment
-        run: |
-          echo "📋 Kubernetes deployment status:"
-          kubectl get deployments
-          echo ""
-          kubectl get services
-          echo ""
-          kubectl get pods
-
-          # Wait for all deployments to be ready
-          echo ""
-          echo "Waiting for all deployments to be ready..."
-          SERVICES=("api-gateway" "cloud-config" "favourite-service" "order-service" "payment-service" "product-service" "proxy-client" "service-discovery" "shipping-service" "user-service")
-
-          for service in "${SERVICES[@]}"; do
-            deployment="${service}-container"
-            if kubectl get deployment "$deployment" 2>/dev/null; then
-              echo "Waiting for $deployment to be ready..."
-              kubectl rollout status deployment/"$deployment" --timeout=5m || true
-            fi
-          done
-
-          echo "✅ Deployment verification complete"
+          - name: Verify final deployment state
+            run: |
+              echo "📋 Final Kubernetes state:"
+              echo ""
+              echo "Deployments:"
+              kubectl get deployments -n stage
+              echo ""
+              echo "Services:"
+              kubectl get services -n stage
+              echo ""
+              echo "Pods:"
+              kubectl get pods -n stage -o wide
 
   integration-tests:
     name: Run Integration Tests
