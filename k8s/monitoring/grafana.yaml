@@ -12,6 +12,16 @@ spec:
       labels:
         app: grafana
     spec:
+      volumes:
+        - name: grafana-provisioning-datasources
+          configMap:
+            name: grafana-provisioning-datasources
+        - name: grafana-dashboards-volume
+          configMap:
+            name: grafana-dashboards
+        - name: grafana-dashboards-config-volume
+          configMap:
+            name: grafana-dashboards-config
       containers:
         - name: grafana
           image: grafana/grafana:latest
@@ -20,6 +30,15 @@ spec:
           env:
             - name: GF_SECURITY_ADMIN_PASSWORD
               value: "admin"
+          volumeMounts:
+            - name: grafana-provisioning-datasources
+              mountPath: /etc/grafana/provisioning/datasources/datasource.yml
+              subPath: datasource.yml
+            - name: grafana-dashboards-volume
+              mountPath: /var/lib/grafana/dashboards
+            - name: grafana-dashboards-config-volume
+              mountPath: /etc/grafana/provisioning/dashboards/dashboards.yml
+              subPath: dashboards.yml
 ---
 apiVersion: v1
 kind: Service
@@ -32,3 +51,193 @@ spec:
     - port: 3000
       targetPort: 3000
   type: NodePort
+
+---
+# ConfigMap que contiene el provisioning (datasource) para Grafana
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning-datasources
+  labels:
+    app: grafana
+data:
+  datasource.yml: |
+    apiVersion: 1
+
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+
+      - name: Elasticsearch
+        type: elasticsearch
+        access: proxy
+        url: http://elasticsearch:9200
+        database: "[microservices-logs-]*"
+        jsonData:
+          timeField: "@timestamp"
+
+---
+# ConfigMap que contiene la definición de providers para dashboards (apunta a /var/lib/grafana/dashboards)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-config
+  labels:
+    app: grafana
+data:
+  dashboards.yml: |
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        allowUiUpdates: true
+        updateIntervalSeconds: 10
+        options:
+          path: /var/lib/grafana/dashboards
+          foldersFromFilesStructure: true
+
+---
+# ConfigMap que contiene los JSON de los dashboards para ser montados en /var/lib/grafana/dashboards
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  labels:
+    app: grafana
+data:
+  overview-dashboard.json: |
+    {
+      "id": null,
+      "uid": "micro-overview",
+      "title": "Microservices - Overview",
+      "timezone": "browser",
+      "schemaVersion": 36,
+      "version": 1,
+      "refresh": "10s",
+      "templating": {
+        "list": [
+          {
+            "type": "query",
+            "name": "service",
+            "label": "Service",
+            "datasource": "Prometheus",
+            "query": "label_values(job)",
+            "multi": true,
+            "includeAll": true
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+          "type": "stat",
+          "title": "Requests/s (total)",
+          "datasource": "Prometheus",
+          "targets": [ { "expr": "sum(rate(http_server_requests_seconds_count[1m]))", "refId": "A" } ]
+        },
+        {
+          "id": 2,
+          "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+          "type": "stat",
+          "title": "Error rate (%)",
+          "datasource": "Prometheus",
+          "targets": [ { "expr": "100 * sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))", "refId": "A" } ]
+        },
+        {
+          "id": 3,
+          "gridPos": { "x": 0, "y": 4, "w": 6, "h": 6 },
+          "type": "timeseries",
+          "title": "P95 latency (by job)",
+          "datasource": "Prometheus",
+          "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job))", "refId": "A" } ]
+        },
+        {
+          "id": 4,
+          "gridPos": { "x": 6, "y": 4, "w": 6, "h": 6 },
+          "type": "timeseries",
+          "title": "Requests rate (by job)",
+          "datasource": "Prometheus",
+          "targets": [ { "expr": "sum by (job) (rate(http_server_requests_seconds_count[1m]))", "refId": "A" } ]
+        },
+        {
+          "id": 5,
+          "gridPos": { "x": 0, "y": 10, "w": 6, "h": 4 },
+          "type": "stat",
+          "title": "Orders placed (increase 5m)",
+          "datasource": "Prometheus",
+          "targets": [ { "expr": "increase(orders_placed_total[5m])", "refId": "A" } ]
+        },
+        {
+          "id": 6,
+          "gridPos": { "x": 6, "y": 10, "w": 6, "h": 4 },
+          "type": "stat",
+          "title": "Instances up",
+          "datasource": "Prometheus",
+          "targets": [ { "expr": "sum(up) by (job)", "refId": "A" } ]
+        }
+      ]
+    }
+  service-dashboard.json: |
+    {
+      "id": null,
+      "uid": "micro-service",
+      "title": "Microservice - Service Detail",
+      "timezone": "browser",
+      "schemaVersion": 36,
+      "version": 1,
+      "refresh": "10s",
+      "templating": {
+        "list": [
+          {
+            "type": "query",
+            "name": "service",
+            "label": "Service",
+            "datasource": "Prometheus",
+            "query": "label_values(job)",
+            "multi": false,
+            "includeAll": false
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+          "type": "timeseries",
+          "title": "Request rate",
+          "datasource": "Prometheus",
+          "targets": [ { "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[1m]))", "refId": "A" } ]
+        },
+        {
+          "id": 2,
+          "gridPos": { "x": 0, "y": 6, "w": 6, "h": 6 },
+          "type": "timeseries",
+          "title": "P95 latency",
+          "datasource": "Prometheus",
+          "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le, instance))", "refId": "A" } ]
+        },
+        {
+          "id": 3,
+          "gridPos": { "x": 6, "y": 6, "w": 6, "h": 6 },
+          "type": "timeseries",
+          "title": "Error rate (%)",
+          "datasource": "Prometheus",
+          "targets": [ { "expr": "100 * sum(rate(http_server_requests_seconds_count{job=~\"$service\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m]))", "refId": "A" } ]
+        },
+        {
+          "id": 4,
+          "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
+          "type": "logs",
+          "title": "Logs (Elasticsearch)",
+          "datasource": "Elasticsearch",
+          "targets": [ { "query": "service:\"$service\"", "refId": "A" } ]
+        }
+      ]
+    }

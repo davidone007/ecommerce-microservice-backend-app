@@ -1,8 +1,11 @@
-minikube start --memory 13500 --cpus 6 --driver=docker
+minikube start --memory 12974 --cpus 4 --driver=docker     
 
 
 scripts/build-in-minikube.sh -t stage all
+ ./scripts/deploy-monitoring.sh stage stage
  ./scripts/deploy-k8s.sh stage stage
- ./scripts/restart-services.sh -n stage -a
+./scripts/port-forward-monitoring.sh stage
  ./scripts/port-forward-all-services-nohup.sh stage
 
+
+ ./scripts/restart-services.sh -n stage -a

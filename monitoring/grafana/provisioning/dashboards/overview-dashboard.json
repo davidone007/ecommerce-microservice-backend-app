@@ -1,0 +1,72 @@
+{
+  "id": null,
+  "uid": "micro-overview",
+  "title": "Microservices - Overview",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "templating": {
+    "list": [
+      {
+        "type": "query",
+        "name": "service",
+        "label": "Service",
+        "datasource": "Prometheus",
+        "query": "label_values(job)",
+        "multi": true,
+        "includeAll": true
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "type": "stat",
+      "title": "Requests/s (total)",
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "sum(rate(http_server_requests_seconds_count[1m]))", "refId": "A" } ]
+    },
+    {
+      "id": 2,
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "type": "stat",
+      "title": "Error rate (%)",
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "100 * sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))", "refId": "A" } ]
+    },
+    {
+      "id": 3,
+      "gridPos": { "x": 0, "y": 4, "w": 6, "h": 6 },
+      "type": "timeseries",
+      "title": "P95 latency (by job)",
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job))", "refId": "A" } ]
+    },
+    {
+      "id": 4,
+      "gridPos": { "x": 6, "y": 4, "w": 6, "h": 6 },
+      "type": "timeseries",
+      "title": "Requests rate (by job)",
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "sum by (job) (rate(http_server_requests_seconds_count[1m]))", "refId": "A" } ]
+    },
+    {
+      "id": 5,
+      "gridPos": { "x": 0, "y": 10, "w": 6, "h": 4 },
+      "type": "stat",
+      "title": "Orders placed (increase 5m)",
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "increase(orders_placed_total[5m])", "refId": "A" } ]
+    },
+    {
+      "id": 6,
+      "gridPos": { "x": 6, "y": 10, "w": 6, "h": 4 },
+      "type": "stat",
+      "title": "Instances up",
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "sum(up) by (job)", "refId": "A" } ]
+    }
+  ]
+}
