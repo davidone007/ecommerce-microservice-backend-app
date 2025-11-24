@@ -16,6 +16,7 @@ import com.selimhorri.app.repository.CredentialRepository;
 import com.selimhorri.app.repository.UserRepository;
 import com.selimhorri.app.service.UserService;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +28,12 @@ public class UserServiceImpl implements UserService {
 
 	private final UserRepository userRepository;
 	private final CredentialRepository credentialRepository;
+	private final MeterRegistry meterRegistry;
+
+	@javax.annotation.PostConstruct
+	public void initMetrics() {
+		this.meterRegistry.gauge("users.total", this.userRepository, UserRepository::count);
+	}
 
 	@Override
 	public List<UserDto> findAll() {
@@ -65,7 +72,12 @@ public class UserServiceImpl implements UserService {
 	public UserDto save(final UserDto userDto) {
 		log.info("*** UserDto, service; save user *");
 		userDto.setUserId(null); // para evitar sobrescribir
-		return UserMappingHelper.map(this.userRepository.save(UserMappingHelper.mapOnlyUser(userDto)));
+		UserDto savedUser = UserMappingHelper.map(this.userRepository.save(UserMappingHelper.mapOnlyUser(userDto)));
+		
+		// Business Metric: Count registered users
+		this.meterRegistry.counter("users.registered").increment();
+		
+		return savedUser;
 	}
 
 	@Override

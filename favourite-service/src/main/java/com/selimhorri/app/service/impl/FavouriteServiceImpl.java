@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.selimhorri.app.constant.AppConstant;
+import com.selimhorri.app.domain.Favourite;
 import com.selimhorri.app.domain.id.FavouriteId;
 import com.selimhorri.app.dto.FavouriteDto;
 import com.selimhorri.app.dto.ProductDto;
@@ -24,6 +25,9 @@ import com.selimhorri.app.helper.FavouriteMappingHelper;
 import com.selimhorri.app.repository.FavouriteRepository;
 import com.selimhorri.app.service.FavouriteService;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import javax.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,6 +39,12 @@ public class FavouriteServiceImpl implements FavouriteService {
 
 	private final FavouriteRepository favouriteRepository;
 	private final RestTemplate restTemplate;
+	private final MeterRegistry meterRegistry;
+
+	@PostConstruct
+	public void initMetrics() {
+		meterRegistry.gauge("favourites.total", favouriteRepository, FavouriteRepository::count);
+	}
 
 	@Override
 	public List<FavouriteDto> findAll() {
@@ -163,8 +173,9 @@ public class FavouriteServiceImpl implements FavouriteService {
 					String.format("Error verifying product with id [%s]", favouriteDto.getProductId()), e);
 		}
 	
-		return FavouriteMappingHelper.map(
-				this.favouriteRepository.save(FavouriteMappingHelper.map(favouriteDto)));
+			Favourite savedFavourite = this.favouriteRepository.save(FavouriteMappingHelper.map(favouriteDto));
+		meterRegistry.counter("favourites.added").increment();
+		return FavouriteMappingHelper.map(savedFavourite);
 	}
 
 	@Override

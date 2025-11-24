@@ -23,6 +23,9 @@ import com.selimhorri.app.helper.PaymentMappingHelper;
 import com.selimhorri.app.repository.PaymentRepository;
 import com.selimhorri.app.service.PaymentService;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import javax.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +37,12 @@ public class PaymentServiceImpl implements PaymentService {
 
 	private final PaymentRepository paymentRepository;
 	private final RestTemplate restTemplate;
+	private final MeterRegistry meterRegistry;
+
+	@PostConstruct
+	public void initMetrics() {
+		meterRegistry.gauge("payments.total", paymentRepository, PaymentRepository::count);
+	}
 
 	@Override
 	public List<PaymentDto> findAll() {
@@ -115,6 +124,7 @@ public class PaymentServiceImpl implements PaymentService {
 			// 2. Guardar el pago
 			PaymentDto savedPayment = PaymentMappingHelper.map(
 					this.paymentRepository.save(PaymentMappingHelper.mapForPayment(paymentDto)));
+			meterRegistry.counter("payments.processed").increment();
 
 			// 3. Actualizar estado de la orden (PATCH)
 			String patchUrl = AppConstant.DiscoveredDomainsApi.ORDER_SERVICE_API_URL + "/"

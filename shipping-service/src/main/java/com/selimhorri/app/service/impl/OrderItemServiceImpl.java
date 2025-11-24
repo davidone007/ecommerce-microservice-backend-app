@@ -21,6 +21,9 @@ import com.selimhorri.app.helper.OrderItemMappingHelper;
 import com.selimhorri.app.repository.OrderItemRepository;
 import com.selimhorri.app.service.OrderItemService;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import javax.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,6 +35,12 @@ public class OrderItemServiceImpl implements OrderItemService {
 
 	private final OrderItemRepository orderItemRepository;
 	private final RestTemplate restTemplate;
+	private final MeterRegistry meterRegistry;
+
+	@PostConstruct
+	public void initMetrics() {
+		meterRegistry.gauge("shipments.total", orderItemRepository, OrderItemRepository::count);
+	}
 
 	@Override
 	public List<OrderItemDto> findAll() {
@@ -211,6 +220,7 @@ public class OrderItemServiceImpl implements OrderItemService {
 		// Save the order item
 		OrderItemDto savedItem = OrderItemMappingHelper.map(
 				this.orderItemRepository.save(OrderItemMappingHelper.mapForCreation(orderItemDto)));
+		meterRegistry.counter("shipments.created").increment();
 
 		// Update order status after successful save
 		try {

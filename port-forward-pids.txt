@@ -1,0 +1,11 @@
+api-gateway-container:1156
+cloud-config-container:1158
+favourite-service-container:1160
+order-service-container:1162
+payment-service-container:1164
+product-service-container:1166
+proxy-client-container:1168
+service-discovery-container:1170
+shipping-service-container:1172
+user-service-container:1174
+zipkin-container:1176

@@ -17,6 +17,9 @@ import com.selimhorri.app.repository.CategoryRepository;
 import com.selimhorri.app.repository.ProductRepository;
 import com.selimhorri.app.service.ProductService;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import javax.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +31,12 @@ public class ProductServiceImpl implements ProductService {
 
 	private final ProductRepository productRepository;
 	private final CategoryRepository categoryRepository;
+	private final MeterRegistry meterRegistry;
+
+	@PostConstruct
+	public void initMetrics() {
+		meterRegistry.gauge("products.total", productRepository, ProductRepository::count);
+	}
 
 	@Override
 	public List<ProductDto> findAll() {
