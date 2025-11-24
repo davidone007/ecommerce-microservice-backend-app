@@ -1,0 +1,77 @@
+# Configuración de Escenarios de Pruebas
+# ======================================
+
+scenarios:
+  # Prueba de Humo - Verificación básica
+  smoke_test:
+    name: "Smoke Test"
+    description: "Verificación básica del sistema con carga mínima"
+    users: 5
+    spawn_rate: 1
+    duration: "2m"
+    
+  # Prueba de Carga - Carga normal esperada
+  load_test:
+    name: "Load Test"
+    description: "Evaluación bajo carga normal esperada"
+    users: 50
+    spawn_rate: 5
+    duration: "10m"
+    
+  # Prueba de Estrés - Identificar límites
+  stress_test:
+    name: "Stress Test"
+    description: "Identificar límites del sistema"
+    users: 200
+    spawn_rate: 10
+    duration: "15m"
+    
+  # Prueba de Picos - Aumentos súbitos
+  spike_test:
+    name: "Spike Test"
+    description: "Evaluar respuesta ante picos de tráfico"
+    users: 300
+    spawn_rate: 50
+    duration: "3m"
+    
+  # Prueba de Resistencia - Carga prolongada
+  soak_test:
+    name: "Soak Test"
+    description: "Evaluar estabilidad bajo carga prolongada"
+    users: 100
+    spawn_rate: 5
+    duration: "30m"
+
+# Configuración de endpoints
+endpoints:
+  base_url: "http://localhost:8080"
+  health_check: "/actuator/health"
+  
+# Thresholds de rendimiento
+performance_thresholds:
+  response_time:
+    excellent: 200    # ms
+    good: 500        # ms
+    acceptable: 1000 # ms
+    poor: 2000       # ms
+  
+  success_rate:
+    excellent: 99.5  # %
+    good: 99.0       # %
+    acceptable: 95.0 # %
+    poor: 90.0       # %
+  
+  throughput:
+    min_rps: 10      # requests por segundo mínimo esperado
+    target_rps: 50   # requests por segundo objetivo
+    max_rps: 100     # requests por segundo máximo deseado
+
+# Configuración de usuarios
+user_distribution:
+  browsing_users: 75   # % de usuarios que solo navegan
+  buying_users: 25     # % de usuarios que compran
+
+# Configuración de timeouts
+timeouts:
+  connection: 30       # segundos
+  request: 60          # segundos

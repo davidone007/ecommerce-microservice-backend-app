@@ -14,21 +14,21 @@ NC='\033[0m'
 
 # Configuración
 REGISTRY="ghcr.io/davidone007"
-BRANCH_TAG="${BRANCH_TAG:-latest}"
+BRANCH_TAG="${1:-latest}"
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Array de servicios con sus paths
-declare -A SERVICES=(
-    ["service-discovery"]="service-discovery"
-    ["cloud-config"]="cloud-config"
-    ["api-gateway"]="api-gateway"
-    ["proxy-client"]="proxy-client"
-    ["order-service"]="order-service"
-    ["payment-service"]="payment-service"
-    ["product-service"]="product-service"
-    ["shipping-service"]="shipping-service"
-    ["user-service"]="user-service"
-    ["favourite-service"]="favourite-service"
+SERVICES=(
+    "service-discovery"
+    "cloud-config"
+    "api-gateway"
+    "proxy-client"
+    "order-service"
+    "payment-service"
+    "product-service"
+    "shipping-service"
+    "user-service"
+    "favourite-service"
 )
 
 echo -e "${BLUE}🐳 Script de Construcción de Imágenes Docker${NC}"
@@ -49,7 +49,7 @@ echo ""
 
 # Mostrar servicios a construir
 echo -e "${BLUE}📋 Servicios a construir:${NC}"
-for service in "${!SERVICES[@]}"; do
+for service in "${SERVICES[@]}"; do
     echo "   - $service"
 done
 echo ""
@@ -76,8 +76,8 @@ FAILED_SERVICES=()
 echo -e "${BLUE}📦 Paso 1: Construyendo JARs con Maven...${NC}"
 echo ""
 
-for service in "${!SERVICES[@]}"; do
-    SERVICE_PATH="${SERVICES[$service]}"
+for service in "${SERVICES[@]}"; do
+    SERVICE_PATH="$service"
     FULL_PATH="$BASE_DIR/$SERVICE_PATH"
     
     echo -e "${YELLOW}🏗️  Construyendo JAR: ${service}${NC}"
@@ -134,8 +134,8 @@ echo -e "${BLUE}📦 Paso 2: Construyendo imágenes Docker...${NC}"
 echo ""
 
 # Ahora construir las imágenes Docker
-for service in "${!SERVICES[@]}"; do
-    SERVICE_PATH="${SERVICES[$service]}"
+for service in "${SERVICES[@]}"; do
+    SERVICE_PATH="$service"
     FULL_PATH="$BASE_DIR/$SERVICE_PATH"
     IMAGE_NAME="${REGISTRY}/${service}:${BRANCH_TAG}"
     

@@ -1,0 +1,6 @@
+global:
+  imageTag: stage
+  imagePullPolicy: Always
+services:
+  api-gateway:
+    type: LoadBalancer

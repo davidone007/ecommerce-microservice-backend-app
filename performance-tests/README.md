@@ -1,269 +1,487 @@
-# Pruebas de Rendimiento y Estrés - Sistema E-Commerce Microservicios
+# Pruebas de Rendimiento y Estrés - E-commerce Microservices
 
-Este directorio contiene pruebas de rendimiento y estrés utilizando **Locust** para validar la capacidad del sistema de e-commerce bajo carga.
+## 📋 Índice
 
-## 📋 Descripción
+- [Descripción](#descripción)
+- [Características](#características)
+- [Requisitos Previos](#requisitos-previos)
+- [Instalación](#instalación)
+- [Uso](#uso)
+- [Tipos de Pruebas](#tipos-de-pruebas)
+- [Métricas Clave](#métricas-clave)
+- [Configuración](#configuración)
+- [Resultados](#resultados)
+- [Docker](#docker)
+- [Mejores Prácticas](#mejores-prácticas)
 
-Las pruebas simulan casos de uso reales del sistema:
+## 🎯 Descripción
 
-1. **Búsqueda de productos** - Los usuarios buscan productos
-2. **Visualización de detalles** - Consultan información detallada
-3. **Agregar a favoritos** - Guardan productos favoritos
-4. **Crear órdenes** - Realizan compras
-5. **Procesar pagos** - Pagan sus órdenes
-6. **Rastrear envíos** - Monitorean entregas
+Suite completa de pruebas de rendimiento y estrés para el sistema de e-commerce basado en microservicios. Utiliza **Locust** para simular casos de uso reales y medir el comportamiento del sistema bajo diferentes condiciones de carga.
 
-## 🚀 Quick Start
+## ✨ Características
 
-### 1. Instalación de dependencias
+- **Escenarios Realistas**: Simulación de usuarios navegando, comprando y gestionando favoritos
+- **Múltiples Tipos de Pruebas**: Smoke, Load, Stress, Spike y Soak tests
+- **Métricas Detalladas**: Response time, throughput, error rate, percentiles
+- **Reportes HTML**: Visualización interactiva de resultados con gráficos
+- **Autenticación JWT**: Manejo automático de tokens de autenticación
+- **Modo Distribuido**: Soporte para pruebas distribuidas con Docker
+- **Interfaz Web**: Dashboard interactivo en tiempo real
+
+## 📦 Requisitos Previos
+
+### Software Necesario
+
+- Python 3.11+
+- pip (gestor de paquetes de Python)
+- Docker & Docker Compose (opcional, para ejecución en contenedores)
+- Sistema de microservicios ejecutándose (ver `compose.yml` en la raíz)
+
+### Servicios del Sistema
+
+Antes de ejecutar las pruebas, asegúrate de que los microservicios estén corriendo:
 
 ```bash
+# Desde la raíz del proyecto
+docker-compose -f compose.yml up -d
+```
+
+Verifica que los servicios estén disponibles:
+
+```bash
+curl http://localhost:8080/app/api/products
+```
+
+## 🚀 Instalación
+
+### Opción 1: Instalación Local
+
+```bash
+# 1. Navegar al directorio de pruebas
+cd performance-tests
+
+# 2. Crear entorno virtual (recomendado)
+python3 -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+
+# 3. Instalar dependencias
 pip install -r requirements.txt
+
+# 4. Dar permisos de ejecución a scripts
+chmod +x scripts/*.sh
 ```
 
-### 2. Ejecutar pruebas básicas (10 usuarios, 5 minutos)
+### Opción 2: Usando Docker
 
 ```bash
-chmod +x *.sh
-./run_performance_tests.sh
+# 1. Construir imagen
+docker build -t ecommerce-locust .
+
+# 2. O usar Docker Compose
+docker-compose up -d
 ```
 
-Acceder a la interfaz web: http://localhost:8089
+## 💻 Uso
 
-### 3. Ejecutar prueba de estrés interactiva
+### Menú Interactivo (Recomendado)
 
 ```bash
-./stress_test.sh
+./scripts/run-tests.sh
 ```
 
-Selecciona el nivel de estrés deseado (Ligero, Moderado, Fuerte, Crítico, Personalizado)
+Este comando abrirá un menú interactivo donde puedes seleccionar el tipo de prueba:
 
-### 4. Probar un servicio específico
+```
+1) 🔥 Smoke Test       - Verificación básica (2 min, 5 usuarios)
+2) 📊 Load Test        - Carga normal (10 min, 50 usuarios)
+3) 💪 Stress Test      - Prueba de estrés (15 min, 200 usuarios)
+4) ⚡ Spike Test       - Picos de tráfico (3 min, 300 usuarios)
+5) 🏊 Soak Test        - Resistencia (30 min, 100 usuarios)
+6) 🌐 Web UI           - Modo interactivo
+7) 🚀 Todas las pruebas
+8) 🔍 Ver últimos resultados
+9) ❌ Salir
+```
+
+### Comandos Directos
+
+#### Prueba de Carga Básica
 
 ```bash
-./test_service.sh products -u 20 -t 5m
-./test_service.sh orders -u 50 -t 10m
-./test_service.sh payments -u 30 -t 5m
+locust -f locustfile.py \
+    --host=http://localhost:8080 \
+    --users 50 \
+    --spawn-rate 5 \
+    --run-time 5m \
+    --headless
 ```
 
-## 📊 Estructuras de archivos
-
-```
-performance-tests/
-├── requirements.txt              # Dependencias Python
-├── config.py                     # Configuración centralizada
-├── utils.py                      # Utilidades y generador de datos
-├── locustfile.py                 # Test principal (flujo completo)
-├── locustfile_products.py        # Test de Product Service
-├── locustfile_orders.py          # Test de Order Service
-├── locustfile_payments.py        # Test de Payment Service
-├── locustfile_favorites.py       # Test de Favourite Service
-├── locustfile_shipping.py        # Test de Shipping Service
-├── run_performance_tests.sh      # Script principal de ejecución
-├── stress_test.sh                # Script de prueba de estrés
-├── test_service.sh               # Script para probar servicios individuales
-├── performance-results/          # Resultados de las pruebas (CSV)
-└── README.md                     # Este archivo
-```
-
-## 🔧 Configuración
-
-### Variables de entorno (.env)
+#### Modo Web UI (Interactivo)
 
 ```bash
-# URLs de los servicios
-API_GATEWAY_URL=http://localhost:8100
-PRODUCT_SERVICE_URL=http://localhost:8200
-ORDER_SERVICE_URL=http://localhost:8300
-PAYMENT_SERVICE_URL=http://localhost:8400
-FAVOURITE_SERVICE_URL=http://localhost:8800
-SHIPPING_SERVICE_URL=http://localhost:8600
+locust -f locustfile.py --host=http://localhost:8080
 ```
 
-## 📈 Ejemplos de uso
+Luego abre tu navegador en: `http://localhost:8089`
 
-### Ejecutar con interfaz gráfica (recomendado para análisis)
+#### Generar Reportes
 
 ```bash
-./run_performance_tests.sh -u 50 -r 5 -t 10m
+# Durante la ejecución, especifica archivos de salida
+locust -f locustfile.py \
+    --host=http://localhost:8080 \
+    --users 50 \
+    --spawn-rate 5 \
+    --run-time 5m \
+    --headless \
+    --html=results/report.html \
+    --csv=results/stats
 ```
 
-Luego acceder a http://localhost:8089
-
-### Ejecutar en modo headless (sin interfaz)
+#### Analizar Resultados
 
 ```bash
-./run_performance_tests.sh -u 100 -r 10 -t 15m --summary
+python scripts/analyze_results.py results/stats_stats.csv --output results/analysis.html
 ```
 
-### Prueba personalizada
+## 🧪 Tipos de Pruebas
+
+### 1. 🔥 Smoke Test (Prueba de Humo)
+
+**Objetivo**: Verificación rápida de que el sistema funciona
+
+- **Duración**: 2 minutos
+- **Usuarios**: 5
+- **Uso**: Validación post-deployment
 
 ```bash
-./run_performance_tests.sh \
-    --users 200 \
-    --rate 20 \
-    --time 30m \
-    --host http://production.example.com:8100 \
-    --csv results_prod
+locust -f locustfile.py --host=http://localhost:8080 --users 5 --spawn-rate 1 --run-time 2m --headless
 ```
 
-### Prueba de servicio específico
+### 2. 📊 Load Test (Prueba de Carga)
+
+**Objetivo**: Evaluar comportamiento bajo carga normal esperada
+
+- **Duración**: 10 minutos
+- **Usuarios**: 50
+- **Uso**: Validar rendimiento en operación normal
 
 ```bash
-# Product Service - 20 usuarios, 5 minutos
-./test_service.sh products -u 20 -t 5m
-
-# Order Service - 50 usuarios, 10 minutos  
-./test_service.sh orders -u 50 -t 10m
-
-# Payment Service - 30 usuarios, 5 minutos
-./test_service.sh payments -u 30 -t 5m
+locust -f locustfile.py --host=http://localhost:8080 --users 50 --spawn-rate 5 --run-time 10m --headless
 ```
 
-## 📊 Interpretación de resultados
+### 3. 💪 Stress Test (Prueba de Estrés)
 
-### Métricas clave
+**Objetivo**: Identificar límites del sistema y puntos de quiebre
 
-| Métrica | Descripción | Objetivo |
-|---------|-------------|----------|
-| **Response Time (ms)** | Tiempo de respuesta promedio | < 500ms |
-| **Request Rate (req/s)** | Solicitudes por segundo procesadas | > 100 req/s |
-| **Failure Rate (%)** | Porcentaje de solicitudes fallidas | < 1% |
-| **P95/P99 Response Time** | Percentiles 95 y 99 | < 1000ms (P95), < 2000ms (P99) |
-| **Concurrent Users** | Usuarios activos simultáneamente | Variable según objetivo |
+- **Duración**: 15 minutos
+- **Usuarios**: 200
+- **Uso**: Encontrar capacidad máxima
 
-### Archivos de resultados
+```bash
+locust -f locustfile.py --host=http://localhost:8080 --users 200 --spawn-rate 10 --run-time 15m --headless
+```
 
-Los resultados se guardan en `performance-results/`:
+### 4. ⚡ Spike Test (Prueba de Picos)
 
-- `*_stats.csv` - Estadísticas de cada request
-- `*_hist.csv` - Histograma de respuestas
+**Objetivo**: Evaluar respuesta ante aumentos súbitos de tráfico
 
-Analizar con Excel, Pandas, o GraphQL:
+- **Duración**: 3 minutos
+- **Usuarios**: 300
+- **Uso**: Simular eventos como Black Friday
+
+```bash
+locust -f locustfile.py --host=http://localhost:8080 --users 300 --spawn-rate 50 --run-time 3m --headless
+```
+
+### 5. 🏊 Soak Test (Prueba de Resistencia)
+
+**Objetivo**: Evaluar estabilidad bajo carga prolongada
+
+- **Duración**: 30 minutos
+- **Usuarios**: 100
+- **Uso**: Detectar memory leaks y degradación
+
+```bash
+locust -f locustfile.py --host=http://localhost:8080 --users 100 --spawn-rate 5 --run-time 30m --headless
+```
+
+## 📊 Métricas Clave
+
+### Tiempo de Respuesta
+
+- **Average Response Time**: Tiempo promedio de respuesta
+- **Median (P50)**: 50% de las requests están por debajo de este tiempo
+- **P95**: 95% de las requests están por debajo de este tiempo
+- **P99**: 99% de las requests están por debajo de este tiempo
+
+### Throughput
+
+- **RPS (Requests per Second)**: Cantidad de requests procesadas por segundo
+- **Total Requests**: Total de requests ejecutadas
+- **Requests/s**: Tasa de requests en tiempo real
+
+### Confiabilidad
+
+- **Success Rate**: Porcentaje de requests exitosas
+- **Failure Rate**: Porcentaje de requests fallidas
+- **Error Distribution**: Distribución de tipos de error
+
+### Thresholds Recomendados
+
+```yaml
+Excelente:
+  - Response Time: < 200ms
+  - Success Rate: > 99.5%
+  - Throughput: > 50 RPS
+
+Bueno:
+  - Response Time: < 500ms
+  - Success Rate: > 99%
+  - Throughput: > 30 RPS
+
+Aceptable:
+  - Response Time: < 1000ms
+  - Success Rate: > 95%
+  - Throughput: > 10 RPS
+```
+
+## ⚙️ Configuración
+
+### Archivo de Configuración
+
+Edita `config/test-config.yaml` para ajustar:
+
+```yaml
+scenarios:
+  load_test:
+    users: 50          # Número de usuarios concurrentes
+    spawn_rate: 5      # Usuarios que se agregan por segundo
+    duration: "10m"    # Duración de la prueba
+
+performance_thresholds:
+  response_time:
+    excellent: 200     # ms
+    acceptable: 1000   # ms
+```
+
+### Personalizar Locustfile
+
+El archivo `locustfile.py` contiene dos clases de usuarios:
+
+- **BrowsingUser**: Usuarios que navegan (peso: 3)
+- **BuyingUser**: Usuarios que compran (peso: 1)
+
+Ajusta los pesos para cambiar la distribución:
 
 ```python
-import pandas as pd
+class BrowsingUser(FastHttpUser):
+    weight = 3  # 75% de usuarios
 
-stats = pd.read_csv('performance-results/20240101_100000_results_stats.csv')
-print(stats[['Name', 'requests', 'failures', 'median', 'p95']])
+class BuyingUser(FastHttpUser):
+    weight = 1  # 25% de usuarios
 ```
 
-## 🎯 Escenarios de prueba
+## 📁 Resultados
 
-### 1. Prueba de carga (Load Test)
+Los resultados se guardan en el directorio `results/`:
+
+```
+results/
+├── load_test_20241104_153000.html      # Reporte HTML de Locust
+├── load_test_20241104_153000_stats.csv # Estadísticas CSV
+├── load_test_20241104_153000_failures.csv
+├── analysis_20241104_153000.html       # Análisis detallado
+└── performance_charts.png              # Gráficos
+```
+
+### Interpretar Resultados
+
+#### Reporte HTML de Locust
+
+Abre el archivo `.html` en tu navegador para ver:
+
+- Dashboard con métricas en tiempo real
+- Gráficos de requests/segundo
+- Tabla de estadísticas por endpoint
+- Distribución de tiempos de respuesta
+- Log de errores
+
+#### Reporte de Análisis
+
+El script `analyze_results.py` genera un reporte mejorado con:
+
+- Métricas consolidadas
+- Gráficos comparativos
+- Estado general del sistema
+- Recomendaciones
+
+## 🐳 Docker
+
+### Ejecución Individual
+
 ```bash
-./run_performance_tests.sh -u 50 -r 5 -t 10m
+# Ejecutar contenedor standalone
+docker run -it --rm \
+    --network host \
+    -v $(pwd)/results:/performance-tests/results \
+    ecommerce-locust \
+    -f locustfile.py \
+    --host=http://localhost:8080 \
+    --users 50 \
+    --spawn-rate 5 \
+    --run-time 5m \
+    --headless
 ```
-Valida que el sistema maneja la carga esperada.
 
-### 2. Prueba de estrés (Stress Test)
+### Modo Distribuido
+
+Para pruebas de alto volumen, usa Docker Compose con workers:
+
 ```bash
-./run_performance_tests.sh -u 200 -r 20 -t 15m --summary
-```
-Determina el punto de quiebre del sistema.
+# Iniciar cluster (1 master + 2 workers)
+docker-compose up -d
 
-### 3. Prueba de resistencia (Endurance Test)
+# Ver logs
+docker-compose logs -f
+
+# Acceder a Web UI
+open http://localhost:8089
+
+# Detener
+docker-compose down
+```
+
+El modo distribuido permite:
+
+- Escalar horizontalmente añadiendo más workers
+- Distribución de carga entre múltiples máquinas
+- Mayor capacidad de generación de usuarios virtuales
+
+### Escalar Workers
+
 ```bash
-./run_performance_tests.sh -u 30 -r 3 -t 60m --summary
-```
-Valida que el sistema es estable durante periodos prolongados.
-
-### 4. Prueba de picos (Spike Test)
-```bash
-# Primero: carga base
-./run_performance_tests.sh -u 20 -t 5m
-
-# Después: incremento rápido
-./run_performance_tests.sh -u 100 -t 5m
+# Añadir más workers
+docker-compose up -d --scale locust-worker=5
 ```
 
-## 🔍 Análisis detallado
+## 📚 Mejores Prácticas
 
-### Ver tabla de estadísticas en vivo
-Acceder a http://localhost:8089 durante la ejecución
+### Antes de las Pruebas
 
-### Analisar resultado CSV con Python
+1. **Asegurar Estado Limpio**:
+   ```bash
+   docker-compose -f ../compose.yml restart
+   ```
 
-```python
-import pandas as pd
-import matplotlib.pyplot as plt
+2. **Verificar Recursos**:
+   - CPU: Mínimo 4 cores disponibles
+   - RAM: Mínimo 8GB
+   - Disco: Espacio para logs y resultados
 
-# Cargar datos
-df = pd.read_csv('performance-results/timestamp_results_stats.csv')
+3. **Configurar Baseline**:
+   - Ejecutar smoke test primero
+   - Establecer métricas de referencia
 
-# Gráfico de tiempo de respuesta
-df[['Name', 'Average']].plot(kind='bar')
-plt.title('Tiempo de Respuesta Promedio por Endpoint')
-plt.show()
+### Durante las Pruebas
 
-# Filtrar errores
-errors = df[df['Failure rate'] > 0]
-print("Endpoints con errores:", errors)
+1. **Monitorear Sistema**:
+   - Métricas de Docker: `docker stats`
+   - Logs de servicios: `docker-compose logs -f`
+   - Actuator endpoints: `http://localhost:8080/actuator/metrics`
 
-# Resumen
-print(f"\nTotal de requests: {df['requests'].sum()}")
-print(f"Total de fallos: {df['failures'].sum()}")
-print(f"Tasa de fallos global: {(df['failures'].sum() / df['requests'].sum() * 100):.2f}%")
-```
+2. **No Interferir**:
+   - No ejecutar otras aplicaciones pesadas
+   - No modificar el sistema durante las pruebas
 
-## 🐛 Troubleshooting
+### Después de las Pruebas
 
-### Error: "Connection refused"
+1. **Analizar Resultados**:
+   ```bash
+   python scripts/analyze_results.py results/latest_stats.csv
+   ```
+
+2. **Comparar con Baseline**:
+   - Response time: ¿aumentó significativamente?
+   - Error rate: ¿está dentro del threshold?
+   - Throughput: ¿cumple con los objetivos?
+
+3. **Documentar Hallazgos**:
+   - Anotar configuración utilizada
+   - Identificar cuellos de botella
+   - Proponer mejoras
+
+### Troubleshooting
+
+#### Error: Connection Refused
+
 ```bash
 # Verificar que los servicios estén corriendo
-docker ps
-# O iniciar con: docker-compose up
+docker-compose -f ../compose.yml ps
+
+# Verificar conectividad
+curl http://localhost:8080/app/api/products
 ```
 
-### Error: "Module not found"
+#### Error: Authentication Failed
+
+El sistema crea usuarios automáticamente, pero si hay problemas:
+
 ```bash
-pip install --upgrade -r requirements.txt
+# Verificar logs del proxy-client
+docker-compose -f ../compose.yml logs proxy-client
 ```
 
-### Interfaz web no abre en http://localhost:8089
+#### Performance Degradation
+
+Si las pruebas son más lentas de lo esperado:
+
 ```bash
-# Usar puerto diferente
-locust -f locustfile.py -w --web-port 8090
+# Verificar recursos de Docker
+docker stats
+
+# Aumentar recursos en Docker Desktop:
+# Settings > Resources > Advanced
 ```
 
-### Resultados inconsistentes
-1. Asegurar que el sistema tiene suficientes recursos (CPU, RAM)
-2. Ejecutar pruebas sin otros procesos intensivos
-3. Repetir pruebas varias veces y promediar resultados
+## 🔧 Comandos Útiles
 
-## 📚 Documentación adicional
+```bash
+# Ver estadísticas en tiempo real (durante Web UI)
+watch -n 1 'curl -s http://localhost:8089/stats/requests | jq'
 
-### Locust Documentation
-- https://docs.locust.io/
+# Limpiar resultados antiguos
+rm -rf results/*.html results/*.csv
 
-### Mejores prácticas de pruebas de carga
-- https://www.locust.io/
+# Ejecutar prueba rápida custom
+locust -f locustfile.py --host=http://localhost:8080 \
+    --users 10 --spawn-rate 2 --run-time 1m --headless
 
-### Análisis de resultados
-- Spreadsheets: Excel, Google Sheets
-- Visualización: Matplotlib, Plotly
-- BI: Kibana, Grafana (con TimeSeriesDB)
+# Ver ayuda de Locust
+locust --help
+```
 
-## 📝 Notas importantes
+## 📖 Referencias
 
-1. **Impacto en producción**: Nunca ejecutar contra producción sin autorización
-2. **Recursos**: Las pruebas de estrés consumirán recursos significativos
-3. **Datos de prueba**: Se utilizan datos faker generados, sin afectar datos reales
-4. **Concurrencia**: Locust ejecuta usuarios en paralelo usando gevent
-5. **Resultados**: Mejor ejecutar múltiples pruebas y promediar
+- [Documentación de Locust](https://docs.locust.io/)
+- [Mejores prácticas de Performance Testing](https://martinfowler.com/articles/performance-testing.html)
+- [Spring Boot Actuator Metrics](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html)
 
-## 🤝 Contribuciones
+## 🤝 Contribuir
 
-Para agregar nuevas pruebas:
+Para agregar nuevos escenarios o mejorar las pruebas:
 
-1. Crear nuevo `locustfile_servicio.py`
-2. Definir casos de uso realistas
-3. Documentar en este README
-4. Ejecutar validación
+1. Edita `locustfile.py` agregando nuevas tareas
+2. Actualiza `test-config.yaml` con nueva configuración
+3. Documenta los cambios en este README
+4. Prueba los cambios con smoke test
 
-## 📞 Soporte
+## 📝 Licencia
 
-Para dudas o problemas:
-1. Revisar logs: `performance-results/*.csv`
-2. Consultar Locust docs: https://docs.locust.io/
-3. Verificar conectividad a servicios
+Este proyecto es parte del sistema E-commerce Microservices.
+
+---
+
+**Autor**: Performance Testing Suite  
+**Fecha**: 2024-11-04  
+**Versión**: 1.0.0

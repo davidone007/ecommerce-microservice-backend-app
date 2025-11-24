@@ -1,4 +1,28 @@
-locust==2.20.0
-requests==2.31.0
-faker==20.1.0
-python-dotenv==1.0.0
+# Dependencias para Pruebas de Rendimiento con Locust
+# ==================================================
+
+# Framework principal de pruebas de carga
+locust==2.17.0
+
+# Cliente HTTP rápido (opcional, para mejor performance)
+geventhttpclient==2.0.11
+
+# Utilidades para análisis y reportes
+pandas==2.1.3
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# Para generar reportes HTML mejorados
+jinja2==3.1.2
+
+# Logging y debugging
+colorlog==6.8.0
+
+# Para manejo de datos JSON
+ujson==5.9.0
+
+# Exportar métricas a diferentes formatos
+openpyxl==3.1.2
+
+# Cliente HTTP alternativo para pruebas más rápidas
+httpx==0.25.2

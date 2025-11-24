@@ -2,13 +2,13 @@
   "info": {
     "_postman_id": "ef5441c3-5a76-4161-8f2b-c7ac0c683b5a",
     "name": "E2E Ecommerce Microservices Tests",
-    "description": "Colección de 5 pruebas End-to-End que validan flujos completos de usuario en el sistema de microservicios de e-commerce",
+    "description": "Colecci\u00f3n de 5 pruebas End-to-End que validan flujos completos de usuario en el sistema de microservicios de e-commerce",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "48543948"
   },
   "item": [
     {
-      "name": "E2E-00: Setup Autenticación",
+      "name": "E2E-00: Setup Autenticaci\u00f3n",
       "item": [
         {
           "name": "0.1 - Crear Usuario Admin",
@@ -51,13 +51,7 @@
               "mode": "raw",
               "raw": "{\n    \"firstName\": \"Admin\",\n    \"lastName\": \"Test\",\n    \"imageUrl\": \"https://example.com/admin-avatar.jpg\",\n    \"email\": \"admin.test@ecommerce.com\",\n    \"phone\": \"+34600000000\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/users",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "users"]
-            }
+            "url": "{{base_url}}/users"
           },
           "response": []
         },
@@ -87,7 +81,7 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
-                  "// Esperar un momento para asegurar que el usuario está creado",
+                  "// Esperar un momento para asegurar que el usuario est\u00e1 creado",
                   "setTimeout(function(){}, 500);"
                 ],
                 "type": "text/javascript"
@@ -106,13 +100,7 @@
               "mode": "raw",
               "raw": "{\n    \"username\": \"admintest\",\n    \"password\": \"Admin123!\",\n    \"roleBasedAuthority\": \"ROLE_ADMIN\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\": {\n        \"userId\": {{admin_userId}}\n    }\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/credentials",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "credentials"]
-            }
+            "url": "{{base_url}}/credentials"
           },
           "response": []
         },
@@ -131,11 +119,11 @@
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData).to.have.property('jwtToken');",
                   "    pm.environment.set(\"jwt_token\", jsonData.jwtToken);",
-                  "    console.log(\"✅ JWT Token obtenido y guardado\");",
+                  "    console.log(\"\u2705 JWT Token obtenido y guardado\");",
                   "    console.log(\"Token:\", jsonData.jwtToken);",
                   "});",
                   "",
-                  "console.log(\"✅ E2E-00 COMPLETADO: Usuario admin creado y autenticado correctamente\");"
+                  "console.log(\"\u2705 E2E-00 COMPLETADO: Usuario admin creado y autenticado correctamente\");"
                 ],
                 "type": "text/javascript"
               }
@@ -144,7 +132,7 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
-                  "// Esperar un momento para asegurar que las credenciales están creadas",
+                  "// Esperar un momento para asegurar que las credenciales est\u00e1n creadas",
                   "setTimeout(function(){}, 500);"
                 ],
                 "type": "text/javascript"
@@ -163,13 +151,7 @@
               "mode": "raw",
               "raw": "{\n    \"username\": \"admintest\",\n    \"password\": \"Admin123!\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/authenticate",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "authenticate"]
-            }
+            "url": "{{base_url}}/authenticate"
           },
           "response": []
         }
@@ -177,7 +159,7 @@
       "description": "Setup inicial: Crea un usuario administrador, sus credenciales y obtiene el token JWT para las pruebas"
     },
     {
-      "name": "E2E-01: Registro y Gestión de Usuario Completa",
+      "name": "E2E-01: Registro y Gesti\u00f3n de Usuario Completa",
       "item": [
         {
           "name": "1.1 - Crear Usuario Nuevo",
@@ -199,7 +181,7 @@
                   "pm.test(\"User data is correct\", function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData.firstName).to.eql(\"Juan\");",
-                  "    pm.expect(jsonData.lastName).to.eql(\"Pérez\");",
+                  "    pm.expect(jsonData.lastName).to.eql(\"P\u00e9rez\");",
                   "    pm.expect(jsonData.email).to.eql(\"juan.perez@test.com\");",
                   "});"
                 ],
@@ -222,15 +204,9 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"firstName\": \"Juan\",\n    \"lastName\": \"Pérez\",\n    \"imageUrl\": \"https://example.com/avatar.jpg\",\n    \"email\": \"juan.perez@test.com\",\n    \"phone\": \"+34666777888\"\n}"
+              "raw": "{\n    \"firstName\": \"Juan\",\n    \"lastName\": \"P\u00e9rez\",\n    \"imageUrl\": \"https://example.com/avatar.jpg\",\n    \"email\": \"juan.perez@test.com\",\n    \"phone\": \"+34666777888\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/users",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "users"]
-            },
+            "url": "{{base_url}}/users",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -293,13 +269,7 @@
               "mode": "raw",
               "raw": "{\n    \"username\": \"juanperez\",\n    \"password\": \"SecurePass123!\",\n    \"roleBasedAuthority\": \"ROLE_USER\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\": {\n        \"userId\": {{test_userId}}\n    }\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/credentials",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "credentials"]
-            }
+            "url": "{{base_url}}/credentials"
           },
           "response": []
         },
@@ -333,13 +303,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/users/{{test_userId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "users", "{{test_userId}}"]
-            },
+            "url": "{{base_url}}/users/{{test_userId}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -354,7 +318,7 @@
           "response": []
         },
         {
-          "name": "1.4 - Actualizar Teléfono del Usuario",
+          "name": "1.4 - Actualizar Tel\u00e9fono del Usuario",
           "event": [
             {
               "listen": "test",
@@ -388,15 +352,9 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"userId\": {{test_userId}},\n    \"firstName\": \"Juan\",\n    \"lastName\": \"Pérez\",\n    \"imageUrl\": \"https://example.com/avatar.jpg\",\n    \"email\": \"juan.perez@test.com\",\n    \"phone\": \"+34999888777\"\n}"
+              "raw": "{\n    \"userId\": {{test_userId}},\n    \"firstName\": \"Juan\",\n    \"lastName\": \"P\u00e9rez\",\n    \"imageUrl\": \"https://example.com/avatar.jpg\",\n    \"email\": \"juan.perez@test.com\",\n    \"phone\": \"+34999888777\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/users/{{test_userId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "users", "{{test_userId}}"]
-            },
+            "url": "{{base_url}}/users/{{test_userId}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -426,7 +384,7 @@
                   "    pm.expect(jsonData.phone).to.eql(\"+34999888777\");",
                   "});",
                   "",
-                  "console.log(\"✅ E2E-01 COMPLETADO: Usuario creado, consultado y actualizado correctamente\");"
+                  "console.log(\"\u2705 E2E-01 COMPLETADO: Usuario creado, consultado y actualizado correctamente\");"
                 ],
                 "type": "text/javascript"
               }
@@ -441,13 +399,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/users/{{test_userId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "users", "{{test_userId}}"]
-            },
+            "url": "{{base_url}}/users/{{test_userId}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -462,13 +414,13 @@
           "response": []
         }
       ],
-      "description": "Flujo completo de registro y gestión de usuario: crea un nuevo usuario, lo consulta, actualiza su información y verifica los cambios"
+      "description": "Flujo completo de registro y gesti\u00f3n de usuario: crea un nuevo usuario, lo consulta, actualiza su informaci\u00f3n y verifica los cambios"
     },
     {
       "name": "E2E-02: Flujo de Compra Completo",
       "item": [
         {
-          "name": "2.1 - Crear Categoría para Productos",
+          "name": "2.1 - Crear Categor\u00eda para Productos",
           "event": [
             {
               "listen": "test",
@@ -503,15 +455,9 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"categoryTitle\": \"Electrónica\",\n    \"imageUrl\": \"https://example.com/electronics.jpg\"\n}"
+              "raw": "{\n    \"categoryTitle\": \"Electr\u00f3nica\",\n    \"imageUrl\": \"https://example.com/electronics.jpg\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/categories",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "categories"]
-            },
+            "url": "{{base_url}}/categories",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -563,13 +509,7 @@
               "mode": "raw",
               "raw": "{\n    \"productTitle\": \"Laptop HP ProBook\",\n    \"imageUrl\": \"https://example.com/laptop.jpg\",\n    \"sku\": \"HP-PROBOOK-2024\",\n    \"priceUnit\": 899.99,\n    \"quantity\": 50,\n    \"category\": {\n        \"categoryId\": {{test_categoryId}}\n    }\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/products",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "products"]
-            },
+            "url": "{{base_url}}/products",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -621,13 +561,7 @@
               "mode": "raw",
               "raw": "{\n    \"productTitle\": \"Mouse Logitech MX Master\",\n    \"imageUrl\": \"https://example.com/mouse.jpg\",\n    \"sku\": \"LOG-MX-MASTER\",\n    \"priceUnit\": 79.99,\n    \"quantity\": 100,\n    \"category\": {\n        \"categoryId\": {{test_categoryId}}\n    }\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/products",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "products"]
-            },
+            "url": "{{base_url}}/products",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -651,13 +585,13 @@
                   "// Verificar que el token JWT existe",
                   "const token = pm.environment.get(\"jwt_token\");",
                   "if (!token) {",
-                  "    console.error('⚠️ Token JWT no encontrado. Ejecuta E2E-00 primero');",
+                  "    console.error('\u26a0\ufe0f Token JWT no encontrado. Ejecuta E2E-00 primero');",
                   "}",
                   "",
                   "// Verificar que el userId existe",
                   "const userId = pm.environment.get(\"test_userId\");",
                   "if (!userId) {",
-                  "    console.error('⚠️ test_userId no encontrado. Ejecuta E2E-01 primero');",
+                  "    console.error('\u26a0\ufe0f test_userId no encontrado. Ejecuta E2E-01 primero');",
                   "}",
                   "",
                   "console.log('Token JWT:', token ? 'Presente' : 'Ausente');",
@@ -670,11 +604,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "// Manejo de errores más detallado",
+                  "// Manejo de errores m\u00e1s detallado",
                   "if (pm.response.code === 403) {",
-                  "    console.error('❌ Error 403 - Forbidden');",
+                  "    console.error('\u274c Error 403 - Forbidden');",
                   "    console.error('Posibles causas:');",
-                  "    console.error('1. Token JWT expirado o inválido');",
+                  "    console.error('1. Token JWT expirado o inv\u00e1lido');",
                   "    console.error('2. Usuario sin permisos para crear carritos');",
                   "    console.error('3. El usuario test_userId no existe');",
                   "    ",
@@ -691,7 +625,7 @@
                   "        var jsonData = pm.response.json();",
                   "        pm.expect(jsonData).to.have.property('cartId');",
                   "        pm.environment.set(\"test_cartId\", jsonData.cartId);",
-                  "        console.log('✅ Carrito creado con ID:', jsonData.cartId);",
+                  "        console.log('\u2705 Carrito creado con ID:', jsonData.cartId);",
                   "    });",
                   "}"
                 ],
@@ -716,13 +650,7 @@
               "mode": "raw",
               "raw": "{\n    \"userId\": {{test_userId}}\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/carts",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "carts"]
-            },
+            "url": "{{base_url}}/carts",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -774,13 +702,7 @@
               "mode": "raw",
               "raw": "{\n    \"orderDate\": \"02-11-2024__10:30:00:000000\",\n    \"orderDesc\": \"Compra de laptop y mouse\",\n    \"orderFee\": 979.98,\n    \"orderStatus\": \"CREATED\",\n    \"isActive\": true,\n    \"cart\": {\n        \"cartId\": {{test_cartId}}\n    }\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/orders",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "orders"]
-            },
+            "url": "{{base_url}}/orders",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -811,7 +733,7 @@
                   "    pm.expect(jsonData).to.have.property('orderStatus');",
                   "});",
                   "",
-                  "console.log(\"✅ E2E-02 COMPLETADO: Flujo de compra completo\");"
+                  "console.log(\"\u2705 E2E-02 COMPLETADO: Flujo de compra completo\");"
                 ],
                 "type": "text/javascript"
               }
@@ -834,13 +756,7 @@
               "mode": "raw",
               "raw": "{\n    \"orderId\": {{test_orderId}},\n    \"orderDate\": \"02-11-2024__10:30:00:000000\",\n    \"orderDesc\": \"Compra de laptop y mouse\",\n    \"orderFee\": 979.98,\n    \"orderStatus\": \"ORDERED\",\n    \"isActive\": true,\n    \"cart\": {\n        \"cartId\": {{test_cartId}}\n    }\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/orders/{{test_orderId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "orders", "{{test_orderId}}"]
-            },
+            "url": "{{base_url}}/orders/{{test_orderId}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -893,13 +809,7 @@
               "mode": "raw",
               "raw": "{\n    \"isPayed\": false,\n    \"paymentStatus\": \"NOT_STARTED\",\n    \"order\": {\n        \"orderId\": {{test_orderId}}\n    }\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/payments",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "payments"]
-            },
+            "url": "{{base_url}}/payments",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -951,13 +861,7 @@
               "mode": "raw",
               "raw": ""
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/payments/{{test_paymentId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "payments", "{{test_paymentId}}"]
-            },
+            "url": "{{base_url}}/payments/{{test_paymentId}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -972,10 +876,10 @@
           "response": []
         }
       ],
-      "description": "Flujo completo de compra: crea categoría y productos, genera carrito, crea orden, procesa pago y actualiza estado de la orden"
+      "description": "Flujo completo de compra: crea categor\u00eda y productos, genera carrito, crea orden, procesa pago y actualiza estado de la orden"
     },
     {
-      "name": "E2E-03: Gestión de Productos y Stock",
+      "name": "E2E-03: Gesti\u00f3n de Productos y Stock",
       "item": [
         {
           "name": "3.1 - Listar Todos los Productos",
@@ -1006,13 +910,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/products",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "products"]
-            },
+            "url": "{{base_url}}/products",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1027,7 +925,7 @@
           "response": []
         },
         {
-          "name": "3.2 - Obtener Producto Específico",
+          "name": "3.2 - Obtener Producto Espec\u00edfico",
           "event": [
             {
               "listen": "test",
@@ -1057,13 +955,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/products/{{test_productId1}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "products", "{{test_productId1}}"]
-            },
+            "url": "{{base_url}}/products/{{test_productId1}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1114,13 +1006,7 @@
               "mode": "raw",
               "raw": "{\n    \"productId\": {{test_productId1}},\n    \"productTitle\": \"Laptop HP ProBook\",\n    \"imageUrl\": \"https://example.com/laptop.jpg\",\n    \"sku\": \"HP-PROBOOK-2024\",\n    \"priceUnit\": 899.99,\n    \"quantity\": 48,\n    \"category\": {\n        \"categoryId\": {{test_categoryId}}\n    }\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/products/{{test_productId1}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "products", "{{test_productId1}}"]
-            },
+            "url": "{{base_url}}/products/{{test_productId1}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1171,13 +1057,7 @@
               "mode": "raw",
               "raw": "{\n    \"productId\": {{test_productId1}},\n    \"productTitle\": \"Laptop HP ProBook\",\n    \"imageUrl\": \"https://example.com/laptop.jpg\",\n    \"sku\": \"HP-PROBOOK-2024\",\n    \"priceUnit\": 849.99,\n    \"quantity\": 48,\n    \"category\": {\n        \"categoryId\": {{test_categoryId}}\n    }\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/products/{{test_productId1}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "products", "{{test_productId1}}"]
-            },
+            "url": "{{base_url}}/products/{{test_productId1}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1207,7 +1087,7 @@
                   "    pm.expect(jsonData).to.have.property('productId');",
                   "});",
                   "",
-                  "console.log(\"✅ E2E-03 COMPLETADO: Productos gestionados\");"
+                  "console.log(\"\u2705 E2E-03 COMPLETADO: Productos gestionados\");"
                 ],
                 "type": "text/javascript"
               }
@@ -1222,13 +1102,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/products/{{test_productId1}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "products", "{{test_productId1}}"]
-            },
+            "url": "{{base_url}}/products/{{test_productId1}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1243,13 +1117,13 @@
           "response": []
         }
       ],
-      "description": "Flujo de gestión de productos: lista productos, obtiene detalles, actualiza stock y precio, y verifica cambios"
+      "description": "Flujo de gesti\u00f3n de productos: lista productos, obtiene detalles, actualiza stock y precio, y verifica cambios"
     },
     {
-      "name": "E2E-04: Flujo de Envío Completo",
+      "name": "E2E-04: Flujo de Env\u00edo Completo",
       "item": [
         {
-          "name": "4.1 - Crear Item de Envío 1",
+          "name": "4.1 - Crear Item de Env\u00edo 1",
           "event": [
             {
               "listen": "test",
@@ -1285,13 +1159,7 @@
               "mode": "raw",
               "raw": "{\n    \"productId\": {{test_productId1}},\n    \"orderId\": {{test_orderId}},\n    \"orderedQuantity\": 1\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/shippings",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "shippings"]
-            },
+            "url": "{{base_url}}/shippings",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1306,7 +1174,7 @@
           "response": []
         },
         {
-          "name": "4.2 - Crear Item de Envío 2",
+          "name": "4.2 - Crear Item de Env\u00edo 2",
           "event": [
             {
               "listen": "test",
@@ -1342,13 +1210,7 @@
               "mode": "raw",
               "raw": "{\n    \"productId\": {{test_productId2}},\n    \"orderId\": {{test_orderId}},\n    \"orderedQuantity\": 2\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/shippings",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "shippings"]
-            },
+            "url": "{{base_url}}/shippings",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1363,7 +1225,7 @@
           "response": []
         },
         {
-          "name": "4.3 - Listar Todos los Items de Envío",
+          "name": "4.3 - Listar Todos los Items de Env\u00edo",
           "event": [
             {
               "listen": "test",
@@ -1391,13 +1253,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/shippings",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "shippings"]
-            },
+            "url": "{{base_url}}/shippings",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1412,7 +1268,7 @@
           "response": []
         },
         {
-          "name": "4.4 - Obtener Item de Envío Específico",
+          "name": "4.4 - Obtener Item de Env\u00edo Espec\u00edfico",
           "event": [
             {
               "listen": "test",
@@ -1428,7 +1284,7 @@
                   "        pm.expect(jsonData).to.have.property('productId');",
                   "    });",
                   "} else if (pm.response.code === 404 || pm.response.code === 400) {",
-                  "    console.log('ℹ️  Envío no encontrado o inaccesible (estado esperado cuando la orden no está en ORDERED)');",
+                  "    console.log('\u2139\ufe0f  Env\u00edo no encontrado o inaccesible (estado esperado cuando la orden no est\u00e1 en ORDERED)');",
                   "    console.log('Respuesta:', pm.response.code, pm.response.text().substring(0, 100));",
                   "}"
                 ],
@@ -1445,19 +1301,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/shippings/{{test_orderId}}/{{test_productId1}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": [
-                "app",
-                "api",
-                "shippings",
-                "{{test_orderId}}",
-                "{{test_productId1}}"
-              ]
-            },
+            "url": "{{base_url}}/shippings/{{test_orderId}}/{{test_productId1}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1472,10 +1316,10 @@
           "response": []
         }
       ],
-      "description": "Flujo completo de envío: crea items de envío para una orden, lista todos los envíos, consulta específico y actualiza cantidades"
+      "description": "Flujo completo de env\u00edo: crea items de env\u00edo para una orden, lista todos los env\u00edos, consulta espec\u00edfico y actualiza cantidades"
     },
     {
-      "name": "E2E-05: Gestión de Favoritos de Usuario",
+      "name": "E2E-05: Gesti\u00f3n de Favoritos de Usuario",
       "item": [
         {
           "name": "5.1 - Agregar Producto 1 a Favoritos",
@@ -1516,13 +1360,7 @@
               "mode": "raw",
               "raw": "{\n    \"userId\": {{test_userId}},\n    \"productId\": {{test_productId1}},\n    \"likeDate\": \"02-11-2024__11:00:00:000000\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/favourites",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "favourites"]
-            },
+            "url": "{{base_url}}/favourites",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1575,13 +1413,7 @@
               "mode": "raw",
               "raw": "{\n    \"userId\": {{test_userId}},\n    \"productId\": {{test_productId2}},\n    \"likeDate\": \"02-11-2024__11:15:00:000000\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/favourites",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "favourites"]
-            },
+            "url": "{{base_url}}/favourites",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1623,13 +1455,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/favourites",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "favourites"]
-            },
+            "url": "{{base_url}}/favourites",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1644,7 +1470,7 @@
           "response": []
         },
         {
-          "name": "5.4 - Obtener Favorito Específico",
+          "name": "5.4 - Obtener Favorito Espec\u00edfico",
           "event": [
             {
               "listen": "test",
@@ -1673,19 +1499,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/favourites/{{test_userId}}/{{test_productId1}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": [
-                "app",
-                "api",
-                "favourites",
-                "{{test_userId}}",
-                "{{test_productId1}}"
-              ]
-            },
+            "url": "{{base_url}}/favourites/{{test_userId}}/{{test_productId1}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1700,7 +1514,7 @@
           "response": []
         }
       ],
-      "description": "Flujo completo de gestión de favoritos: agrega productos a favoritos, lista todos, consulta específico y elimina favoritos"
+      "description": "Flujo completo de gesti\u00f3n de favoritos: agrega productos a favoritos, lista todos, consulta espec\u00edfico y elimina favoritos"
     },
     {
       "name": "E2E-99: Cleanup - Eliminar Datos de Prueba",
@@ -1731,19 +1545,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/favourites/{{test_userId}}/{{test_productId1}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": [
-                "app",
-                "api",
-                "favourites",
-                "{{test_userId}}",
-                "{{test_productId1}}"
-              ]
-            }
+            "url": "{{base_url}}/favourites/{{test_userId}}/{{test_productId1}}"
           },
           "response": []
         },
@@ -1773,19 +1575,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/favourites/{{test_userId}}/{{test_productId2}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": [
-                "app",
-                "api",
-                "favourites",
-                "{{test_userId}}",
-                "{{test_productId2}}"
-              ]
-            }
+            "url": "{{base_url}}/favourites/{{test_userId}}/{{test_productId2}}"
           },
           "response": []
         },
@@ -1827,13 +1617,7 @@
               "mode": "raw",
               "raw": "{\n    \"orderId\": {{test_orderId}},\n    \"orderDate\": \"02-11-2024__10:30:00:000000\",\n    \"orderDesc\": \"Compra de laptop y mouse\",\n    \"orderFee\": 979.98,\n    \"orderStatus\": \"CREATED\",\n    \"isActive\": false,\n    \"cart\": {\n        \"cartId\": {{test_cartId}}\n    }\n}"
             },
-            "url": {
-              "raw": "http://localhost:8080/app/api/orders/{{test_orderId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "orders", "{{test_orderId}}"]
-            },
+            "url": "{{base_url}}/orders/{{test_orderId}}",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1873,13 +1657,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/orders/{{test_orderId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "orders", "{{test_orderId}}"]
-            }
+            "url": "{{base_url}}/orders/{{test_orderId}}"
           },
           "response": []
         },
@@ -1909,13 +1687,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/carts/{{test_cartId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "carts", "{{test_cartId}}"]
-            }
+            "url": "{{base_url}}/carts/{{test_cartId}}"
           },
           "response": []
         },
@@ -1945,13 +1717,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/products/{{test_productId1}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "products", "{{test_productId1}}"]
-            }
+            "url": "{{base_url}}/products/{{test_productId1}}"
           },
           "response": []
         },
@@ -1981,18 +1747,12 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/products/{{test_productId2}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "products", "{{test_productId2}}"]
-            }
+            "url": "{{base_url}}/products/{{test_productId2}}"
           },
           "response": []
         },
         {
-          "name": "99.7 - Eliminar Categoría",
+          "name": "99.7 - Eliminar Categor\u00eda",
           "event": [
             {
               "listen": "test",
@@ -2002,7 +1762,7 @@
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
                   "});",
                   "",
-                  "console.log(\"Categoría eliminada\");"
+                  "console.log(\"Categor\u00eda eliminada\");"
                 ],
                 "type": "text/javascript"
               }
@@ -2017,13 +1777,7 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/categories/{{test_categoryId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "categories", "{{test_categoryId}}"]
-            }
+            "url": "{{base_url}}/categories/{{test_categoryId}}"
           },
           "response": []
         },
@@ -2053,17 +1807,10 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/credentials/{{test_userId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "credentials", "{{test_userId}}"]
-            }
+            "url": "{{base_url}}/credentials/{{test_userId}}"
           },
           "response": []
         },
-
         {
           "name": "99.10 - Eliminar Credenciales Admin",
           "event": [
@@ -2076,9 +1823,9 @@
                   "});",
                   "",
                   "if (pm.response.code === 200 || pm.response.code === 204) {",
-                  "    console.log(\"✅ Credenciales admin eliminadas\");",
+                  "    console.log(\"\u2705 Credenciales admin eliminadas\");",
                   "} else {",
-                  "    console.log(\"ℹ️  Credenciales admin no encontradas o no se pueden eliminar\");",
+                  "    console.log(\"\u2139\ufe0f  Credenciales admin no encontradas o no se pueden eliminar\");",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -2094,18 +1841,12 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "http://localhost:8080/app/api/credentials/{{admin_userId}}",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["app", "api", "credentials", "{{admin_userId}}"]
-            }
+            "url": "{{base_url}}/credentials/{{admin_userId}}"
           },
           "response": []
         }
       ],
-      "description": "Cleanup: Elimina todos los recursos creados durante los tests para permitir que la colección se ejecute nuevamente sin conflictos"
+      "description": "Cleanup: Elimina todos los recursos creados durante los tests para permitir que la colecci\u00f3n se ejecute nuevamente sin conflictos"
     }
   ],
   "variable": [
@@ -2120,7 +1861,7 @@
       "listen": "prerequest",
       "script": {
         "exec": [
-          "console.log(\"🚀 Iniciando prueba: \" + pm.info.requestName);"
+          "console.log(\"\ud83d\ude80 Iniciando prueba: \" + pm.info.requestName);"
         ],
         "type": "text/javascript"
       }
@@ -2129,7 +1870,7 @@
       "listen": "test",
       "script": {
         "exec": [
-          "console.log(\"✅ Prueba completada: \" + pm.info.requestName);"
+          "console.log(\"\u2705 Prueba completada: \" + pm.info.requestName);"
         ],
         "type": "text/javascript"
       }
