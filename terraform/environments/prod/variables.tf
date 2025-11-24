@@ -48,3 +48,21 @@ variable "jwt_secret_value" {
   default     = "mysecretkey" # In a real scenario, this should be passed via -var or environment variable
 }
 
+variable "tags" {
+  description = "Tags to apply to resources"
+  type        = map(string)
+  default     = {}
+}
+
+variable "static_ip_name" {
+  description = "Name of the static public IP created manually"
+  type        = string
+  default     = "ecommerce-prod-ip"
+}
+
+variable "static_ip_resource_group" {
+  description = "Resource group where the static public IP is located"
+  type        = string
+  default     = "ecommerce-static-resources"
+}
+

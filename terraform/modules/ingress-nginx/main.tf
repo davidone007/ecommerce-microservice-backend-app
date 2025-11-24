@@ -6,23 +6,17 @@ resource "helm_release" "ingress_nginx" {
   create_namespace = true
   version          = "4.8.3"
 
-  # Helm waits for resources to be ready; on cloud providers (AKS) LoadBalancer
-  # provisioning can take several minutes. Increase timeout to avoid 'context
-  # deadline exceeded' when Terraform/Helm tries to wait for the Release to
-  # become ready. Make the release atomic so failed installations are rolled
-  # back automatically.
-  atomic  = true
-  wait    = true
-  timeout = 900
+  # Use provider defaults for wait/timeout/atomic to keep a standard Helm
+  # behaviour and reduce surprises on retries.
 
   values = [
     yamlencode({
       controller = {
         service = {
-          loadBalancerIP = "172.210.123.215"
+          loadBalancerIP = var.load_balancer_ip
           annotations = {
             "service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path" = "/healthz"
-            "service.beta.kubernetes.io/azure-load-balancer-resource-group"            = "MC_ecommerce-rg-prod_ecommerce-aks-prod_eastus"
+            "service.beta.kubernetes.io/azure-load-balancer-resource-group"            = var.static_ip_resource_group
           }
         }
       }
