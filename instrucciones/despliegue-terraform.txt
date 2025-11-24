@@ -1,8 +1,6 @@
 #Stage
 terraform init 
-#Desplegar AKS primero 
-terraform apply -target=module.aks -auto-approve
-#Volverlo a hacer con el secreto y para desplegar el resto 
+terraform apply -target=module.aks -var="jwt_secret_value=secret123" -auto-approve
 terraform apply -var="jwt_secret_value=secret123" -auto-approve
 
 

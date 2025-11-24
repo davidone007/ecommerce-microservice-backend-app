@@ -24,7 +24,11 @@ module "helm_release" {
     "keyVault.userAssignedIdentityID" = module.aks.key_vault_secrets_provider_identity_client_id
   }
 
-  depends_on = [module.aks, module.keyvault]
+  # Ensure AKS + KeyVault are created and KeyVault access policy has time to
+  # propagate to the SecretProvider identity before Helm installs the chart.
+  # This avoids a race where pods start and the CSI driver gets 403 when reading
+  # secrets because the access policy hasn't propagated yet.
+  depends_on = [module.aks, module.keyvault, time_sleep.wait_for_rbac]
 }
 
 module "sonarqube" {
@@ -49,4 +53,10 @@ resource "random_string" "suffix" {
   length  = 6
   special = false
   upper   = false
+}
+
+# short wait to allow RBAC / Key Vault policy changes to propagate before pods
+# that depend on them are created
+resource "time_sleep" "wait_for_rbac" {
+  create_duration = "30s"
 }
