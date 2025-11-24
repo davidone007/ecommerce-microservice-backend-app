@@ -12,376 +12,228 @@ on:
     branches: [stage, "ops/feat/*", "ops/fix/*"]
 
 jobs:
-  maven-build:
-    name: Build (Maven)
+  fetch-image-tag:
+    name: Fetch image tag published by Dev
     runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.set.outputs.image_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Build with Maven (compile + unit tests only)
+      - name: Get latest dev release tag and set image tag
+        id: set
         run: |
-          chmod +x ./mvnw
-          # Run only unit tests at this stage
-          # Integration tests will run after infrastructure is deployed
-          # Pattern: *ServiceImplTest for unit tests
-          ./mvnw -B -T 1C verify \
-            -Dtest="*ServiceImplTest" \
-            -DfailIfNoTests=false
+          OWNER=${{ github.repository_owner }}
+          REPO=$(basename $GITHUB_REPOSITORY)
+          echo "Looking for latest release tag starting with dev- in $OWNER/$REPO..."
+          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases")
+          tag=$(echo "$resp" | jq -r '.[] | select(.tag_name | startswith("dev-")) | .tag_name' | head -n1)
+          if [ -z "$tag" ] || [ "$tag" = "null" ]; then
+            echo "No dev release tag found" >&2
+            exit 1
+          fi
+          version=${tag#dev-}
+          echo "Found dev release: $tag -> image tag: $version"
+          echo "image_tag=$version" >> "$GITHUB_OUTPUT"
+
+  # (no semantic calculation or build in stage; image comes from dev release)
+
+  # No docker build in stage (image comes from Dev) — stage will fetch the image tag and deploy it
+
+  kubernetes-deploy:
+    name: Deploy to Kubernetes
+    # Use GitHub Environment protections for stage deployments. Configure reviewers/secrets in repo Settings → Environments → stage
+    environment:
+      name: stage
+    runs-on: ubuntu-latest
+    needs: [fetch-image-tag, infrastructure-deploy]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ecommerce-rg-stage
+          cluster-name: ecommerce-aks-stage
 
-      - name: Get AKS Credentials
-        run: az aks get-credentials --resource-group ecommerce-rg-stage --name ecommerce-aks-stage --overwrite-existing
-
-      - name: Port-forward SonarQube
+      - name: Update image tags in deployments (selective)
         run: |
-          # Start port-forward in background
-          kubectl port-forward svc/sonarqube-sonarqube 9000:9000 -n sonarqube &
-          # Wait for connection to be ready
-          sleep 5
-          echo "SonarQube port-forward established on localhost:9000"
+          echo "🚀 Updating only application service deployments..."
 
-      - name: SonarQube analysis
-        env:
-          SONAR_HOST_URL: "http://localhost:9000"
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          # Lista ESPECÍFICA de tus servicios de aplicación (NO infraestructura)
+          declare -a APP_DEPLOYMENTS=(
+            "api-gateway-container"
+            "product-service-container"
+            "user-service-container"
+            "order-service-container"
+            "payment-service-container"
+            "shipping-service-container"
+            "favourite-service-container"
+            "proxy-client-container"
+            "service-discovery-container"
+            "cloud-config-container"
+          )
+
+          IMAGE_TAG="${{ needs.fetch-image-tag.outputs.image_tag }}"
+          REGISTRY="ghcr.io/${{ github.repository_owner }}"
+
+          # Actualizar cada deployment individualmente
+          for deployment in "${APP_DEPLOYMENTS[@]}"; do
+            # Extraer el nombre del servicio (sin el sufijo -container)
+            SERVICE_NAME="${deployment%-container}"
+            
+            echo "📦 Updating $deployment with image tag: $IMAGE_TAG"
+            
+            # Verificar si el deployment existe
+            if kubectl get deployment "$deployment" -n stage &> /dev/null; then
+              # Actualizar la imagen del contenedor
+              kubectl set image deployment/"$deployment" \
+                "$deployment=$REGISTRY/$SERVICE_NAME:$IMAGE_TAG" \
+                -n stage
+              
+              echo "✅ Updated $deployment"
+            else
+              echo "⚠️  Deployment $deployment not found, skipping..."
+            fi
+          done
+
+      - name: Wait for rollouts with proper timeout
         run: |
-          if [ -z "$SONAR_TOKEN" ]; then
-            echo "Skipping SonarQube analysis: SONAR_TOKEN not set as secret"
-            exit 0
+          echo "⏳ Waiting for rollouts to complete..."
+
+          declare -a APP_DEPLOYMENTS=(
+            "api-gateway-container"
+            "product-service-container"
+            "user-service-container"
+            "order-service-container"
+            "payment-service-container"
+            "shipping-service-container"
+            "favourite-service-container"
+            "proxy-client-container"
+            "service-discovery-container"
+            "cloud-config-container"
+          )
+
+          FAILED_DEPLOYMENTS=()
+
+          for deployment in "${APP_DEPLOYMENTS[@]}"; do
+            if kubectl get deployment "$deployment" -n stage &> /dev/null; then
+              echo "⏳ Waiting for $deployment rollout..."
+              
+              if kubectl rollout status deployment/"$deployment" -n stage --timeout=10m; then
+                echo "✅ $deployment rolled out successfully"
+              else
+                echo "❌ $deployment rollout failed or timed out"
+                FAILED_DEPLOYMENTS+=("$deployment")
+                
+                # Debug information
+                echo "--- Debugging $deployment ---"
+                kubectl describe deployment/"$deployment" -n stage | tail -30
+                kubectl get pods -n stage -l "io.kompose.service=$deployment" -o wide
+              fi
+            fi
+          done
+
+          # Check if any deployments failed
+          if [ ${#FAILED_DEPLOYMENTS[@]} -gt 0 ]; then
+            echo ""
+            echo "❌ The following deployments failed:"
+            printf '%s\n' "${FAILED_DEPLOYMENTS[@]}"
+            exit 1
           fi
 
-          chmod +x ./mvnw
-          ./mvnw -B -DskipTests=true sonar:sonar \
-          -Dsonar.host.url="$SONAR_HOST_URL" \
-          -Dsonar.login="$SONAR_TOKEN" \
-          -Dsonar.projectKey="ecommerce" \
-          -Dsonar.projectName="ecommerce" \
-          -Dsonar.coverage.jacoco.xmlReportPaths="**/target/site/jacoco/jacoco.xml,**/target/site/jacoco-aggregate/jacoco.xml"
+          echo ""
+          echo "✅ All application deployments completed successfully"
 
-      - name: Upload test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            **/target/surefire-reports/*.xml
-          retention-days: 3
-
-      - name: Upload build workspace
-        uses: actions/upload-artifact@v4
-        with:
-          name: workspace
-          path: |
-            .
-            !.git
-          retention-days: 1
-
-  docker-build:
-    name: Build ${{ matrix.service }}
-    runs-on: ubuntu-latest
-    needs: maven-build
-    strategy:
-      fail-fast: false
-      matrix:
-        service:
-          [
-            api-gateway,
-            cloud-config,
-            favourite-service,
-            order-service,
-            payment-service,
-            product-service,
-            proxy-client,
-            service-discovery,
-            shipping-service,
-            user-service,
-          ]
-
-    steps:
-      - name: Download workspace
-        uses: actions/download-artifact@v4
-        with:
-          name: workspace
-          path: .
-
-      - name: Check if Dockerfile exists
-        id: check
+      - name: Verify services are accessible
         run: |
-          if [ -f "${{ matrix.service }}/Dockerfile" ]; then 
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else 
-            echo "exists=false" >> "$GITHUB_OUTPUT"
+          echo "🔍 Verifying service endpoints..."
+
+          # Wait a bit for services to stabilize
+          sleep 30
+
+          # Get API Gateway External IP
+          EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+
+          if [ -z "$EXTERNAL_IP" ]; then
+            echo "⚠️  Could not get External IP, checking service status..."
+            kubectl get svc -n stage
+            exit 1
           fi
 
-      - name: Set up Docker Buildx
-        if: steps.check.outputs.exists == 'true'
-        uses: docker/setup-buildx-action@v3
+          echo "API Gateway IP: $EXTERNAL_IP"
 
-      - name: Log in to GHCR
-        if: steps.check.outputs.exists == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          # Quick health check
+          HEALTH_URL="http://$EXTERNAL_IP:8080/actuator/health"
+          echo "Checking health endpoint: $HEALTH_URL"
 
-      - name: Extract metadata
-        if: steps.check.outputs.exists == 'true'
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
-          tags: |
-            type=raw,value=stage
-            type=sha,prefix=,format=long
+          RETRIES=0
+          MAX_RETRIES=10
 
-      - name: Build and push
-        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ matrix.service }}/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Run Trivy vulnerability scanner
-        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:stage'
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-          scanners: 'vuln'
-
-      - name: Upload Trivy scan results
-        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
-        continue-on-error: true
-        run: |
-          echo "📋 Trivy scan completed for ${{ matrix.service }}"
-          echo "Security scan results have been generated and attached as artifact"
-
-      - name: Build locally if push fails (for testing)
-        if: steps.check.outputs.exists == 'true' && failure()
-        run: |
-          echo "⚠️  GHCR push failed. Building image locally for testing..."
-          docker build -f ${{ matrix.service }}/Dockerfile -t ${{ matrix.service }}:stage .
-
-      - name: Set build tag output for K8s deployment
-        if: steps.check.outputs.exists == 'true'
-        id: build-tag
-        run: |
-          echo "tag=stage" >> "$GITHUB_OUTPUT"
-
-  kubernetes-deploy:
-      name: Deploy to Kubernetes
-      runs-on: ubuntu-latest
-      needs: [docker-build, infrastructure-deploy]
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-
-        - name: Azure Login
-          uses: azure/login@v1
-          with:
-            creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-        - name: Set AKS Context
-          uses: azure/aks-set-context@v3
-          with:
-            resource-group: ecommerce-rg-stage
-            cluster-name: ecommerce-aks-stage
-
-        - name: Update image tags in deployments (selective)
-          run: |
-            echo "🚀 Updating only application service deployments..."
+          while [ $RETRIES -lt $MAX_RETRIES ]; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
             
-            # Lista ESPECÍFICA de tus servicios de aplicación (NO infraestructura)
-            declare -a APP_DEPLOYMENTS=(
-              "api-gateway-container"
-              "product-service-container"
-              "user-service-container"
-              "order-service-container"
-              "payment-service-container"
-              "shipping-service-container"
-              "favourite-service-container"
-              "proxy-client-container"
-              "service-discovery-container"
-              "cloud-config-container"
-            )
-            
-            IMAGE_TAG="stage"
-            REGISTRY="ghcr.io/${{ github.repository_owner }}"
-            
-            # Actualizar cada deployment individualmente
-            for deployment in "${APP_DEPLOYMENTS[@]}"; do
-              # Extraer el nombre del servicio (sin el sufijo -container)
-              SERVICE_NAME="${deployment%-container}"
-              
-              echo "📦 Updating $deployment with image tag: $IMAGE_TAG"
-              
-              # Verificar si el deployment existe
-              if kubectl get deployment "$deployment" -n stage &> /dev/null; then
-                # Actualizar la imagen del contenedor
-                kubectl set image deployment/"$deployment" \
-                  "$deployment=$REGISTRY/$SERVICE_NAME:$IMAGE_TAG" \
-                  -n stage
-                
-                echo "✅ Updated $deployment"
-              else
-                echo "⚠️  Deployment $deployment not found, skipping..."
-              fi
-            done
-
-        - name: Wait for rollouts with proper timeout
-          run: |
-            echo "⏳ Waiting for rollouts to complete..."
-            
-            declare -a APP_DEPLOYMENTS=(
-              "api-gateway-container"
-              "product-service-container"
-              "user-service-container"
-              "order-service-container"
-              "payment-service-container"
-              "shipping-service-container"
-              "favourite-service-container"
-              "proxy-client-container"
-              "service-discovery-container"
-              "cloud-config-container"
-            )
-            
-            FAILED_DEPLOYMENTS=()
-            
-            for deployment in "${APP_DEPLOYMENTS[@]}"; do
-              if kubectl get deployment "$deployment" -n stage &> /dev/null; then
-                echo "⏳ Waiting for $deployment rollout..."
-                
-                if kubectl rollout status deployment/"$deployment" -n stage --timeout=10m; then
-                  echo "✅ $deployment rolled out successfully"
-                else
-                  echo "❌ $deployment rollout failed or timed out"
-                  FAILED_DEPLOYMENTS+=("$deployment")
-                  
-                  # Debug information
-                  echo "--- Debugging $deployment ---"
-                  kubectl describe deployment/"$deployment" -n stage | tail -30
-                  kubectl get pods -n stage -l "io.kompose.service=$deployment" -o wide
-                fi
-              fi
-            done
-            
-            # Check if any deployments failed
-            if [ ${#FAILED_DEPLOYMENTS[@]} -gt 0 ]; then
-              echo ""
-              echo "❌ The following deployments failed:"
-              printf '%s\n' "${FAILED_DEPLOYMENTS[@]}"
-              exit 1
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ API Gateway is healthy (HTTP $HTTP_CODE)"
+              break
+            else
+              echo "⏳ Waiting for API Gateway... (HTTP $HTTP_CODE) - Retry $((RETRIES+1))/$MAX_RETRIES"
+              sleep 10
+              RETRIES=$((RETRIES+1))
             fi
-            
-            echo ""
-            echo "✅ All application deployments completed successfully"
+          done
 
-        - name: Verify services are accessible
-          run: |
-            echo "🔍 Verifying service endpoints..."
-            
-            # Wait a bit for services to stabilize
-            sleep 30
-            
-            # Get API Gateway External IP
-            EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
-            
-            if [ -z "$EXTERNAL_IP" ]; then
-              echo "⚠️  Could not get External IP, checking service status..."
-              kubectl get svc -n stage
-              exit 1
-            fi
-            
-            echo "API Gateway IP: $EXTERNAL_IP"
-            
-            # Quick health check
-            HEALTH_URL="http://$EXTERNAL_IP:8080/actuator/health"
-            echo "Checking health endpoint: $HEALTH_URL"
-            
-            RETRIES=0
-            MAX_RETRIES=10
-            
-            while [ $RETRIES -lt $MAX_RETRIES ]; do
-              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
-              
-              if [ "$HTTP_CODE" = "200" ]; then
-                echo "✅ API Gateway is healthy (HTTP $HTTP_CODE)"
-                break
-              else
-                echo "⏳ Waiting for API Gateway... (HTTP $HTTP_CODE) - Retry $((RETRIES+1))/$MAX_RETRIES"
-                sleep 10
-                RETRIES=$((RETRIES+1))
-              fi
-            done
-            
-            if [ $RETRIES -eq $MAX_RETRIES ]; then
-              echo "❌ API Gateway health check failed after $MAX_RETRIES retries"
-              exit 1
-            fi
+          if [ $RETRIES -eq $MAX_RETRIES ]; then
+            echo "❌ API Gateway health check failed after $MAX_RETRIES retries"
+            exit 1
+          fi
 
-        - name: Debug Deployment Status (if rollout failed)
-          if: failure()
-          run: |
-            echo "❌ Deployment failed. Debugging..."
+      - name: Debug Deployment Status (if rollout failed)
+        if: failure()
+        run: |
+          echo "❌ Deployment failed. Debugging..."
+          echo ""
+          echo "1. All deployments:"
+          kubectl get deployments -n stage -o wide
+          echo ""
+          echo "2. Pod status:"
+          kubectl get pods -n stage -o wide
+          echo ""
+          echo "3. Recent events:"
+          kubectl get events -n stage --sort-by='.lastTimestamp' | tail -50
+          echo ""
+          echo "4. Services status:"
+          kubectl get services -n stage
+          echo ""
+          echo "5. Failing pods details:"
+          kubectl get pods -n stage | grep -E "Pending|ImagePull|CrashLoop|Error|0/" | awk '{print $1}' | while read pod; do
+            echo "--- Pod: $pod ---"
+            kubectl describe pod/"$pod" -n stage | tail -50
             echo ""
-            echo "1. All deployments:"
-            kubectl get deployments -n stage -o wide
+            kubectl logs "$pod" -n stage --tail=50 2>/dev/null || echo "No logs available"
             echo ""
-            echo "2. Pod status:"
-            kubectl get pods -n stage -o wide
-            echo ""
-            echo "3. Recent events:"
-            kubectl get events -n stage --sort-by='.lastTimestamp' | tail -50
-            echo ""
-            echo "4. Services status:"
-            kubectl get services -n stage
-            echo ""
-            echo "5. Failing pods details:"
-            kubectl get pods -n stage | grep -E "Pending|ImagePull|CrashLoop|Error|0/" | awk '{print $1}' | while read pod; do
-              echo "--- Pod: $pod ---"
-              kubectl describe pod/"$pod" -n stage | tail -50
-              echo ""
-              kubectl logs "$pod" -n stage --tail=50 2>/dev/null || echo "No logs available"
-              echo ""
-            done
+          done
 
-        - name: Verify final deployment state
-          run: |
-            echo "📋 Final Kubernetes state:"
-            echo ""
-            echo "Deployments:"
-            kubectl get deployments -n stage
-            echo ""
-            echo "Services:"
-            kubectl get services -n stage
-            echo ""
-            echo "Pods:"
-            kubectl get pods -n stage -o wide
+      - name: Verify final deployment state
+        run: |
+          echo "📋 Final Kubernetes state:"
+          echo ""
+          echo "Deployments:"
+          kubectl get deployments -n stage
+          echo ""
+          echo "Services:"
+          kubectl get services -n stage
+          echo ""
+          echo "Pods:"
+          kubectl get pods -n stage -o wide
 
   integration-tests:
     name: Run Integration Tests
@@ -473,7 +325,6 @@ jobs:
             fi
           done
 
-
       - name: Run Integration Tests against deployed services
         run: |
           chmod +x ./mvnw
@@ -485,7 +336,6 @@ jobs:
             -Dtest="*IntegrationTest" \
             -DfailIfNoTests=false \
             -Dgateway.url="http://$EXTERNAL_IP:8080"
-
 
       - name: Upload integration test reports
         if: always()
@@ -677,7 +527,7 @@ jobs:
   generate-release-notes-stage:
     name: Generate Stage Release Notes
     runs-on: ubuntu-latest
-    needs: [performance-tests, security-tests]
+    needs: [performance-tests, security-tests, fetch-image-tag]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/')) && success()
     outputs:
       release_version: ${{ steps.output_info.outputs.version }}
@@ -688,26 +538,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Calculate Semantic Version & Changelog
-        id: version
-        uses: mathieudutour/github-tag-action@v6.1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          release_branches: stage
-          tag_prefix: stage-
-          dry_run: false
-          default_bump: patch
-
-      - name: Output Version & Changelog
+      - name: Get changelog from Dev release
         id: output_info
         run: |
-          echo "version=${{ steps.version.outputs.new_version }}" >> "$GITHUB_OUTPUT"
+          VERSION="${{ needs.fetch-image-tag.outputs.image_tag }}"
+          OWNER=${{ github.repository_owner }}
+          REPO=$(basename $GITHUB_REPOSITORY)
+
+          echo "Fetching release body for dev-$VERSION"
+          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases/tags/dev-$VERSION")
+          changelog=$(echo "$resp" | jq -r '.body // ""')
+
+          if [ -z "$changelog" ] || [ "$changelog" = "null" ]; then
+            changelog="No changelog found in dev release dev-$VERSION"
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "changelog<<EOF" >> "$GITHUB_OUTPUT"
-          echo "${{ steps.version.outputs.changelog }}" >> "$GITHUB_OUTPUT"
+          echo "$changelog" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
-          
+
           # Save changelog to file
-          echo "${{ steps.version.outputs.changelog }}" > CHANGELOG_STAGE_TEMP.txt
+          echo "$changelog" > CHANGELOG_STAGE_TEMP.txt
 
       - name: Create GitHub Pre-Release (Stage)
         if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
@@ -715,14 +567,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: stage-${{ steps.version.outputs.new_version }}
-          release_name: Stage Release stage-${{ steps.version.outputs.new_version }}
+          tag_name: stage-${{ steps.output_info.outputs.version }}
+          release_name: Stage Release stage-${{ steps.output_info.outputs.version }}
           body: |
-            # 🌙 Stage Release stage-${{ steps.version.outputs.new_version }}
+            # 🌙 Stage Release stage-${{ steps.output_info.outputs.version }}
 
             ## 📝 Changelog
 
-            ${{ steps.version.outputs.changelog }}
+            ${{ steps.output_info.outputs.changelog }}
 
             ## 📦 Artifacts
 
@@ -767,7 +619,7 @@ jobs:
   infrastructure-deploy:
     name: Deploy Infrastructure (Terraform)
     runs-on: ubuntu-latest
-    needs: maven-build
+    # no compilation required in stage — infra can be applied independently
     if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
     env:
       ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
@@ -792,78 +644,88 @@ jobs:
         run: terraform apply -auto-approve
 
   performance-tests:
-      name: Run Performance Tests (Locust)
-      runs-on: ubuntu-latest
-      needs: e2e-tests
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
+    name: Run Performance Tests (Locust)
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-        - name: Set up Python
-          uses: actions/setup-python@v4
-          with:
-            python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-        - name: Install Locust
-          run: |
-            pip install locust
-            if [ -f "performance-tests/requirements.txt" ]; then
-              pip install -r performance-tests/requirements.txt
-            fi
+      - name: Install Locust
+        run: |
+          pip install locust
+          if [ -f "performance-tests/requirements.txt" ]; then
+            pip install -r performance-tests/requirements.txt
+          fi
 
-        - name: Azure Login
-          uses: azure/login@v1
-          with:
-            creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-        - name: Set AKS Context
-          uses: azure/aks-set-context@v3
-          with:
-            resource-group: ecommerce-rg-stage
-            cluster-name: ecommerce-aks-stage
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ecommerce-rg-stage
+          cluster-name: ecommerce-aks-stage
 
-        - name: Get API Gateway External IP
-          id: get-ip
-          run: |
-            echo "Getting API Gateway External IP..."
-            EXTERNAL_IP=""
-            while [ -z "$EXTERNAL_IP" ]; do
-              echo "Waiting for External IP..."
-              EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-              [ -z "$EXTERNAL_IP" ] && sleep 10
-            done
-            echo "API Gateway IP: $EXTERNAL_IP"
-            echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_ENV
+      - name: Get API Gateway External IP
+        id: get-ip
+        run: |
+          echo "Getting API Gateway External IP..."
+          EXTERNAL_IP=""
+          while [ -z "$EXTERNAL_IP" ]; do
+            echo "Waiting for External IP..."
+            EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            [ -z "$EXTERNAL_IP" ] && sleep 10
+          done
+          echo "API Gateway IP: $EXTERNAL_IP"
+          echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_ENV
 
-        - name: Run Locust Tests
-          working-directory: ./performance-tests
-          continue-on-error: true
-          run: |
-            mkdir -p results
-            locust -f locustfile.py \
-              --headless \
-              --users 10 \
-              --spawn-rate 2 \
-              --run-time 1m \
-              --host "http://$EXTERNAL_IP:8080" \
-              --html results/report.html \
-              --csv results/stats \
-              --exit-code-on-error 0
+      - name: Run Locust Tests
+        working-directory: ./performance-tests
+        continue-on-error: true
+        run: |
+          mkdir -p results
+          locust -f locustfile.py \
+            --headless \
+            --users 10 \
+            --spawn-rate 2 \
+            --run-time 1m \
+            --host "http://$EXTERNAL_IP:8080" \
+            --html results/report.html \
+            --csv results/stats \
+            --exit-code-on-error 0
 
-        - name: Upload Performance Results
-          if: always()
-          uses: actions/upload-artifact@v4
-          with:
-            name: performance-test-results
-            path: performance-tests/results/
-            retention-days: 7
+      - name: Upload Performance Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-test-results
+          path: performance-tests/results/
+          retention-days: 7
 
   notify-success:
     name: Notify Success
     runs-on: ubuntu-latest
     if: success()
-    needs: [maven-build, docker-build, infrastructure-deploy, kubernetes-deploy, integration-tests, e2e-tests, performance-tests, security-tests, generate-release-notes-stage]
+    needs:
+      [
+        fetch-image-tag,
+        infrastructure-deploy,
+        kubernetes-deploy,
+        integration-tests,
+        e2e-tests,
+        performance-tests,
+        security-tests,
+        generate-release-notes-stage,
+      ]
     steps:
       - name: Send Email Notification
         uses: dawidd6/action-send-mail@v3
@@ -875,11 +737,11 @@ jobs:
           subject: "✅ Pipeline Success: ${{ github.repository }} (${{ github.ref }})"
           body: |
             The pipeline for branch ${{ github.ref }} has completed successfully! 🚀
-            
+
             Repository: ${{ github.repository }}
             Commit: ${{ github.sha }}
             Author: ${{ github.actor }}
-            
+
             Check the logs here: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           # For multiple recipients, configure MAIL_TO as "email1@example.com,email2@example.com"
           to: ${{ secrets.MAIL_TO }}
@@ -890,7 +752,17 @@ jobs:
     name: Notify Failure or Cancellation
     runs-on: ubuntu-latest
     if: failure() || cancelled()
-    needs: [maven-build, docker-build, infrastructure-deploy, kubernetes-deploy, integration-tests, e2e-tests, performance-tests, security-tests, generate-release-notes-stage]
+    needs:
+      [
+        fetch-image-tag,
+        infrastructure-deploy,
+        kubernetes-deploy,
+        integration-tests,
+        e2e-tests,
+        performance-tests,
+        security-tests,
+        generate-release-notes-stage,
+      ]
     steps:
       - name: Send Email Notification
         uses: dawidd6/action-send-mail@v3
@@ -902,11 +774,11 @@ jobs:
           subject: "❌ Pipeline Failed or Cancelled: ${{ github.repository }} (${{ github.ref }})"
           body: |
             The pipeline for branch ${{ github.ref }} has failed or was cancelled.
-            
+
             Repository: ${{ github.repository }}
             Commit: ${{ github.sha }}
             Author: ${{ github.actor }}
-            
+
             Check the logs here: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           # For multiple recipients, configure MAIL_TO as "email1@example.com,email2@example.com"
           to: ${{ secrets.MAIL_TO }}
@@ -914,55 +786,55 @@ jobs:
           secure: true
 
   security-tests:
-      name: Run Security Tests (OWASP ZAP)
-      runs-on: ubuntu-latest
-      needs: kubernetes-deploy
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
+    name: Run Security Tests (OWASP ZAP)
+    runs-on: ubuntu-latest
+    needs: kubernetes-deploy
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-        - name: Azure Login
-          uses: azure/login@v1
-          with:
-            creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-        - name: Set AKS Context
-          uses: azure/aks-set-context@v3
-          with:
-            resource-group: ecommerce-rg-stage
-            cluster-name: ecommerce-aks-stage
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ecommerce-rg-stage
+          cluster-name: ecommerce-aks-stage
 
-        - name: Get API Gateway External IP
-          id: get-ip
-          run: |
-            echo "Getting API Gateway External IP..."
-            EXTERNAL_IP=""
-            while [ -z "$EXTERNAL_IP" ]; do
-              echo "Waiting for External IP..."
-              EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-              [ -z "$EXTERNAL_IP" ] && sleep 10
-            done
-            echo "API Gateway IP: $EXTERNAL_IP"
-            echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_ENV
+      - name: Get API Gateway External IP
+        id: get-ip
+        run: |
+          echo "Getting API Gateway External IP..."
+          EXTERNAL_IP=""
+          while [ -z "$EXTERNAL_IP" ]; do
+            echo "Waiting for External IP..."
+            EXTERNAL_IP=$(kubectl get svc api-gateway-container -n stage -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            [ -z "$EXTERNAL_IP" ] && sleep 10
+          done
+          echo "API Gateway IP: $EXTERNAL_IP"
+          echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_ENV
 
-        - name: OWASP ZAP Full Scan
-          uses: zaproxy/action-full-scan@v0.10.0
-          continue-on-error: true
-          with:
-            target: "http://${{ env.EXTERNAL_IP }}:8080"
-            cmd_options: '-a'
-            allow_issue_writing: false
-            fail_action: false
-            artifact_name: ''  # Disable built-in artifact upload
+      - name: OWASP ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        continue-on-error: true
+        with:
+          target: "http://${{ env.EXTERNAL_IP }}:8080"
+          cmd_options: "-a"
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: "" # Disable built-in artifact upload
 
-        - name: Upload ZAP Report
-          if: always()
-          uses: actions/upload-artifact@v4
-          with:
-            name: zap-security-report
-            path: |
-              report_html.html
-              report_json.json
-              report_md.md
-            retention-days: 7
+      - name: Upload ZAP Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-security-report
+          path: |
+            report_html.html
+            report_json.json
+            report_md.md
+          retention-days: 7

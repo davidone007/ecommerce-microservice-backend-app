@@ -1,14 +1,15 @@
 name: CI - CD - Dev build
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 on:
+  # Run this workflow on any branch except master and stage (both on push and PR)
   push:
-    branches: [dev, "feat/*", "ops/feat/*"]
+    branches-ignore: [master, stage]
   pull_request:
-    branches: [dev, "feat/*", "ops/feat/*"]
+    branches-ignore: [master, stage]
 
 jobs:
   maven-build:
@@ -44,19 +45,24 @@ jobs:
           # so that modules without matching tests don't fail the aggregated build.
           ./mvnw -B -T 1C verify -Dtest="*ServiceImplTest" -DfailIfNoTests=false
 
-
       - name: SonarQube analysis
         env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          # Skip SonarQube analysis in dev environment
-          # SonarQube analysis only runs in stage and prod where infrastructure is deployed
-          if [ -z "$SONAR_TOKEN" ]; then
-            echo "⏭️  Skipping SonarQube analysis: SONAR_TOKEN not set as secret"
+          if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ]; then
+            echo "⚠️  SONAR_HOST_URL or SONAR_TOKEN not set; skipping SonarQube analysis"
             exit 0
           fi
-          echo "⏭️  SonarQube analysis is disabled for dev environment"
-          echo "    (Only runs in stage and prod pipelines)"
+
+          echo "➡️ Running SonarQube analysis against $SONAR_HOST_URL"
+          chmod +x ./mvnw
+          ./mvnw -B -DskipTests=true sonar:sonar \
+            -Dsonar.host.url="$SONAR_HOST_URL" \
+            -Dsonar.login="$SONAR_TOKEN" \
+            -Dsonar.projectKey="ecommerce" \
+            -Dsonar.projectName="ecommerce" \
+            -Dsonar.coverage.jacoco.xmlReportPaths="**/target/site/jacoco/jacoco.xml,**/target/site/jacoco-aggregate/jacoco.xml"
 
       - name: Upload test reports
         if: always()
@@ -76,10 +82,33 @@ jobs:
             !.git
           retention-days: 1
 
+  calculate-semver:
+    name: Calculate Semantic Version (Dev)
+    runs-on: ubuntu-latest
+    needs: maven-build
+    outputs:
+      new_version: ${{ steps.calc.outputs.new_version }}
+      changelog: ${{ steps.calc.outputs.changelog }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate Semantic Version & Changelog (dry run)
+        id: calc
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          release_branches: dev
+          tag_prefix: dev-
+          dry_run: true
+          default_bump: minor
+
   docker-build:
     name: Build ${{ matrix.service }}
     runs-on: ubuntu-latest
-    needs: maven-build
+    needs: [maven-build, calculate-semver]
     strategy:
       fail-fast: false
       matrix:
@@ -136,13 +165,16 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
           tags: |
+            # Add semantic version (calculated earlier) if available
+            type=raw,value=${{ needs.calculate-semver.outputs.new_version }}
             type=raw,value=latest
             type=sha,prefix=,format=long
             # Add a fixed tag 'dev' for all pushes
             type=raw,value=dev
 
       - name: Build and push
-        if: steps.check.outputs.exists == 'true' && (github.event_name == 'push' && github.ref == 'refs/heads/dev' || github.event_name == 'pull_request' && github.base_ref == 'dev')
+        # Push images on direct pushes to dev and PRs targeting dev
+        if: steps.check.outputs.exists == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/dev') || (github.event_name == 'pull_request' && github.base_ref == 'dev'))
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -153,8 +185,73 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Run Trivy vulnerability scanner (fail on CRITICAL)
+        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ needs.calculate-semver.outputs.new_version }}
+          format: table
+          # exit-code: 1 makes the step fail when vulnerabilities of the specified severities are found
+          exit-code: 1
+          ignore-unfixed: false
+          vuln-type: os,library
+          # Fail build only for CRITICAL vulns here; HIGH will still be visible in reports
+          severity: CRITICAL
+          scanners: vuln
+
+      - name: Upload Trivy scan results
+        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        continue-on-error: true
+        run: |
+          echo "📋 Trivy scan completed for ${{ matrix.service }}"
+          echo "Security scan results (if generated) are available in the job logs or trivy output artifacts"
+
+  repo-scan:
+    name: Repository filesystem & config scans (Trivy)
+    runs-on: ubuntu-latest
+    needs: maven-build
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+
+      - name: Trivy fs scan (repo)
+        id: trivy-fs
+        run: |
+          set -e
+          echo "Running trivy fs scan (repo root)"
+          trivy fs --format json --output trivy-fs.json --severity CRITICAL,HIGH . || true
+          trivy fs --format table --output trivy-fs.txt --severity CRITICAL,HIGH . || true
+
+      - name: Trivy config scan (repo)
+        id: trivy-config
+        run: |
+          set -e
+          echo "Running trivy config scan (YAML/Dockerfile/Helm/Terraform)"
+          trivy config --format json --output trivy-config.json --severity CRITICAL,HIGH . || true
+          trivy config --format table --output trivy-config.txt --severity CRITICAL,HIGH . || true
+
+      - name: Upload trivy repo scan artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-repo-scan
+          path: |
+            trivy-fs.json
+            trivy-fs.txt
+            trivy-config.json
+            trivy-config.txt
+          retention-days: 30
+
   generate-dev-release:
     name: Generate Dev Release Notes
+    # Use a GitHub Environment for dev if you want approvals/secrets scoped to dev
+    environment:
+      name: dev
     runs-on: ubuntu-latest
     needs: docker-build
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && success()
@@ -174,7 +271,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           release_branches: dev
           tag_prefix: dev-
-          dry_run: true
+          # create the tag at the release generation step
+          dry_run: false
           default_bump: minor
 
       - name: Output Version & Changelog
@@ -184,7 +282,7 @@ jobs:
           echo "changelog<<EOF" >> "$GITHUB_OUTPUT"
           echo "${{ steps.version.outputs.changelog }}" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
-          
+
           # Save changelog to file
           echo "${{ steps.version.outputs.changelog }}" > CHANGELOG_DEV_TEMP.txt
 
@@ -254,12 +352,12 @@ jobs:
           subject: "✅ Dev Build Success: ${{ github.repository }}"
           body: |
             The dev build for ${{ github.repository }} has completed successfully! 🚀
-            
+
             Repository: ${{ github.repository }}
             Commit: ${{ github.sha }}
             Author: ${{ github.actor }}
             Branch: dev
-            
+
             Check the logs here: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           to: ${{ secrets.MAIL_TO }}
           from: GitHub Actions <${{ secrets.MAIL_USERNAME }}>
@@ -281,12 +379,12 @@ jobs:
           subject: "❌ Dev Pipeline Failed or Cancelled: ${{ github.repository }}"
           body: |
             The dev pipeline for ${{ github.repository }} has failed or was cancelled.
-            
+
             Repository: ${{ github.repository }}
             Commit: ${{ github.sha }}
             Author: ${{ github.actor }}
             Branch: dev
-            
+
             Check the logs here: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           to: ${{ secrets.MAIL_TO }}
           from: GitHub Actions <${{ secrets.MAIL_USERNAME }}>
