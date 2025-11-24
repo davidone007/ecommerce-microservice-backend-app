@@ -1,0 +1,171 @@
+name: Security - Continuous Vulnerability Scans
+
+# Scheduled + manual security scanning for images and dependencies
+on:
+    schedule:
+        # Daily scan at 02:00 UTC
+        - cron: "0 2 * * *"
+    workflow_dispatch: {}
+
+permissions:
+    contents: read
+    packages: read
+    id-token: write
+
+jobs:
+    image-scan:
+        name: Image vulnerability scans (GHCR)
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                service:
+                    [
+                        api-gateway,
+                        cloud-config,
+                        favourite-service,
+                        order-service,
+                        payment-service,
+                        product-service,
+                        proxy-client,
+                        service-discovery,
+                        shipping-service,
+                        user-service,
+                    ]
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Login to GHCR
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Run Trivy scan - dev tag
+              uses: aquasecurity/trivy-action@master
+              with:
+                  image-ref: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:dev
+                  format: table
+                  exit-code: 0
+                  ignore-unfixed: true
+                  vuln-type: os,library
+                  severity: CRITICAL
+                  scanners: vuln
+
+            - name: Run Trivy scan - latest tag
+              uses: aquasecurity/trivy-action@master
+              with:
+                  image-ref: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:latest
+                  format: table
+                  exit-code: 0
+                  ignore-unfixed: true
+                  vuln-type: os,library
+                  severity: CRITICAL,HIGH
+                  scanners: vuln
+
+            - name: Upload Trivy notes
+              if: always()
+              run: |
+                  echo "Trivy scan completed for ${{ matrix.service }}"
+
+    dependency-scan:
+        name: Dependency scan (OWASP dependency-check)
+        runs-on: ubuntu-latest
+        needs: image-scan
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Set up JDK 11
+              uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: "11"
+
+            - name: Run OWASP Dependency-Check (Maven)
+              run: |
+                  # Run dependency-check across the multi-module Maven project
+                  chmod +x ./mvnw
+                  ./mvnw -B -T 1C org.owasp:dependency-check-maven:check -Dformat=ALL -DfailBuildOnCVSS=9 || true
+
+            - name: Upload dependency-check results
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: dependency-check-reports
+                  path: |
+                      **/target/dependency-check-report.html
+                      **/target/dependency-check-report.xml
+                  retention-days: 30
+
+    repo-scan:
+        name: Repository filesystem & config scans (Trivy)
+        runs-on: ubuntu-latest
+        needs: image-scan
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Install Trivy
+              run: |
+                  curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+
+            - name: Run Trivy filesystem scan (trivy fs)
+              id: trivy-fs
+              run: |
+                  set -e
+                  echo "Running trivy fs scan (repo root)"
+                  # Save JSON and table view
+                  trivy fs --format json --output trivy-fs.json --severity CRITICAL,HIGH . || true
+                  trivy fs --format table --output trivy-fs.txt --severity CRITICAL,HIGH . || true
+
+            - name: Run Trivy config scan (trivy config)
+              id: trivy-config
+              run: |
+                  set -e
+                  echo "Running trivy config scan (detect misconfigurations in YAML/Dockerfile/Helm/Terraform)"
+                  trivy config --format json --output trivy-config.json --severity CRITICAL,HIGH . || true
+                  trivy config --format table --output trivy-config.txt --severity CRITICAL,HIGH . || true
+
+            - name: Upload Trivy repo scan reports
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: trivy-repo-scan
+                  path: |
+                      trivy-fs.json
+                      trivy-fs.txt
+                      trivy-config.json
+                      trivy-config.txt
+                  retention-days: 30
+
+    notify:
+        name: Notify Security Scan Results
+        runs-on: ubuntu-latest
+        needs: [image-scan, dependency-scan, repo-scan]
+        env:
+            MAIL_ENABLED: ${{ secrets.MAIL_ENABLED }}
+        if: always()
+        steps:
+            - name: Summary
+              run: |
+                  echo "Scheduled security scans finished. Check artifacts for details."
+
+            - name: "Optional: email notifications (configure secrets to enable)"
+              if: ${{ env.MAIL_ENABLED == 'true' }}
+              uses: dawidd6/action-send-mail@v3
+              with:
+                  server_address: smtp.gmail.com
+                  server_port: 465
+                  username: ${{ secrets.MAIL_USERNAME }}
+                  password: ${{ secrets.MAIL_PASSWORD }}
+                  subject: "Security scan results for ${{ github.repository }}"
+                  body: |
+                      The scheduled security scans completed. Review artifacts and job logs for details.
+                  to: ${{ secrets.MAIL_TO }}
+                  from: GitHub Actions <${{ secrets.MAIL_USERNAME }}>
+                  secure: true

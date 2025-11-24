@@ -49,6 +49,8 @@ Este proyecto implementa un sistema completo de **e-commerce** basado en arquite
 - Implementación de pruebas de integración
 - Configuración de Postman collections para E2E testing
 - **Pruebas de Seguridad (OWASP ZAP)**: Escaneo automatizado de vulnerabilidades en el pipeline CI/CD.
+ - **Pruebas de Seguridad (OWASP ZAP)**: Escaneo automatizado de vulnerabilidades en el pipeline CI/CD.
+ - **Escaneo Continuo de Vulnerabilidades**: Trivy (imágenes GHCR) + OWASP Dependency-Check (dependencias Maven) se ejecutan periódicamente y bajo demanda para detectar vulnerabilidades en imágenes y dependencias.
 - Preparación de infraestructura para pruebas de rendimiento con Locust
 
 ### 📦 Código Base Original
@@ -197,6 +199,48 @@ El resultado esperado:
 ```
 
 ### Opción 1: Ejecutar con Docker Compose
+## 🔐 Escaneo continuo de vulnerabilidades (Trivy + Dependency-Check)
+
+Este repositorio ejecuta escaneos automáticos de seguridad para detectar vulnerabilidades en imágenes de contenedor y en dependencias del proyecto:
+
+- Trivy: escanea imágenes publicadas en GHCR (tags `dev` y `latest`) — se ejecuta diariamente y también puede dispararse manualmente desde GitHub Actions. El trabajo programado genera artefactos con los resultados en cada ejecución.
+- OWASP Dependency-Check: ejecuta un análisis de dependencias en la base de código Maven y sube el informe HTML y XML como artefactos.
+
+Dónde revisar resultados:
+- pestaña `Actions` → ejecutar el workflow `Security - Continuous Vulnerability Scans` (programado o manual).
+- artefactos adjuntos a la ejecución: `dependency-check-reports` y logs de Trivy para cada imagen.
+
+Cómo ajustar comportamiento:
+- El pipeline `ci-cd-dev.yml` ya está configurado para fallar (exit-code 1) cuando Trivy detecta vulnerabilidades CRÍTICAS en la imagen semver generada por Dev, evitando promover imágenes inseguras a Stage.
+- Para recibir notificaciones por email, configura los secretos `MAIL_ENABLED=true`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_TO` en tu repositorio o Environment — el workflow programado enviará correo si está habilitado.
+
+Si quieres, puedo:
+- Añadir integración con Slack / Teams para avisos de seguridad.
+- Configurar bloqueo más estricto (fail build on HIGH) o generar SBOMs y firmar imágenes (cosign).
+
+### 🔎 Trivy: escaneo del repositorio (trivy fs / trivy config)
+
+Además de escanear imágenes y dependencias, Trivy puede ejecutar escaneos directamente sobre el repositorio:
+
+- trivy fs (File-System scan): inspecciona el árbol de ficheros (paquetes y dependencias detectadas en la fuente) para encontrar vulnerabilidades.
+- trivy config (Configuration scan): revisa archivos de configuración e IAC (Dockerfile, YAML, Helm charts, Terraform) para detectar malas prácticas o configuraciones inseguras.
+
+Ejemplos rápidos (desde la raíz del repositorio):
+
+```bash
+# Escaneo filesystem (JSON y formato tabla)
+trivy fs --format json --output trivy-fs.json --severity CRITICAL,HIGH .
+trivy fs --format table .
+
+# Escaneo de configuraciones (JSON y formato tabla)
+trivy config --format json --output trivy-config.json --severity CRITICAL,HIGH .
+trivy config --format table .
+```
+
+Buenas prácticas para CI:
+- Para streams programados (schedules) es recomendable no bloquear por defecto (exit code 0) y usar los resultados como trazabilidad; para pipelines de PRs o pushes a ramas de integración puede usarse `--exit-code 1` para bloquear cuando se detecten vulnerabilidades críticas.
+- Los informes generados por el workflow `Security - Continuous Vulnerability Scans` se publican como artefactos (trivy-fs.json / trivy-config.json) para su análisis.
+
 
 ```bash
 # Establecer la variable de entorno para el tag
@@ -317,6 +361,39 @@ curl -k https://localhost:8080/actuator/health -s | jq
 - **Stage**: `v0.0.1-pre-release` - Pre-release para testing
 
 Ver [Release Notes completas](docs/08-release-notes.md)
+
+## 🔁 Promoción controlada entre entornos (dev → stage → prod)
+
+Se ha habilitado un flujo de **promoción manual** para mover una versión semántica ya construida a los entornos **stage** y **prod** sin reconstruir las imágenes.
+
+- Workflow: `.github/workflows/promote.yml` (ejecución manual - workflow_dispatch)
+- Parámetros: `version` (ej. 1.2.3) y `target` (stage | prod)
+
+Cómo funciona brevemente:
+
+1. Las imágenes Docker se construyen y etiquetan con la versión semántica (p. ej. `v1.2.3`) en la pipeline principal.
+2. Usa el workflow `Promote Release` (Actions → Promote Release → Run workflow) y pasa `version=vX.Y.Z` y `target=stage` para promover esa versión a Stage.
+3. Para promoción a producción, usa `target=prod`. El workflow se encarga de conectarse al AKS correspondiente y ejecutar el deploy Helm con `imageTag=vX.Y.Z`.
+
+Beneficios:
+
+- Promociones controladas y manuales (aprobación humana cuando se requiere)
+- Evita reconstrucciones innecesarias — se despliega exactamente la imagen ya publicada
+- Mantiene trazabilidad por versión (etiquetas semánticas + releases en GitHub)
+
+Prueba segura (recomendado): prueba primero con `target=stage` usando una versión que ya exista en GHCR (por ejemplo una versión `dev-...` o la semver publicada) y verifica que los servicios se despliegan correctamente antes de promover a `prod`.
+
+###  Aprobar despliegues a producción (GitHub Environments)
+
+Para asegurar que los despliegues a `prod` requieren aprobación humana, utiliza GitHub Environments protections:
+
+- Crea un Environment llamado exactamente `production` en GitHub (Settings → Environments).
+- Configura "Required reviewers" en ese Environment para forzar aprobaciones manuales antes de ejecutar cualquier job que use ese environment.
+- Opcionalmente puedes configurar un "Wait timer" o restricciones adicionales (por ejemplo, reviewers específicos o teams).
+
+El workflow `.github/workflows/promote.yml` y la job de `kubernetes-deploy` en `ci-cd-master.yml` están configuradas para usar ese environment. Cuando se ejecute una promoción o un deploy de `master` dirigido a `production`, GitHub pedirá las aprobaciones configuradas antes de permitir que el job continúe.
+
+Si prefieres administrar esto desde CLI, la creación y configuración de environments se puede hacer con la GitHub API o `gh api` — pero la protección (required reviewers) debe configurarse en la UI o a través de la API con los permisos adecuados.
 
 ## 📌 Metodología Ágil, Gestión del Proyecto y Estrategia de Branching
 
