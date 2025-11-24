@@ -1,0 +1,33 @@
+#Curl
+
+Rutas (Gateway | Proxy‑Client | Directas)
+
+Products
+
+Gateway: http://localhost:8080/product-service/api/products
+Proxy‑Client: http://localhost:8080/app/api/products
+Directo: http://localhost:8500/product-service/api/products
+Shippings
+
+Gateway: http://localhost:8080/shipping-service/api/shippings
+Proxy‑Client: http://localhost:8080/app/api/shippings
+Directo: http://localhost:8600/shipping-service/api/shippings
+Users
+
+Gateway: http://localhost:8080/user-service/api/users
+Proxy‑Client: http://localhost:8080/app/api/users
+Directo: http://localhost:8700/user-service/api/users
+Favourites
+
+Gateway: http://localhost:8080/favourite-service/api/favourites
+Proxy‑Client: http://localhost:8080/app/api/favourites
+Directo: http://localhost:8800/favourite-service/api/favourites
+Payments
+
+Gateway: http://localhost:8080/payment-service/api/payments
+Proxy‑Client: http://localhost:8080/app/api/payments
+Directo: http://localhost:8400/payment-service/api/payments
+
+
+
+

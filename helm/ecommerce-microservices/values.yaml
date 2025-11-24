@@ -1,0 +1,292 @@
+global:
+  imageRegistry: ghcr.io/davidone007
+  imageTag: stage
+
+keyVault:
+  enabled: true
+  name: "ecommerce-kv"
+  tenantId: ""
+  userAssignedIdentityID: ""
+
+ingress:
+  enabled: false
+  host: ecommerce.example.com
+  tls:
+    enabled: true
+    secretName: ecommerce-tls-secret
+
+services:
+  service-discovery:
+    name: service-discovery-container
+    image: service-discovery
+    port: 8761
+    env:
+      - name: SPRING_PROFILES_ACTIVE
+        value: dev
+    initContainers: []
+
+  cloud-config:
+    name: cloud-config-container
+    image: cloud-config
+    port: 9296
+    env:
+      - name: EUREKA_CLIENT_ENABLED
+        value: "true"
+      - name: EUREKA_CLIENT_FETCH-REGISTRY
+        value: "true"
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+        value: http://service-discovery-container:8761/eureka/
+      - name: EUREKA_INSTANCE
+        value: cloud-config-container
+      - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+        value: "false"
+      - name: RIBBON_EUREKA_ENABLED
+        value: "true"
+      - name: SPRING_PROFILES_ACTIVE
+        value: dev
+      - name: SPRING_ZIPKIN_BASE_URL
+        value: http://zipkin-container:9411
+    
+  
+      
+      
+    initContainers:
+      - name: wait-for-eureka
+        image: curlimages/curl:7.85.0
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done"]
+
+  api-gateway:
+    name: api-gateway-container
+    image: api-gateway
+    type: ClusterIP
+    port: 8080
+    env:
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+        value: http://service-discovery-container:8761/eureka/
+      - name: EUREKA_INSTANCE
+        value: api-gateway-container
+      - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+        value: "false"
+      - name: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED
+        value: "false"
+      - name: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWER-CASE-SERVICE-ID
+        value: "true"
+      - name: SPRING_PROFILES_ACTIVE
+        value: dev
+      - name: SPRING_CONFIG_IMPORT
+        value: optional:configserver:http://cloud-config-container:9296/
+      - name: SPRING_ZIPKIN_BASE_URL
+        value: http://zipkin-container:9411
+    initContainers:
+      - name: wait-for-dependencies
+        image: curlimages/curl:7.85.0
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done; until curl -sS http://zipkin-container:9411/ >/dev/null 2>&1; do echo waiting for zipkin...; sleep 2; done"]
+
+  zipkin:
+    name: zipkin-container
+    image: openzipkin/zipkin
+    fullImage: true # To indicate this uses a full image name, not constructed
+    port: 9411
+    env: []
+    initContainers: []
+
+  order-service:
+    name: order-service-container
+    image: order-service
+    port: 8300
+    env:
+      - name: EUREKA_CLIENT_ENABLED
+        value: "true"
+      - name: EUREKA_CLIENT_FETCH-REGISTRY
+        value: "true"
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+        value: http://service-discovery-container:8761/eureka/
+      - name: EUREKA_INSTANCE
+        value: order-service-container
+      - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+        value: "false"
+      - name: RIBBON_EUREKA_ENABLED
+        value: "true"
+      - name: SPRING_CONFIG_IMPORT
+        value: optional:configserver:http://cloud-config-container:9296/
+      - name: SPRING_PROFILES_ACTIVE
+        value: dev
+      - name: SPRING_ZIPKIN_BASE_URL
+        value: http://zipkin-container:9411
+    initContainers:
+      - name: wait-for-dependencies
+        image: curlimages/curl:7.85.0
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+
+  payment-service:
+    name: payment-service-container
+    image: payment-service
+    port: 8400
+    env:
+      - name: EUREKA_CLIENT_ENABLED
+        value: "true"
+      - name: EUREKA_CLIENT_FETCH-REGISTRY
+        value: "true"
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+        value: http://service-discovery-container:8761/eureka/
+      - name: EUREKA_INSTANCE
+        value: payment-service-container
+      - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+        value: "false"
+      - name: RIBBON_EUREKA_ENABLED
+        value: "true"
+      - name: SPRING_CONFIG_IMPORT
+        value: optional:configserver:http://cloud-config-container:9296/
+      - name: SPRING_PROFILES_ACTIVE
+        value: dev
+      - name: SPRING_ZIPKIN_BASE_URL
+        value: http://zipkin-container:9411
+    initContainers:
+      - name: wait-for-dependencies
+        image: curlimages/curl:7.85.0
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+
+  product-service:
+    name: product-service-container
+    image: product-service
+    port: 8500
+    env:
+      - name: EUREKA_CLIENT_ENABLED
+        value: "true"
+      - name: EUREKA_CLIENT_FETCH-REGISTRY
+        value: "true"
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+        value: http://service-discovery-container:8761/eureka/
+      - name: EUREKA_INSTANCE
+        value: product-service-container
+      - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+        value: "false"
+      - name: RIBBON_EUREKA_ENABLED
+        value: "true"
+      - name: SPRING_CONFIG_IMPORT
+        value: optional:configserver:http://cloud-config-container:9296/
+      - name: SPRING_PROFILES_ACTIVE
+        value: dev
+      - name: SPRING_ZIPKIN_BASE_URL
+        value: http://zipkin-container:9411
+    initContainers:
+      - name: wait-for-dependencies
+        image: curlimages/curl:7.85.0
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+
+  favourite-service:
+    name: favourite-service-container
+    image: favourite-service
+    port: 8800
+    env:
+      - name: EUREKA_CLIENT_ENABLED
+        value: "true"
+      - name: EUREKA_CLIENT_FETCH-REGISTRY
+        value: "true"
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+        value: http://service-discovery-container:8761/eureka/
+      - name: EUREKA_INSTANCE
+        value: favourite-service-container
+      - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+        value: "false"
+      - name: RIBBON_EUREKA_ENABLED
+        value: "true"
+      - name: SPRING_CONFIG_IMPORT
+        value: optional:configserver:http://cloud-config-container:9296/
+      - name: SPRING_PROFILES_ACTIVE
+        value: dev
+      - name: SPRING_ZIPKIN_BASE_URL
+        value: http://zipkin-container:9411
+    initContainers:
+      - name: wait-for-dependencies
+        image: curlimages/curl:7.85.0
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+
+  proxy-client:
+    name: proxy-client-container
+    image: proxy-client
+    port: 8900
+    env:
+      - name: JWT_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: jwt-secret-csi
+            key: jwt-secret
+      - name: EUREKA_CLIENT_ENABLED
+        value: "true"
+      - name: EUREKA_CLIENT_FETCH-REGISTRY
+        value: "true"
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+        value: http://service-discovery-container:8761/eureka/
+      - name: EUREKA_INSTANCE
+        value: proxy-client-container
+      - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+        value: "false"
+      - name: RIBBON_EUREKA_ENABLED
+        value: "true"
+      - name: SPRING_CONFIG_IMPORT
+        value: optional:configserver:http://cloud-config-container:9296/
+      - name: SPRING_PROFILES_ACTIVE
+        value: dev
+      - name: SPRING_ZIPKIN_BASE_URL
+        value: http://zipkin-container:9411
+    initContainers:
+      - name: wait-for-dependencies
+        image: curlimages/curl:7.85.0
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+
+  shipping-service:
+    name: shipping-service-container
+    image: shipping-service
+    port: 8600
+    env:
+      - name: EUREKA_CLIENT_ENABLED
+        value: "true"
+      - name: EUREKA_CLIENT_FETCH-REGISTRY
+        value: "true"
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+        value: http://service-discovery-container:8761/eureka/
+      - name: EUREKA_INSTANCE
+        value: shipping-service-container
+      - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+        value: "false"
+      - name: RIBBON_EUREKA_ENABLED
+        value: "true"
+      - name: SPRING_CONFIG_IMPORT
+        value: optional:configserver:http://cloud-config-container:9296/
+      - name: SPRING_PROFILES_ACTIVE
+        value: dev
+      - name: SPRING_ZIPKIN_BASE_URL
+        value: http://zipkin-container:9411
+    initContainers:
+      - name: wait-for-dependencies
+        image: curlimages/curl:7.85.0
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+
+  user-service:
+    name: user-service-container
+    image: user-service
+    port: 8700
+    env:
+      - name: EUREKA_CLIENT_ENABLED
+        value: "true"
+      - name: EUREKA_CLIENT_FETCH-REGISTRY
+        value: "true"
+      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+        value: http://service-discovery-container:8761/eureka/
+      - name: EUREKA_INSTANCE
+        value: user-service-container
+      - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+        value: "false"
+      - name: RIBBON_EUREKA_ENABLED
+        value: "true"
+      - name: SPRING_CONFIG_IMPORT
+        value: optional:configserver:http://cloud-config-container:9296/
+      - name: SPRING_PROFILES_ACTIVE
+        value: dev
+      - name: SPRING_ZIPKIN_BASE_URL
+        value: http://zipkin-container:9411
+    initContainers:
+      - name: wait-for-dependencies
+        image: curlimages/curl:7.85.0
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]

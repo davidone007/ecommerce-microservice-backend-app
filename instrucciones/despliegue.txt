@@ -1,0 +1,83 @@
+## SETUP INICIAL (una sola vez)
+./scripts/setup-terraform-backend.sh
+
+## ======================================
+## AMBIENTE PROD
+## ======================================
+
+# 1. Deploy Prod
+cd terraform/environments/prod
+terraform init
+terraform plan
+terraform apply -auto-approve
+
+# 2. Conectar a cluster Prod
+az aks get-credentials --resource-group ecommerce-rg-prod --name ecommerce-aks-prod --overwrite-existing
+
+# 3. Verificar pods en Prod
+kubectl get pods -n prod
+
+# 4. Obtener External IP del API Gateway en Prod
+kubectl get svc api-gateway-container -n prod
+
+# 5. Probar API Gateway en Prod (reemplazar con IP real)
+# curl -v http://<EXTERNAL-IP>:8080/actuator/health
+# curl -v http://48.195.193.180:8080/product-service/api/products
+
+# 6. Port forward Eureka en Prod
+kubectl port-forward svc/service-discovery-container 8761:8761 -n prod
+# Eureka (Local): http://localhost:8761
+
+# 7. Port forward Zipkin en Prod
+kubectl port-forward svc/zipkin-container 9411:9411 -n prod
+# Zipkin (Local): http://localhost:9411
+
+## ======================================
+## AMBIENTE STAGE
+## ======================================
+
+# 1. Deploy Stage
+cd terraform/environments/stage
+terraform init
+terraform plan
+terraform apply -auto-approve
+
+# 2. Conectar a cluster Stage
+az aks get-credentials --resource-group ecommerce-rg-stage --name ecommerce-aks-stage --overwrite-existing
+
+# 3. Verificar pods en Stage
+kubectl get pods -n stage
+
+# 4. Obtener External IP del API Gateway en Stage
+kubectl get svc api-gateway-container -n stage
+
+# 5. Probar API Gateway en Stage (reemplazar con IP real)
+# curl -v http://<EXTERNAL-IP>:8080/actuator/health
+# curl -v http://<EXTERNAL-IP>:8080/product-service/api/products
+
+# 6. Port forward Eureka en Stage
+kubectl port-forward svc/service-discovery-container 8761:8761 -n stage
+# Eureka (Local): http://localhost:8761
+
+# 7. Port forward Zipkin en Stage
+kubectl port-forward svc/zipkin-container 9411:9411 -n stage
+# Zipkin (Local): http://localhost:9411
+
+## ======================================
+## PUSH DE IMAGENES A GHCR
+## ======================================
+
+# 1. Crear access token en GitHub
+# Ve a: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+# Crea un token nuevo con scopes:
+# - write:packages
+# - read:packages
+# - delete:packages (opcional)
+
+# 2. Login en GHCR
+docker login ghcr.io -u davidone007
+# Usar el token como contraseña
+
+# 3. Push imágenes (ver script/push-images.sh)
+
+
