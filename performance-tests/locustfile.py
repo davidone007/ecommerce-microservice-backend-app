@@ -24,6 +24,41 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+MAX_ERROR_DETAIL_CHARS = 400
+
+
+def format_error_detail(response):
+    """Extrae un mensaje de error legible desde la respuesta HTTP."""
+    detail = response.text or ""
+
+    try:
+        body = response.json()
+        if isinstance(body, dict):
+            detail = body.get("message") or body.get("error") or body.get("errors") or body
+        elif isinstance(body, list):
+            detail = body
+    except ValueError:
+        # La respuesta no es JSON; conservamos el texto crudo
+        pass
+
+    if isinstance(detail, (dict, list)):
+        detail = json.dumps(detail, ensure_ascii=False)
+
+    detail = (detail or "sin cuerpo de respuesta").strip()
+
+    if len(detail) > MAX_ERROR_DETAIL_CHARS:
+        detail = f"{detail[:MAX_ERROR_DETAIL_CHARS]}..."
+
+    return f"HTTP {response.status_code} - {detail}"
+
+
+def register_failure(response, context):
+    """Registra y reporta un fallo detallado para una petición."""
+    message = f"{context}: {format_error_detail(response)}"
+    response.failure(message)
+    logger.error(message)
+    return message
+
 
 class AuthenticationMixin:
     """Mixin para manejar la autenticación JWT"""
@@ -153,7 +188,7 @@ class UserBehavior(TaskSet, AuthenticationMixin):
             if response.status_code == 200:
                 response.success()
             else:
-                response.failure(f"Status code: {response.status_code}")
+                register_failure(response, "/app/api/products [BROWSE]")
 
     @task(8)
     def view_product_details(self):
@@ -169,7 +204,7 @@ class UserBehavior(TaskSet, AuthenticationMixin):
                 if response.status_code == 200:
                     response.success()
                 else:
-                    response.failure(f"Status code: {response.status_code}")
+                    register_failure(response, "/app/api/products/[id] [VIEW DETAILS]")
 
     @task(3)
     def create_user_account(self):
@@ -195,7 +230,7 @@ class UserBehavior(TaskSet, AuthenticationMixin):
                 self.user_id = data.get("userId")
                 response.success()
             else:
-                response.failure(f"Status code: {response.status_code}")
+                register_failure(response, "/app/api/users [CREATE]")
 
     @task(5)
     def create_product(self):
@@ -227,7 +262,7 @@ class UserBehavior(TaskSet, AuthenticationMixin):
                         self.product_ids.append(product_id)
                     response.success()
                 else:
-                    response.failure(f"Status code: {response.status_code}")
+                    register_failure(response, "/app/api/products [CREATE]")
 
     @task(2)
     def add_to_favorites(self):
@@ -249,7 +284,7 @@ class UserBehavior(TaskSet, AuthenticationMixin):
                 if response.status_code in [200, 201]:
                     response.success()
                 else:
-                    response.failure(f"Status code: {response.status_code}")
+                    register_failure(response, "/app/api/favourites [ADD]")
 
     @task(1)
     def view_favorites(self):
@@ -263,7 +298,7 @@ class UserBehavior(TaskSet, AuthenticationMixin):
             if response.status_code == 200:
                 response.success()
             else:
-                response.failure(f"Status code: {response.status_code}")
+                register_failure(response, "/app/api/favourites [VIEW]")
 
     def _create_category(self):
         """Método auxiliar para crear una categoría"""
@@ -388,7 +423,7 @@ class PurchaseFlowBehavior(TaskSet, AuthenticationMixin):
                 self.cart_id = response.json().get("cartId")
                 response.success()
             else:
-                response.failure(f"Failed to create cart: {response.status_code}")
+                register_failure(response, "/app/api/carts [CREATE]")
                 return
 
         time.sleep(0.5)
@@ -415,7 +450,7 @@ class PurchaseFlowBehavior(TaskSet, AuthenticationMixin):
                     self.order_id = response.json().get("orderId")
                     response.success()
                 else:
-                    response.failure(f"Failed to create order: {response.status_code}")
+                    register_failure(response, "/app/api/orders [CREATE]")
                     return
 
         time.sleep(0.5)
@@ -442,7 +477,7 @@ class PurchaseFlowBehavior(TaskSet, AuthenticationMixin):
                 if response.status_code == 200:
                     response.success()
                 else:
-                    response.failure(f"Failed to update order: {response.status_code}")
+                    register_failure(response, "/app/api/orders/[id] [UPDATE]")
                     return
 
         time.sleep(0.5)
@@ -481,13 +516,9 @@ class PurchaseFlowBehavior(TaskSet, AuthenticationMixin):
                                     f"Purchase completed successfully for order {self.order_id}"
                                 )
                             else:
-                                pay_response.failure(
-                                    f"Failed to complete payment: {pay_response.status_code}"
-                                )
+                                register_failure(pay_response, "/app/api/payments/[id] [COMPLETE]")
                 else:
-                    response.failure(
-                        f"Failed to create payment: {response.status_code}"
-                    )
+                    register_failure(response, "/app/api/payments [CREATE]")
 
 
 class BrowsingUser(FastHttpUser):

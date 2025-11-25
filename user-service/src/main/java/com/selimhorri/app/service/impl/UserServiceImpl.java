@@ -41,13 +41,16 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public UserDto findById(final Integer userId) {
-		log.info("*** UserDto, service; fetch user by id with credentials *");
+		log.info("*** UserDto, service; fetch user by id *");
 		return this.userRepository.findById(userId)
-				.filter(user -> user.getCredential() != null) // Filtramos que tenga credenciales
-				.map(UserMappingHelper::map)
-				.orElseThrow(
-						() -> new UserObjectNotFoundException(
-								String.format("User with id: %d not found or has no credentials", userId)));
+				.map(user -> {
+					if (user.getCredential() == null) {
+						log.debug("User {} retrieved without credentials", userId);
+					}
+					return UserMappingHelper.map(user);
+				})
+				.orElseThrow(() -> new UserObjectNotFoundException(
+						String.format("User with id: %d not found", userId)));
 	}
 
 	@Override

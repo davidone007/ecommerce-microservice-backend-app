@@ -1,0 +1,2217 @@
+{
+	"info": {
+		"_postman_id": "2bfe466b-3dcd-4c72-bf77-f3a20fda800e",
+		"name": "E2E Ecommerce Microservices Tests Prod",
+		"description": "Colección de 5 pruebas End-to-End que validan flujos completos de usuario en el sistema de microservicios de e-commerce",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48543948"
+	},
+	"item": [
+		{
+			"name": "E2E-00: Setup Autenticación",
+			"item": [
+				{
+					"name": "0.1 - Crear Usuario Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has userId\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('userId');",
+									"    pm.environment.set(\"admin_userId\", jsonData.userId);",
+									"    console.log(\"Admin User ID:\", jsonData.userId);",
+									"});",
+									"",
+									"pm.test(\"User data is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.firstName).to.eql(\"Admin\");",
+									"    pm.expect(jsonData.lastName).to.eql(\"Test\");",
+									"    pm.expect(jsonData.email).to.eql(\"admin.test@ecommerce.com\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Admin\",\n    \"lastName\": \"Test\",\n    \"imageUrl\": \"https://example.com/admin-avatar.jpg\",\n    \"email\": \"admin.test@ecommerce.com\",\n    \"phone\": \"+34600000000\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "0.2 - Crear Credenciales para Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Credentials created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('credentialId');",
+									"    pm.expect(jsonData.username).to.eql(\"admintest\");",
+									"    pm.environment.set(\"admin_credentialId\", jsonData.credentialId);",
+									"    console.log(\"Admin Credential ID:\", jsonData.credentialId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Esperar un momento para asegurar que el usuario está creado",
+									"setTimeout(function(){}, 500);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admintest\",\n    \"password\": \"Admin123!\",\n    \"roleBasedAuthority\": \"ROLE_ADMIN\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\": {\n        \"userId\": {{admin_userId}}\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/credentials",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"credentials"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "0.3 - Autenticar y Obtener Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"JWT Token received\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('jwtToken');",
+									"    pm.environment.set(\"jwt_token\", jsonData.jwtToken);",
+									"    console.log(\"✅ JWT Token obtenido y guardado\");",
+									"    console.log(\"Token:\", jsonData.jwtToken);",
+									"});",
+									"",
+									"console.log(\"✅ E2E-00 COMPLETADO: Usuario admin creado y autenticado correctamente\");"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Esperar un momento para asegurar que las credenciales están creadas",
+									"setTimeout(function(){}, 500);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admintest\",\n    \"password\": \"Admin123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/authenticate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"authenticate"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Setup inicial: Crea un usuario administrador, sus credenciales y obtiene el token JWT para las pruebas"
+		},
+		{
+			"name": "E2E-01: Registro y Gestión de Usuario Completa",
+			"item": [
+				{
+					"name": "1.1 - Crear Usuario Nuevo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has userId\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('userId');",
+									"    pm.environment.set(\"test_userId\", jsonData.userId);",
+									"});",
+									"",
+									"pm.test(\"User data is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.firstName).to.eql(\"Juan\");",
+									"    pm.expect(jsonData.lastName).to.eql(\"Pérez\");",
+									"    pm.expect(jsonData.email).to.eql(\"juan.perez@test.com\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Juan\",\n    \"lastName\": \"Pérez\",\n    \"imageUrl\": \"https://example.com/avatar.jpg\",\n    \"email\": \"juan.perez@test.com\",\n    \"phone\": \"+34666777888\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "1.2 - Crear Credenciales para Usuario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Credentials created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('credentialId');",
+									"    pm.expect(jsonData.username).to.eql(\"juanperez\");",
+									"    console.log(\"User Credential ID:\", jsonData.credentialId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"juanperez\",\n    \"password\": \"SecurePass123!\",\n    \"roleBasedAuthority\": \"ROLE_USER\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\": {\n        \"userId\": {{test_userId}}\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/credentials",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"credentials"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "1.3 - Obtener Usuario Creado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User exists and has correct data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.userId).to.eql(parseInt(pm.environment.get(\"test_userId\")));",
+									"    pm.expect(jsonData.email).to.eql(\"juan.perez@test.com\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/{{test_userId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{test_userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "1.4 - Actualizar Teléfono del Usuario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Phone number updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.phone).to.eql(\"+34999888777\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{test_userId}},\n    \"firstName\": \"Juan\",\n    \"lastName\": \"Pérez\",\n    \"imageUrl\": \"https://example.com/avatar.jpg\",\n    \"email\": \"juan.perez@test.com\",\n    \"phone\": \"+34999888777\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/{{test_userId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{test_userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "1.5 - Verificar Usuario Actualizado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User updated successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.phone).to.eql(\"+34999888777\");",
+									"});",
+									"",
+									"console.log(\"✅ E2E-01 COMPLETADO: Usuario creado, consultado y actualizado correctamente\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/{{test_userId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{test_userId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Flujo completo de registro y gestión de usuario: crea un nuevo usuario, lo consulta, actualiza su información y verifica los cambios"
+		},
+		{
+			"name": "E2E-02: Flujo de Compra Completo",
+			"item": [
+				{
+					"name": "2.1 - Crear Categoría para Productos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Category created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('categoryId');",
+									"    pm.environment.set(\"test_categoryId\", jsonData.categoryId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"categoryTitle\": \"Electrónica\",\n    \"imageUrl\": \"https://example.com/electronics.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.2 - Crear Producto 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Product 1 created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('productId');",
+									"    pm.environment.set(\"test_productId1\", jsonData.productId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productTitle\": \"Laptop HP ProBook\",\n    \"imageUrl\": \"https://example.com/laptop.jpg\",\n    \"sku\": \"HP-PROBOOK-2024\",\n    \"priceUnit\": 899.99,\n    \"quantity\": 50,\n    \"category\": {\n        \"categoryId\": {{test_categoryId}}\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.3 - Crear Producto 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Product 2 created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('productId');",
+									"    pm.environment.set(\"test_productId2\", jsonData.productId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productTitle\": \"Mouse Logitech MX Master\",\n    \"imageUrl\": \"https://example.com/mouse.jpg\",\n    \"sku\": \"LOG-MX-MASTER\",\n    \"priceUnit\": 79.99,\n    \"quantity\": 100,\n    \"category\": {\n        \"categoryId\": {{test_categoryId}}\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.4 - Crear Carrito para Usuario (CORREGIDO)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Verificar que el token JWT existe",
+									"const token = pm.environment.get(\"jwt_token\");",
+									"if (!token) {",
+									"    console.error('⚠️ Token JWT no encontrado. Ejecuta E2E-00 primero');",
+									"}",
+									"",
+									"// Verificar que el userId existe",
+									"const userId = pm.environment.get(\"test_userId\");",
+									"if (!userId) {",
+									"    console.error('⚠️ test_userId no encontrado. Ejecuta E2E-01 primero');",
+									"}",
+									"",
+									"console.log('Token JWT:', token ? 'Presente' : 'Ausente');",
+									"console.log('User ID:', userId);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Manejo de errores más detallado",
+									"if (pm.response.code === 403) {",
+									"    console.error('❌ Error 403 - Forbidden');",
+									"    console.error('Posibles causas:');",
+									"    console.error('1. Token JWT expirado o inválido');",
+									"    console.error('2. Usuario sin permisos para crear carritos');",
+									"    console.error('3. El usuario test_userId no existe');",
+									"    ",
+									"    const responseBody = pm.response.text();",
+									"    console.error('Respuesta del servidor:', responseBody);",
+									"}",
+									"",
+									"pm.test(\"Status code is 200 or 201\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"",
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    pm.test(\"Cart created\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('cartId');",
+									"        pm.environment.set(\"test_cartId\", jsonData.cartId);",
+									"        console.log('✅ Carrito creado con ID:', jsonData.cartId);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{test_userId}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/carts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"carts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.5 - Crear Orden con Productos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Order created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('orderId');",
+									"    pm.environment.set(\"test_orderId\", jsonData.orderId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderDate\": \"02-11-2024__10:30:00:000000\",\n    \"orderDesc\": \"Compra de laptop y mouse\",\n    \"orderFee\": 979.98,\n    \"orderStatus\": \"CREATED\",\n    \"isActive\": true,\n    \"cart\": {\n        \"cartId\": {{test_cartId}}\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.6 - Actualizar Estado de Orden a ORDERED",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Order updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('orderId');",
+									"    pm.expect(jsonData).to.have.property('orderStatus');",
+									"});",
+									"",
+									"console.log(\"✅ E2E-02 COMPLETADO: Flujo de compra completo\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderId\": {{test_orderId}},\n    \"orderDate\": \"02-11-2024__10:30:00:000000\",\n    \"orderDesc\": \"Compra de laptop y mouse\",\n    \"orderFee\": 979.98,\n    \"orderStatus\": \"ORDERED\",\n    \"isActive\": true,\n    \"cart\": {\n        \"cartId\": {{test_cartId}}\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/{{test_orderId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								"{{test_orderId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.7 - Crear Pago para la Orden",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Payment created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('paymentId');",
+									"    pm.expect(jsonData.paymentStatus).to.exist;",
+									"    pm.environment.set(\"test_paymentId\", jsonData.paymentId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"isPayed\": false,\n    \"paymentStatus\": \"NOT_STARTED\",\n    \"order\": {\n        \"orderId\": {{test_orderId}}\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/payments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"payments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.8 - Completar Pago",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Payment updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('paymentId');",
+									"    pm.expect(jsonData).to.have.property('paymentStatus');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_url}}/payments/{{test_paymentId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"payments",
+								"{{test_paymentId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Flujo completo de compra: crea categoría y productos, genera carrito, crea orden, procesa pago y actualiza estado de la orden"
+		},
+		{
+			"name": "E2E-03: Gestión de Productos y Stock",
+			"item": [
+				{
+					"name": "3.1 - Listar Todos los Productos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has products\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.2 - Obtener Producto Específico",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Product details are correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.productId).to.eql(parseInt(pm.environment.get(\"test_productId1\")));",
+									"    pm.expect(jsonData.productTitle).to.include(\"Laptop\");",
+									"    pm.expect(jsonData.quantity).to.eql(50);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/products/{{test_productId1}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{test_productId1}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.3 - Actualizar Stock del Producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Product updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('productId');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productId\": {{test_productId1}},\n    \"productTitle\": \"Laptop HP ProBook\",\n    \"imageUrl\": \"https://example.com/laptop.jpg\",\n    \"sku\": \"HP-PROBOOK-2024\",\n    \"priceUnit\": 899.99,\n    \"quantity\": 48,\n    \"category\": {\n        \"categoryId\": {{test_categoryId}}\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products/{{test_productId1}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{test_productId1}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.4 - Actualizar Precio del Producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Product updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('productId');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productId\": {{test_productId1}},\n    \"productTitle\": \"Laptop HP ProBook\",\n    \"imageUrl\": \"https://example.com/laptop.jpg\",\n    \"sku\": \"HP-PROBOOK-2024\",\n    \"priceUnit\": 849.99,\n    \"quantity\": 48,\n    \"category\": {\n        \"categoryId\": {{test_categoryId}}\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products/{{test_productId1}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{test_productId1}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.5 - Verificar Cambios en el Producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Product retrieved\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('productId');",
+									"});",
+									"",
+									"console.log(\"✅ E2E-03 COMPLETADO: Productos gestionados\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/products/{{test_productId1}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{test_productId1}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Flujo de gestión de productos: lista productos, obtiene detalles, actualiza stock y precio, y verifica cambios"
+		},
+		{
+			"name": "E2E-04: Flujo de Envío Completo",
+			"item": [
+				{
+					"name": "4.1 - Crear Item de Envío 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Shipping item created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('productId');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productId\": {{test_productId1}},\n    \"orderId\": {{test_orderId}},\n    \"orderedQuantity\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/shippings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"shippings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4.2 - Crear Item de Envío 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Shipping item created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('productId');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productId\": {{test_productId2}},\n    \"orderId\": {{test_orderId}},\n    \"orderedQuantity\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/shippings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"shippings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4.3 - Listar Todos los Items de Envío",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response received\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/shippings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"shippings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4.4 - Obtener Item de Envío Específico",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200, 404 o 400\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404, 400]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Shipping item found\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('productId');",
+									"    });",
+									"} else if (pm.response.code === 404 || pm.response.code === 400) {",
+									"    console.log('ℹ️  Envío no encontrado o inaccesible (estado esperado cuando la orden no está en ORDERED)');",
+									"    console.log('Respuesta:', pm.response.code, pm.response.text().substring(0, 100));",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/shippings/{{test_orderId}}/{{test_productId1}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"shippings",
+								"{{test_orderId}}",
+								"{{test_productId1}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Flujo completo de envío: crea items de envío para una orden, lista todos los envíos, consulta específico y actualiza cantidades"
+		},
+		{
+			"name": "E2E-05: Gestión de Favoritos de Usuario",
+			"item": [
+				{
+					"name": "5.1 - Agregar Producto 1 a Favoritos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Favourite 1 created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.userId).to.eql(parseInt(pm.environment.get(\"test_userId\")));",
+									"    pm.expect(jsonData.productId).to.eql(parseInt(pm.environment.get(\"test_productId1\")));",
+									"    pm.environment.set(\"test_likeDate1\", jsonData.likeDate);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{test_userId}},\n    \"productId\": {{test_productId1}},\n    \"likeDate\": \"02-11-2024__11:00:00:000000\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/favourites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"favourites"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5.2 - Agregar Producto 2 a Favoritos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Favourite 2 created\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.userId).to.eql(parseInt(pm.environment.get(\"test_userId\")));",
+									"    pm.expect(jsonData.productId).to.eql(parseInt(pm.environment.get(\"test_productId2\")));",
+									"    pm.environment.set(\"test_likeDate2\", jsonData.likeDate);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{test_userId}},\n    \"productId\": {{test_productId2}},\n    \"likeDate\": \"02-11-2024__11:15:00:000000\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/favourites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"favourites"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5.3 - Listar Todos los Favoritos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response received\", function () {",
+									"    pm.response.to.be.ok;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/favourites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"favourites"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5.4 - Obtener Favorito Específico",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Favourite has required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('userId');",
+									"    pm.expect(jsonData).to.have.property('productId');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/favourites/{{test_userId}}/{{test_productId1}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"favourites",
+								"{{test_userId}}",
+								"{{test_productId1}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Flujo completo de gestión de favoritos: agrega productos a favoritos, lista todos, consulta específico y elimina favoritos"
+		},
+		{
+			"name": "E2E-99: Cleanup - Eliminar Datos de Prueba",
+			"item": [
+				{
+					"name": "99.1 - Eliminar Favoritos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200, 204 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+									"});",
+									"",
+									"console.log(\"Favoritos eliminados\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/favourites/{{test_userId}}/{{test_productId1}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"favourites",
+								"{{test_userId}}",
+								"{{test_productId1}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "99.2 - Eliminar Segundo Favorito",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200, 204 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+									"});",
+									"",
+									"console.log(\"Segundo favorito eliminado\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/favourites/{{test_userId}}/{{test_productId2}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"favourites",
+								"{{test_userId}}",
+								"{{test_productId2}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "99.3 - Cambiar Estado de Orden a CANCELLED",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200, 400 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    console.log(\"Orden cambiada a CANCELLED\");",
+									"} else {",
+									"    console.log(\"No se pudo cambiar estado de orden (posiblemente ya no existe)\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderId\": {{test_orderId}},\n    \"orderDate\": \"02-11-2024__10:30:00:000000\",\n    \"orderDesc\": \"Compra de laptop y mouse\",\n    \"orderFee\": 979.98,\n    \"orderStatus\": \"CREATED\",\n    \"isActive\": false,\n    \"cart\": {\n        \"cartId\": {{test_cartId}}\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/{{test_orderId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								"{{test_orderId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "99.3b - Eliminar Orden",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200, 204 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+									"});",
+									"",
+									"console.log(\"Orden eliminada o no existe\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/orders/{{test_orderId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								"{{test_orderId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "99.4 - Eliminar Carrito",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200, 204 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+									"});",
+									"",
+									"console.log(\"Carrito eliminado\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/carts/{{test_cartId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"carts",
+								"{{test_cartId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "99.5 - Eliminar Producto 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200, 204 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+									"});",
+									"",
+									"console.log(\"Producto 1 eliminado\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/products/{{test_productId1}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{test_productId1}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "99.6 - Eliminar Producto 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200, 204 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+									"});",
+									"",
+									"console.log(\"Producto 2 eliminado\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/products/{{test_productId2}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{test_productId2}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "99.7 - Eliminar Categoría",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200, 204 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+									"});",
+									"",
+									"console.log(\"Categoría eliminada\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/categories/{{test_categoryId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories",
+								"{{test_categoryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "99.8 - Eliminar Credenciales del Usuario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200, 204 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+									"});",
+									"",
+									"console.log(\"Credenciales del usuario eliminadas\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/credentials/{{test_userId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"credentials",
+								"{{test_userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "99.10 - Eliminar Credenciales Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200, 204, 400 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 204, 400, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200 || pm.response.code === 204) {",
+									"    console.log(\"✅ Credenciales admin eliminadas\");",
+									"} else {",
+									"    console.log(\"ℹ️  Credenciales admin no encontradas o no se pueden eliminar\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/credentials/{{admin_userId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"credentials",
+								"{{admin_userId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Cleanup: Elimina todos los recursos creados durante los tests para permitir que la colección se ejecute nuevamente sin conflictos"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					"console.log(\"🚀 Iniciando prueba: \" + pm.info.requestName);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					"console.log(\"✅ Prueba completada: \" + pm.info.requestName);"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://57.152.28.243:8080/app/api"
+		}
+	]
+}

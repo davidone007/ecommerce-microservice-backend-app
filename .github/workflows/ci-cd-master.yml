@@ -12,359 +12,215 @@ on:
     branches: [master]
 
 jobs:
-  maven-build:
-    name: Build (Maven)
-    runs-on: self-hosted
+  fetch-stage-tag:
+    name: Find latest Stage release
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.set.outputs.image_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 11
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "11"
-
-      - name: Build with Maven (compile + unit tests only)
+      - name: Get latest stage release tag and set image tag
+        id: set
         run: |
-          chmod +x ./mvnw
-          # Run only unit tests at this stage
-          # System tests will run after infrastructure is deployed
-          # Pattern: *ServiceImplTest for unit tests
-          ./mvnw -B -T 1C verify \
-            -Dtest="*ServiceImplTest" \
-            -DfailIfNoTests=false
-
-      - name: Ensure SonarQube available (start local if missing)
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_TOKEN" ]; then
-            echo "SONAR_HOST_URL or SONAR_TOKEN not set; skipping Sonar availability check/startup"
-            exit 0
+          OWNER=${{ github.repository_owner }}
+          REPO=$(basename $GITHUB_REPOSITORY)
+          echo "Looking for latest release tag starting with stage- in $OWNER/$REPO..."
+          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases")
+          tag=$(echo "$resp" | jq -r '.[] | select(.tag_name | startswith("stage-")) | .tag_name' | head -n1)
+          if [ -z "$tag" ] || [ "$tag" = "null" ]; then
+            echo "No stage release tag found" >&2
+            exit 1
           fi
-
-          echo "Checking SonarQube at $SONAR_HOST_URL"
-          if curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1; then
-            echo "SonarQube is reachable"
-            exit 0
-          fi
-
-          echo "SonarQube not reachable. Attempting to start local Sonar using docker-compose.sonar.yml"
-          if command -v docker >/dev/null 2>&1; then
-            if command -v docker-compose >/dev/null 2>&1; then
-              DOCKER_COMPOSE_CMD="docker-compose"
-            else
-              DOCKER_COMPOSE_CMD="docker compose"
-            fi
-            echo "Using: $DOCKER_COMPOSE_CMD"
-            $DOCKER_COMPOSE_CMD -f docker-compose.sonar.yml up -d
-          else
-            echo "Docker not available on runner; cannot start local Sonar. Proceeding and letting Sonar analysis step handle unreachable host."
-            exit 0
-          fi
-
-          SECONDS_WAITED=0
-          until curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1 || [ $SECONDS_WAITED -ge 180 ]; do
-            sleep 5
-            SECONDS_WAITED=$((SECONDS_WAITED+5))
-            echo "Waiting for SonarQube... ($SECONDS_WAITED s)"
-          done
-
-          if curl -sSf --max-time 5 "$SONAR_HOST_URL" >/dev/null 2>&1; then
-            echo "SonarQube is up after startup"
-          else
-            echo "Timed out waiting for SonarQube to start. Proceeding and letting Sonar analysis step run (it may fail)."
-          fi
-
-      - name: SonarQube analysis
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_TOKEN" ]; then
-            echo "Skipping SonarQube analysis: SONAR_HOST_URL or SONAR_TOKEN not set as secrets"
-            exit 0
-          fi
-
-          chmod +x ./mvnw
-          ./mvnw -B -DskipTests=true sonar:sonar \
-          -Dsonar.host.url="$SONAR_HOST_URL" \
-          -Dsonar.login="$SONAR_TOKEN" \
-          -Dsonar.projectKey="ecommerce" \
-          -Dsonar.projectName="ecommerce" \
-          -Dsonar.coverage.jacoco.xmlReportPaths="**/target/site/jacoco/jacoco.xml,**/target/site/jacoco-aggregate/jacoco.xml"
-
-      - name: Upload test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            **/target/surefire-reports/*.xml
-          retention-days: 7
-
-      - name: Upload build workspace
-        uses: actions/upload-artifact@v4
-        with:
-          name: workspace
-          path: |
-            .
-            !.git
-          retention-days: 1
-
-  docker-build:
-    name: Build ${{ matrix.service }}
-    runs-on: ubuntu-latest
-    needs: maven-build
-    strategy:
-      fail-fast: false
-      matrix:
-        service:
-          [
-            api-gateway,
-            cloud-config,
-            favourite-service,
-            order-service,
-            payment-service,
-            product-service,
-            proxy-client,
-            service-discovery,
-            shipping-service,
-            user-service,
-          ]
-
-    steps:
-      - name: Download workspace
-        uses: actions/download-artifact@v4
-        with:
-          name: workspace
-          path: .
-
-      - name: Check if Dockerfile exists
-        id: check
-        run: |
-          if [ -f "${{ matrix.service }}/Dockerfile" ]; then 
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else 
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Set up Docker Buildx
-        if: steps.check.outputs.exists == 'true'
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        if: steps.check.outputs.exists == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        if: steps.check.outputs.exists == 'true'
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest
-            type=sha,prefix=,format=long
-
-      - name: Build and push
-        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ matrix.service }}/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build locally if push fails (for testing)
-        if: steps.check.outputs.exists == 'true' && failure()
-        run: |
-          echo "⚠️  GHCR push failed. Building image locally for testing..."
-          docker build -f ${{ matrix.service }}/Dockerfile -t ${{ matrix.service }}:latest .
-
-      - name: Set build tag output for K8s deployment
-        if: steps.check.outputs.exists == 'true'
-        id: build-tag
-        run: |
-          echo "tag=latest" >> "$GITHUB_OUTPUT"
+          version=${tag#stage-}
+          echo "Found stage release: $tag -> image tag: $version"
+          echo "image_tag=$version" >> "$GITHUB_OUTPUT"
+    # outputs set from 'set' step above
 
   kubernetes-deploy:
     name: Deploy to Kubernetes (Production)
-    runs-on: self-hosted
-    needs: docker-build
+    # require the production environment approval in GitHub (configure reviewers in repo settings -> Environments -> production)
+    environment:
+      name: production
+    runs-on: ubuntu-latest
+    needs: fetch-stage-tag
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure kubectl
+      - name: Azure Login (production)
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+
+      - name: Set AKS Context (prod)
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ecommerce-rg-prod
+          cluster-name: ecommerce-aks-prod
+
+      - name: Update image tags in deployments (selective)
         run: |
-          # Ensure kubectl is available
-          if ! command -v kubectl &> /dev/null; then
-            echo "kubectl not found. Installing..."
-            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-            chmod +x kubectl
-            sudo mv kubectl /usr/local/bin/
-          fi
+          echo "🚀 Updating only application service deployments (prod namespace)"
 
-          # Check if kubeconfig is configured
-          if [ ! -f ~/.kube/config ] && [ -z "$KUBECONFIG" ]; then
-            echo "⚠️  WARNING: kubeconfig not found and KUBECONFIG not set."
-            echo "Please ensure kubectl is configured for your Kubernetes cluster."
-            exit 1
-          fi
+          # Specific list of application services (not infra)
+          declare -a APP_DEPLOYMENTS=(
+            "api-gateway-container"
+            "product-service-container"
+            "user-service-container"
+            "order-service-container"
+            "payment-service-container"
+            "shipping-service-container"
+            "favourite-service-container"
+            "proxy-client-container"
+            "service-discovery-container"
+            "cloud-config-container"
+          )
 
-      - name: Deploy using deploy-k8s.sh script
-        run: |
-          echo "🚀 Deploying services to Kubernetes (Production)..."
+          IMAGE_TAG="${{ needs.fetch-stage-tag.outputs.image_tag }}"
+          REGISTRY="ghcr.io/${{ github.repository_owner }}"
 
-          # Use latest tag for production deployment
-          BRANCH_TAG="latest"
+          for deployment in "${APP_DEPLOYMENTS[@]}"; do
+            SERVICE_NAME="${deployment%-container}"
 
-          # Make the deploy script executable
-          chmod +x ./scripts/deploy-k8s.sh
+            echo "📦 Updating $deployment with image tag: $IMAGE_TAG"
 
-          # Run the deploy script with the latest tag
-          ./scripts/deploy-k8s.sh "$BRANCH_TAG"
-
-      - name: Verify deployment
-        run: |
-          echo "📋 Kubernetes deployment status:"
-          kubectl get deployments
-          echo ""
-          kubectl get services
-          echo ""
-          kubectl get pods
-
-          # Wait for all deployments to be ready
-          echo ""
-          echo "Waiting for all deployments to be ready..."
-          SERVICES=("api-gateway" "cloud-config" "favourite-service" "order-service" "payment-service" "product-service" "proxy-client" "service-discovery" "shipping-service" "user-service")
-
-          for service in "${SERVICES[@]}"; do
-            deployment="${service}-container"
-            if kubectl get deployment "$deployment" 2>/dev/null; then
-              echo "Waiting for $deployment to be ready..."
-              kubectl rollout status deployment/"$deployment" --timeout=5m || true
+            if kubectl get deployment "$deployment" -n prod &> /dev/null; then
+              kubectl set image deployment/"$deployment" \
+                "$deployment=$REGISTRY/$SERVICE_NAME:$IMAGE_TAG" \
+                -n prod
+              echo "✅ Updated $deployment"
+            else
+              echo "⚠️  Deployment $deployment not found in prod, skipping..."
             fi
           done
 
-          echo "✅ Deployment verification complete"
+      - name: Wait for rollouts with proper timeout
+        run: |
+          echo "⏳ Waiting for rollouts to complete in prod..."
 
-  integration-tests:
-    name: Run Integration Tests
-    runs-on: self-hosted
+          declare -a APP_DEPLOYMENTS=(
+            "api-gateway-container"
+            "product-service-container"
+            "user-service-container"
+            "order-service-container"
+            "payment-service-container"
+            "shipping-service-container"
+            "favourite-service-container"
+            "proxy-client-container"
+            "service-discovery-container"
+            "cloud-config-container"
+          )
+
+          FAILED_DEPLOYMENTS=()
+
+          for deployment in "${APP_DEPLOYMENTS[@]}"; do
+            if kubectl get deployment "$deployment" -n prod &> /dev/null; then
+              echo "⏳ Waiting for $deployment rollout (prod)..."
+              if kubectl rollout status deployment/"$deployment" -n prod --timeout=10m; then
+                echo "✅ $deployment rolled out successfully"
+              else
+                echo "❌ $deployment rollout failed or timed out"
+                FAILED_DEPLOYMENTS+=("$deployment")
+
+                echo "--- Debugging $deployment ---"
+                kubectl describe deployment/"$deployment" -n prod | tail -30
+                kubectl get pods -n prod -l "io.kompose.service=$deployment" -o wide
+              fi
+            fi
+          done
+
+          if [ ${#FAILED_DEPLOYMENTS[@]} -gt 0 ]; then
+            echo ""
+            echo "❌ The following deployments failed in prod:"
+            printf '%s\n' "${FAILED_DEPLOYMENTS[@]}"
+            exit 1
+          fi
+
+          echo "✅ All application deployments completed successfully (prod)"
+
+      - name: Verify services are accessible (ingress)
+        run: |
+          echo "🔍 Verifying service endpoints in prod (via ingress)..."
+
+          sleep 30
+
+          # Try to get ingress host first
+          INGRESS_HOST=$(kubectl get ingress -n prod -o jsonpath='{.items[0].spec.rules[0].host}' 2>/dev/null || true)
+          if [ -z "$INGRESS_HOST" ]; then
+            # Fall back to load balancer IP if no ingress host
+            INGRESS_HOST=$(kubectl get ingress -n prod -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+          fi
+
+          if [ -z "$INGRESS_HOST" ]; then
+            echo "⚠️  Could not get Ingress host or IP for prod. Listing services to help debug:" 
+            kubectl get svc -n prod
+            exit 1
+          fi
+
+          echo "Ingress host/IP: $INGRESS_HOST"
+
+          HEALTH_URL="http://${INGRESS_HOST}/actuator/health"
+          echo "Checking health endpoint: $HEALTH_URL"
+
+          RETRIES=0
+          MAX_RETRIES=10
+
+          while [ $RETRIES -lt $MAX_RETRIES ]; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ API Gateway via ingress is healthy (HTTP $HTTP_CODE)"
+              break
+            else
+              echo "⏳ Waiting for API Gateway via ingress... (HTTP $HTTP_CODE) - Retry $((RETRIES+1))/$MAX_RETRIES"
+              sleep 10
+              RETRIES=$((RETRIES+1))
+            fi
+          done
+
+          if [ $RETRIES -eq $MAX_RETRIES ]; then
+            echo "❌ API Gateway health check failed after $MAX_RETRIES retries"
+            exit 1
+          fi
+
+  # integration-tests removed for master: master only runs smoke tests per request
+
+  smoke-tests:
+    name: Run Smoke Tests
+    runs-on: ubuntu-latest
     needs: kubernetes-deploy
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 11
-        uses: actions/setup-java@v4
+      - name: Azure Login (production)
+        uses: azure/login@v1
         with:
-          distribution: temurin
-          java-version: "11"
+          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
 
-      - name: Wait for API Gateway to be ready
-        run: |
-          echo "Waiting for services to be ready..."
-          SECONDS_WAITED=0
-          TIMEOUT=300
-
-          # Array of service endpoints to check
-          declare -a ENDPOINTS=(
-            "http://localhost:8080/app/api/products"
-            "http://localhost:8600/shipping-service/api/shippings"
-            "http://localhost:8700/user-service/api/users"
-            "http://localhost:8500/product-service/api/products"
-            "http://localhost:8800/favourite-service/api/favourites"
-            "http://localhost:8400/payment-service/api/payments"
-          )
-
-          # Check all endpoints until they are ready or timeout
-          while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
-            ALL_READY=true
-            for endpoint in "${ENDPOINTS[@]}"; do
-              if ! curl -sSf "$endpoint" >/dev/null 2>&1; then
-                ALL_READY=false
-                break
-              fi
-            done
-            
-            if [ "$ALL_READY" = true ]; then
-              echo "✅ All services are ready"
-              exit 0
-            fi
-            
-            sleep 5
-            SECONDS_WAITED=$((SECONDS_WAITED+5))
-            echo "Waiting for services... ($SECONDS_WAITED s / $TIMEOUT s)"
-          done
-
-          echo "⚠️  Service health check timed out after $TIMEOUT seconds"
-          echo "Checking pod status..."
-          kubectl get pods
-          exit 1
-
-      - name: Run Integration Tests against deployed services
-        run: |
-          chmod +x ./mvnw
-          echo "🧪 Running integration tests (*IntegrationTest pattern) against live services..."
-          echo "Target API: http://localhost:8080/app/api"
-          echo ""
-
-          ./mvnw -B -T 1C verify \
-            -Dtest="*IntegrationTest" \
-            -DfailIfNoTests=false
-
-      - name: Upload integration test reports
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Set AKS Context (prod)
+        uses: azure/aks-set-context@v3
         with:
-          name: integration-test-results
-          path: |
-            **/target/surefire-reports/*IntegrationTest*.xml
-          retention-days: 7
+          resource-group: ecommerce-rg-prod
+          cluster-name: ecommerce-aks-prod
 
-      - name: Check test results
-        if: always()
+      - name: Get API Gateway ingress host
+        id: get-host-smoke
         run: |
-          echo "📊 Integration Test Summary:"
-          echo ""
-          # Count test results
-          TOTAL_TESTS=$(find . -name "*IntegrationTest*.xml" -exec grep -c "<testcase" {} + 2>/dev/null | awk '{sum+=$1} END {print sum}')
-          FAILURES=$(find . -name "*IntegrationTest*.xml" -exec grep -c "<failure" {} + 2>/dev/null | awk '{sum+=$1} END {print sum}')
-
-          echo "Total tests executed: ${TOTAL_TESTS:-0}"
-          echo "Failures: ${FAILURES:-0}"
-          echo ""
-
-          if [ "$FAILURES" -gt 0 ]; then
-            echo "⚠️  Some integration tests failed. Check artifacts for details."
-          else
-            echo "✅ All integration tests passed"
+          echo "Fetching ingress host for prod namespace..."
+          INGRESS_HOST="$(kubectl get ingress -n prod -o jsonpath='{.items[0].spec.rules[0].host}' 2>/dev/null || true)"
+          if [ -z "$INGRESS_HOST" ]; then
+            INGRESS_HOST="$(kubectl get ingress -n prod -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)"
           fi
-
-  smoke-tests:
-    name: Run Smoke Tests
-    runs-on: self-hosted
-    needs: integration-tests
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+          if [ -z "$INGRESS_HOST" ]; then
+            echo "No ingress host found in prod namespace" >&2
+            exit 1
+          fi
+          echo "Ingress host: $INGRESS_HOST"
+          echo "GATEWAY_HOST=$INGRESS_HOST" >> $GITHUB_ENV
 
       - name: Debug - Check services status
         run: |
@@ -393,15 +249,15 @@ jobs:
           TIMEOUT=120
           RETRY_DELAY=5
 
-          # Array of service endpoints to check
+          # Array of service endpoints to check (via ingress host)
           declare -a ENDPOINTS=(
-            "http://localhost:8080/app/api/products"
-            "http://localhost:8600/shipping-service/api/shippings"
-            "http://localhost:8700/user-service/api/users"
-            "http://localhost:8500/product-service/api/products"
-            "http://localhost:8800/favourite-service/api/favourites"
-            "http://localhost:8400/payment-service/api/payments"
-            "http://localhost:8300/order-service/api/orders"
+            "http://${GATEWAY_HOST}/app/api/products"
+            "http://${GATEWAY_HOST}/shipping-service/api/shippings"
+            "http://${GATEWAY_HOST}/user-service/api/users"
+            "http://${GATEWAY_HOST}/product-service/api/products"
+            "http://${GATEWAY_HOST}/favourite-service/api/favourites"
+            "http://${GATEWAY_HOST}/payment-service/api/payments"
+            "http://${GATEWAY_HOST}/order-service/api/orders"
           )
 
           # Check all endpoints until they are ready or timeout
@@ -461,25 +317,25 @@ jobs:
           }
 
           # Test 1: API Gateway Health
-          test_endpoint "1" "API Gateway - Products" "http://localhost:8080/app/api/products"
+          test_endpoint "1" "API Gateway - Products" "http://${GATEWAY_HOST}/app/api/products"
 
           # Test 2: Product Service Health
-          test_endpoint "2" "Product Service" "http://localhost:8500/product-service/api/products"
+          test_endpoint "2" "Product Service" "http://${GATEWAY_HOST}/product-service/api/products"
 
           # Test 3: User Service Health
-          test_endpoint "3" "User Service" "http://localhost:8700/user-service/api/users"
+          test_endpoint "3" "User Service" "http://${GATEWAY_HOST}/user-service/api/users"
 
           # Test 4: Order Service Health
-          test_endpoint "4" "Order Service" "http://localhost:8300/order-service/api/orders"
+          test_endpoint "4" "Order Service" "http://${GATEWAY_HOST}/order-service/api/orders"
 
           # Test 5: Payment Service Health
-          test_endpoint "5" "Payment Service" "http://localhost:8400/payment-service/api/payments"
+          test_endpoint "5" "Payment Service" "http://${GATEWAY_HOST}/payment-service/api/payments"
 
           # Test 6: Shipping Service Health
-          test_endpoint "6" "Shipping Service" "http://localhost:8600/shipping-service/api/shippings"
+          test_endpoint "6" "Shipping Service" "http://${GATEWAY_HOST}/shipping-service/api/shippings"
 
           # Test 7: Favourite Service Health
-          test_endpoint "7" "Favourite Service" "http://localhost:8800/favourite-service/api/favourites"
+          test_endpoint "7" "Favourite Service" "http://${GATEWAY_HOST}/favourite-service/api/favourites"
 
           echo ""
           echo "📊 Smoke Test Results: $PASSED_TESTS passed, $FAILED_TESTS failed"
@@ -524,58 +380,40 @@ jobs:
   generate-release-notes:
     name: Generate Release Notes
     runs-on: ubuntu-latest
-    needs: smoke-tests
+    needs: [smoke-tests, fetch-stage-tag]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master' && success()
     outputs:
-      release_version: ${{ steps.version.outputs.version }}
-      changelog: ${{ steps.changelog.outputs.changelog }}
+      release_version: ${{ steps.output_info.outputs.version }}
+      changelog: ${{ steps.output_info.outputs.changelog }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get version from git tags
-        id: version
+      - name: Use Stage release info as production release
+        id: output_info
         run: |
-          # Get the latest tag or generate a new version
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          LATEST_VERSION=${LATEST_TAG#v}
+          VERSION="${{ needs.fetch-stage-tag.outputs.image_tag }}"
+          OWNER=${{ github.repository_owner }}
+          REPO=$(basename $GITHUB_REPOSITORY)
 
-          # Parse version
-          MAJOR=$(echo $LATEST_VERSION | cut -d. -f1)
-          MINOR=$(echo $LATEST_VERSION | cut -d. -f2)
-          PATCH=$(echo $LATEST_VERSION | cut -d. -f3)
+          echo "Using stage-$VERSION as base for production release"
+          # Fetch changelog body from stage release
+          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases/tags/stage-$VERSION")
+          changelog=$(echo "$resp" | jq -r '.body // ""')
 
-          # Increment patch version
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-
-          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-          echo "previous_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
-          echo "📌 New version: $NEW_VERSION"
-
-      - name: Generate Changelog
-        id: changelog
-        run: |
-          PREVIOUS_TAG=${{ steps.version.outputs.previous_tag }}
-
-          # Generate changelog from commits
-          if [ "$PREVIOUS_TAG" != "v0.0.0" ]; then
-            CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %h: %s (%an)")
-          else
-            CHANGELOG=$(git log --pretty=format:"- %h: %s (%an)")
+          if [ -z "$changelog" ] || [ "$changelog" = "null" ]; then
+            changelog="No changelog found in stage release stage-$VERSION"
           fi
 
-          # Save to file for later use
-          echo "$CHANGELOG" > CHANGELOG_TEMP.txt
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "changelog<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$changelog" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
-          # Output for display
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          echo "✅ Changelog generated"
+          # Save changelog to file
+          echo "$changelog" > CHANGELOG_TEMP.txt
 
       - name: Create GitHub Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -583,14 +421,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          release_name: Release v${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.output_info.outputs.version }}
+          release_name: Release v${{ steps.output_info.outputs.version }}
           body: |
-            # 🚀 Release v${{ steps.version.outputs.version }}
+            # 🚀 Release v${{ steps.output_info.outputs.version }}
 
             ## 📝 Changelog
 
-            ${{ steps.changelog.outputs.changelog }}
+            ${{ steps.output_info.outputs.changelog }}
 
             ## 📦 Artifacts
 
@@ -601,16 +439,16 @@ jobs:
             ## 🔗 Images
 
             Docker images for this release:
-            - `ghcr.io/${{ github.repository_owner }}/api-gateway:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/product-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/user-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/order-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/payment-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/shipping-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/favourite-service:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/proxy-client:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/service-discovery:v${{ steps.version.outputs.version }}`
-            - `ghcr.io/${{ github.repository_owner }}/cloud-config:v${{ steps.version.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/api-gateway:v${{ steps.output_info.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/product-service:v${{ steps.output_info.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/user-service:v${{ steps.output_info.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/order-service:v${{ steps.output_info.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/payment-service:v${{ steps.output_info.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/shipping-service:v${{ steps.output_info.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/favourite-service:v${{ steps.output_info.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/proxy-client:v${{ steps.output_info.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/service-discovery:v${{ steps.output_info.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/cloud-config:v${{ steps.output_info.outputs.version }}`
 
             ## ✅ Quality Gates Passed
 
@@ -652,3 +490,69 @@ jobs:
           echo "✅ All deployment steps completed successfully"
           echo ""
           echo "📌 Release Notes and artifacts are available in GitHub Actions"
+
+  notify-success:
+    name: Notify Success
+    runs-on: ubuntu-latest
+    if: success()
+    needs:
+      [
+        fetch-stage-tag,
+        kubernetes-deploy,
+        post-deployment,
+        generate-release-notes,
+      ]
+    steps:
+      - name: Send Email Notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "✅ Production Release Success: ${{ github.repository }}"
+          body: |
+            The production release for ${{ github.repository }} has completed successfully! 🚀
+
+            Repository: ${{ github.repository }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+            Branch: master
+
+            Check the logs here: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          to: ${{ secrets.MAIL_TO }}
+          from: GitHub Actions <${{ secrets.MAIL_USERNAME }}>
+          secure: true
+
+  notify-failure-or-cancel:
+    name: Notify Failure or Cancellation
+    runs-on: ubuntu-latest
+    if: failure() || cancelled()
+    needs:
+      [
+        fetch-stage-tag,
+        kubernetes-deploy,
+        post-deployment,
+        generate-release-notes,
+      ]
+    steps:
+      - name: Send Email Notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "❌ Production Release Failed or Cancelled: ${{ github.repository }}"
+          body: |
+            The production release for ${{ github.repository }} has failed or was cancelled.
+
+            Repository: ${{ github.repository }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+            Branch: master
+
+            Check the logs here: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          to: ${{ secrets.MAIL_TO }}
+          from: GitHub Actions <${{ secrets.MAIL_USERNAME }}>
+          secure: true
