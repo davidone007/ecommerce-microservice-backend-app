@@ -193,26 +193,37 @@ jobs:
 
           echo "Ingress host/IP: $INGRESS_HOST"
 
-          HEALTH_URL="http://${INGRESS_HOST}/actuator/health"
-          echo "Checking health endpoint: $HEALTH_URL"
+          # All routes are HTTPS in prod; follow redirects and check HTTPS health
+          HEALTH_URL="https://${INGRESS_HOST}/actuator/health"
+          echo "Checking health endpoint (waiting up to 15m): $HEALTH_URL"
 
-          RETRIES=0
-          MAX_RETRIES=10
+          # Wait up to 15 minutes (900s), check every 10s and validate JSON status == UP
+          SECONDS_WAITED=0
+          TIMEOUT=900
+          INTERVAL=10
 
-          while [ $RETRIES -lt $MAX_RETRIES ]; do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
-            if [ "$HTTP_CODE" = "200" ]; then
-              echo "✅ API Gateway via ingress is healthy (HTTP $HTTP_CODE)"
-              break
+          while [ $SECONDS_WAITED -lt $TIMEOUT ]; do
+            # follow redirects, fetch body
+            BODY=$(curl -sSL --max-time 5 "$HEALTH_URL" 2>/dev/null || echo "")
+            if [ -n "$BODY" ]; then
+              # try to extract status field with grep (jq might not be installed)
+              STATUS=$(echo "$BODY" | grep -oE '"status"\s*:\s*"[A-Za-z]+"' | head -n1 | sed -E 's/.*"([A-Za-z]+)"/\1/')
+              if [ "$STATUS" = "UP" ] || [ "$STATUS" = "up" ]; then
+                echo "✅ API Gateway via ingress is healthy (status=$STATUS)"
+                break
+              else
+                echo "⏳ Waiting for API Gateway via ingress... (status=${STATUS:-unknown}) - waited ${SECONDS_WAITED}s/${TIMEOUT}s"
+              fi
             else
-              echo "⏳ Waiting for API Gateway via ingress... (HTTP $HTTP_CODE) - Retry $((RETRIES+1))/$MAX_RETRIES"
-              sleep 10
-              RETRIES=$((RETRIES+1))
+              echo "⏳ Waiting for API Gateway via ingress... (no response) - waited ${SECONDS_WAITED}s/${TIMEOUT}s"
             fi
+
+            sleep $INTERVAL
+            SECONDS_WAITED=$((SECONDS_WAITED + INTERVAL))
           done
 
-          if [ $RETRIES -eq $MAX_RETRIES ]; then
-            echo "❌ API Gateway health check failed after $MAX_RETRIES retries"
+          if [ $SECONDS_WAITED -ge $TIMEOUT ]; then
+            echo "❌ API Gateway health check failed after ${TIMEOUT}s"
             exit 1
           fi
 
@@ -302,6 +313,7 @@ jobs:
           for deployment in "${INFRA_DEPLOYMENTS[@]}"; do
             if kubectl get deployment "$deployment" -n prod &> /dev/null; then
               echo "⏳ Waiting for $deployment rollout (prod)..."
+              # Infra can take longer; give more time for large infra rollouts
               if kubectl rollout status deployment/"$deployment" -n prod --timeout=15m; then
                 echo "✅ $deployment rolled out successfully"
               else
@@ -393,18 +405,18 @@ jobs:
         run: |
           echo "Waiting for services to be ready for smoke tests..."
           SECONDS_WAITED=0
-          TIMEOUT=120
-          RETRY_DELAY=5
+          TIMEOUT=900  # 15 minutes
+          RETRY_DELAY=10
 
           # Array of service endpoints to check (via ingress host)
           declare -a ENDPOINTS=(
-            "http://${GATEWAY_HOST}/app/api/products"
-            "http://${GATEWAY_HOST}/shipping-service/api/shippings"
-            "http://${GATEWAY_HOST}/user-service/api/users"
-            "http://${GATEWAY_HOST}/product-service/api/products"
-            "http://${GATEWAY_HOST}/favourite-service/api/favourites"
-            "http://${GATEWAY_HOST}/payment-service/api/payments"
-            "http://${GATEWAY_HOST}/order-service/api/orders"
+            "https://${GATEWAY_HOST}/app/api/products"
+            "https://${GATEWAY_HOST}/shipping-service/api/shippings"
+            "https://${GATEWAY_HOST}/user-service/api/users"
+            "https://${GATEWAY_HOST}/product-service/api/products"
+            "https://${GATEWAY_HOST}/favourite-service/api/favourites"
+            "https://${GATEWAY_HOST}/payment-service/api/payments"
+            "https://${GATEWAY_HOST}/order-service/api/orders"
           )
 
           # Check all endpoints until they are ready or timeout
