@@ -27,8 +27,9 @@ jobs:
           OWNER=${{ github.repository_owner }}
           REPO=$(basename $GITHUB_REPOSITORY)
           echo "Looking for latest release tag starting with stage- in $OWNER/$REPO..."
-          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases")
-          tag=$(echo "$resp" | jq -r '.[] | select(.tag_name | startswith("stage-")) | .tag_name' | head -n1)
+          # pick latest stage- release by created_at (newest)
+          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases?per_page=100")
+          tag=$(echo "$resp" | jq -r 'sort_by(.created_at) | reverse[] | select(.tag_name | startswith("stage-")) | .tag_name' | head -n1)
           if [ -z "$tag" ] || [ "$tag" = "null" ]; then
             echo "No stage release tag found" >&2
             exit 1
@@ -88,6 +89,15 @@ jobs:
             echo "📦 Updating $deployment with image tag: $IMAGE_TAG"
 
             if kubectl get deployment "$deployment" -n prod &> /dev/null; then
+              # Verify the image tag exists in GHCR for the service before updating
+              MANIFEST_URL="https://ghcr.io/v2/${{ github.repository_owner }}/${SERVICE_NAME}/manifests/${IMAGE_TAG}"
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$MANIFEST_URL")
+
+              if [ "$HTTP_CODE" != "200" ]; then
+                echo "⚠️  Image ghcr.io/${{ github.repository_owner }}/${SERVICE_NAME}:${IMAGE_TAG} not found (HTTP $HTTP_CODE). Skipping update for $deployment"
+                continue
+              fi
+
               kubectl set image deployment/"$deployment" \
                 "$deployment=$REGISTRY/$SERVICE_NAME:$IMAGE_TAG" \
                 -n prod

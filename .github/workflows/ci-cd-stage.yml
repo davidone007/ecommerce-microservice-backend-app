@@ -27,8 +27,9 @@ jobs:
           OWNER=${{ github.repository_owner }}
           REPO=$(basename $GITHUB_REPOSITORY)
           echo "Looking for latest release tag starting with dev- in $OWNER/$REPO..."
-          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases")
-          tag=$(echo "$resp" | jq -r '.[] | select(.tag_name | startswith("dev-")) | .tag_name' | head -n1)
+          # Get releases and pick the newest by created_at that starts with 'dev-'
+          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases?per_page=100")
+          tag=$(echo "$resp" | jq -r 'sort_by(.created_at) | reverse[] | select(.tag_name | startswith("dev-")) | .tag_name' | head -n1)
           if [ -z "$tag" ] || [ "$tag" = "null" ]; then
             echo "No dev release tag found" >&2
             exit 1
@@ -94,11 +95,20 @@ jobs:
             
             # Verificar si el deployment existe
             if kubectl get deployment "$deployment" -n stage &> /dev/null; then
-              # Actualizar la imagen del contenedor
+              # Verify the image exists on GHCR before patching
+              MANIFEST_URL="https://ghcr.io/v2/${{ github.repository_owner }}/${SERVICE_NAME}/manifests/${IMAGE_TAG}"
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$MANIFEST_URL")
+
+              if [ "$HTTP_CODE" != "200" ]; then
+                echo "⚠️  Image ghcr.io/${{ github.repository_owner }}/${SERVICE_NAME}:${IMAGE_TAG} not found (HTTP $HTTP_CODE). Skipping update for $deployment"
+                continue
+              fi
+
+              # Update the image of the container
               kubectl set image deployment/"$deployment" \
                 "$deployment=$REGISTRY/$SERVICE_NAME:$IMAGE_TAG" \
                 -n stage
-              
+
               echo "✅ Updated $deployment"
             else
               echo "⚠️  Deployment $deployment not found, skipping..."
