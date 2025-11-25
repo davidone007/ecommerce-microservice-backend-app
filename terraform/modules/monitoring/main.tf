@@ -73,7 +73,7 @@ resource "helm_release" "kube_prometheus_stack" {
               {
                 name     = "Elasticsearch"
                 type     = "elasticsearch"
-                url      = "http://elasticsearch:9200"
+                url      = "http://elasticsearch-master:9200"
                 database = "[microservices-logs-]*"
                 jsonData = {
                   timeField = "@timestamp"
@@ -249,7 +249,7 @@ resource "helm_release" "logstash" {
           }
           output {
             elasticsearch {
-              hosts => ["http://elasticsearch:9200"]
+              hosts => ["http://elasticsearch-master:9200"]
               index => "%%{[@metadata][index]}"
             }
           }
@@ -287,7 +287,7 @@ resource "helm_release" "kibana" {
       service = {
         type = "ClusterIP"
       }
-      elasticsearchHosts = "http://elasticsearch:9200"
+      elasticsearchHosts = "http://elasticsearch-master:9200"
       resources = {
         requests = {
           cpu    = "100m"

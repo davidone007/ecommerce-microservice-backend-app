@@ -196,6 +196,23 @@ echo "📊 Imágenes disponibles localmente:"
 docker images | grep "$REGISTRY" || echo "   (ninguna encontrada)"
 echo ""
 
+echo -e "${BLUE}📤 Paso 3: Pusheando imágenes al registry...${NC}"
+
+for service in "${SERVICES[@]}"; do
+    IMAGE_NAME="${REGISTRY}/${service}:${BRANCH_TAG}"
+    echo -e "${YELLOW}⬆️  Pusheando: $IMAGE_NAME${NC}"
+
+    if docker push "$IMAGE_NAME"; then
+        echo -e "   ${GREEN}✅ Push exitoso${NC}"
+    else
+        echo -e "   ${RED}❌ Error al hacer push${NC}"
+        FAILED_SERVICES+=("$service")
+    fi
+
+    echo ""
+done
+
+
 # Opciones siguientes
 if [ $FAILED -eq 0 ]; then
     echo -e "${BLUE}📚 Próximos pasos:${NC}"

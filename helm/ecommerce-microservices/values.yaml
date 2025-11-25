@@ -2,6 +2,8 @@ global:
   imageRegistry: ghcr.io/davidone007
   imageTag: stage
   imagePullPolicy: Always
+  # Logstash host for cross-namespace logging (stage -> monitoring)
+  logstashHost: logstash-logstash.monitoring.svc.cluster.local:5000
 
 keyVault:
   enabled: true
@@ -47,6 +49,8 @@ services:
         value: dev
       - name: SPRING_ZIPKIN_BASE_URL
         value: http://zipkin-container:9411
+      - name: LOGSTASH_HOST
+        value: logstash-logstash.monitoring.svc.cluster.local:5000
     
   
       
@@ -59,7 +63,7 @@ services:
   api-gateway:
     name: api-gateway-container
     image: api-gateway
-    type: ClusterIP
+    type: LoadBalancer
     port: 8080
     env:
       - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
@@ -78,6 +82,8 @@ services:
         value: optional:configserver:http://cloud-config-container:9296/
       - name: SPRING_ZIPKIN_BASE_URL
         value: http://zipkin-container:9411
+      - name: LOGSTASH_HOST
+        value: logstash-logstash.monitoring.svc.cluster.local:5000
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
@@ -114,6 +120,8 @@ services:
         value: dev
       - name: SPRING_ZIPKIN_BASE_URL
         value: http://zipkin-container:9411
+      - name: LOGSTASH_HOST
+        value: logstash-logstash.monitoring.svc.cluster.local:5000
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
@@ -142,6 +150,8 @@ services:
         value: dev
       - name: SPRING_ZIPKIN_BASE_URL
         value: http://zipkin-container:9411
+      - name: LOGSTASH_HOST
+        value: logstash-logstash.monitoring.svc.cluster.local:5000
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
@@ -170,6 +180,8 @@ services:
         value: dev
       - name: SPRING_ZIPKIN_BASE_URL
         value: http://zipkin-container:9411
+      - name: LOGSTASH_HOST
+        value: logstash-logstash.monitoring.svc.cluster.local:5000
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
@@ -198,6 +210,8 @@ services:
         value: dev
       - name: SPRING_ZIPKIN_BASE_URL
         value: http://zipkin-container:9411
+      - name: LOGSTASH_HOST
+        value: logstash-logstash.monitoring.svc.cluster.local:5000
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
@@ -231,6 +245,8 @@ services:
         value: dev
       - name: SPRING_ZIPKIN_BASE_URL
         value: http://zipkin-container:9411
+      - name: LOGSTASH_HOST
+        value: logstash-logstash.monitoring.svc.cluster.local:5000
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
@@ -259,6 +275,8 @@ services:
         value: dev
       - name: SPRING_ZIPKIN_BASE_URL
         value: http://zipkin-container:9411
+      - name: LOGSTASH_HOST
+        value: logstash-logstash.monitoring.svc.cluster.local:5000
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
@@ -287,6 +305,8 @@ services:
         value: dev
       - name: SPRING_ZIPKIN_BASE_URL
         value: http://zipkin-container:9411
+      - name: LOGSTASH_HOST
+        value: logstash-logstash.monitoring.svc.cluster.local:5000
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0

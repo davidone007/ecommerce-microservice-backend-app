@@ -1,0 +1,14 @@
+# Grafana (acceder en http://localhost:3000)
+kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80
+
+# Prometheus (acceder en http://localhost:9090)
+kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090
+
+# Kibana (acceder en http://localhost:5601)
+kubectl port-forward -n monitoring svc/kibana-kibana 5601:5601
+
+# Elasticsearch (acceder en http://localhost:9200)
+kubectl port-forward -n monitoring svc/elasticsearch-master 9200:9200
+
+# Logstash (puerto 5000 para input)
+kubectl port-forward -n monitoring svc/logstash-logstash 5000:5000
