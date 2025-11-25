@@ -34,7 +34,7 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
       - name: EUREKA_INSTANCE
         value: cloud-config-container
@@ -61,7 +61,7 @@ services:
     type: ClusterIP
     port: 8080
     env:
-      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
       - name: EUREKA_INSTANCE
         value: api-gateway-container
@@ -99,7 +99,7 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
       - name: EUREKA_INSTANCE
         value: order-service-container
@@ -127,7 +127,7 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
       - name: EUREKA_INSTANCE
         value: payment-service-container
@@ -155,7 +155,7 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
       - name: EUREKA_INSTANCE
         value: product-service-container
@@ -183,7 +183,7 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
       - name: EUREKA_INSTANCE
         value: favourite-service-container
@@ -216,7 +216,7 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
       - name: EUREKA_INSTANCE
         value: proxy-client-container
@@ -244,7 +244,7 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
       - name: EUREKA_INSTANCE
         value: shipping-service-container
@@ -272,7 +272,7 @@ services:
         value: "true"
       - name: EUREKA_CLIENT_FETCH-REGISTRY
         value: "true"
-      - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+      - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
         value: http://service-discovery-container:8761/eureka/
       - name: EUREKA_INSTANCE
         value: user-service-container

@@ -120,7 +120,7 @@ jobs:
           for deployment in "${APP_DEPLOYMENTS[@]}"; do
             if kubectl get deployment "$deployment" -n prod &> /dev/null; then
               echo "⏳ Waiting for $deployment rollout (prod)..."
-              if kubectl rollout status deployment/"$deployment" -n prod --timeout=10m; then
+              if kubectl rollout status deployment/"$deployment" -n prod --timeout=15m; then
                 echo "✅ $deployment rolled out successfully"
               else
                 echo "❌ $deployment rollout failed or timed out"
@@ -179,20 +179,20 @@ jobs:
 
           echo "Ingress host/IP: $INGRESS_HOST"
 
-          HEALTH_URL="http://${INGRESS_HOST}/actuator/health"
+          HEALTH_URL="https://${INGRESS_HOST}/actuator/health"
           echo "Checking health endpoint: $HEALTH_URL"
 
           RETRIES=0
-          MAX_RETRIES=10
+          MAX_RETRIES=30
 
           while [ $RETRIES -lt $MAX_RETRIES ]; do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
+            HTTP_CODE=$(curl -kLs -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
             if [ "$HTTP_CODE" = "200" ]; then
               echo "✅ API Gateway via ingress is healthy (HTTP $HTTP_CODE)"
               break
             else
               echo "⏳ Waiting for API Gateway via ingress... (HTTP $HTTP_CODE) - Retry $((RETRIES+1))/$MAX_RETRIES"
-              sleep 10
+              sleep 20
               RETRIES=$((RETRIES+1))
             fi
           done
