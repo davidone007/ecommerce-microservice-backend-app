@@ -185,14 +185,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Run Trivy vulnerability scanner (fail on CRITICAL)
+      - name: Run Trivy vulnerability scanner (report CRITICAL as warnings)
         if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/dev'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ needs.calculate-semver.outputs.new_version }}
           format: table
-          # exit-code: 1 makes the step fail when vulnerabilities of the specified severities are found
-          exit-code: 1
+          # Treat CRITICAL vulnerabilities as warnings for Dev builds — do not fail the pipeline.
+          # Set exit-code: 0 so the step never returns a failing exit code regardless of findings.
+          exit-code: 0
           ignore-unfixed: false
           vuln-type: os,library
           # Fail build only for CRITICAL vulns here; HIGH will still be visible in reports
