@@ -8,11 +8,6 @@ metadata:
     app: {{ $val.name }}
 spec:
   replicas: 1
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 0
-      maxUnavailable: 1
   selector:
     matchLabels:
       app: {{ $val.name }}
@@ -43,24 +38,6 @@ spec:
             - name: secrets-store-inline
               mountPath: "/mnt/secrets-store"
               readOnly: true
-          {{- end }}
-          {{- if ne $val.name "zipkin-container" }}
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: {{ $val.port }}
-            initialDelaySeconds: 90
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: {{ $val.port }}
-            initialDelaySeconds: 120
-            periodSeconds: 20
-            timeoutSeconds: 5
-            failureThreshold: 5
           {{- end }}
       {{- if and $.Values.keyVault.enabled (eq $val.name "proxy-client-container") }}
       volumes:

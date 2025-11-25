@@ -12,8 +12,8 @@ on:
     branches: [master]
 
 jobs:
-  fetch-dev-tag:
-    name: Find latest Dev release
+  fetch-stage-tag:
+    name: Find latest Stage release
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.set.outputs.image_tag }}
@@ -21,21 +21,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Get latest dev release tag and set image tag
+      - name: Get latest stage release tag and set image tag
         id: set
         run: |
           OWNER=${{ github.repository_owner }}
           REPO=$(basename $GITHUB_REPOSITORY)
-          echo "Looking for latest release tag starting with dev- in $OWNER/$REPO..."
-          # pick latest dev- release by created_at (newest)
+          echo "Looking for latest release tag starting with stage- in $OWNER/$REPO..."
+          # pick latest stage- release by created_at (newest)
           resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases?per_page=100")
-          tag=$(echo "$resp" | jq -r 'sort_by(.created_at) | reverse[] | select(.tag_name | startswith("dev-")) | .tag_name' | head -n1)
+          tag=$(echo "$resp" | jq -r 'sort_by(.created_at) | reverse[] | select(.tag_name | startswith("stage-")) | .tag_name' | head -n1)
           if [ -z "$tag" ] || [ "$tag" = "null" ]; then
-            echo "No dev release tag found" >&2
+            echo "No stage release tag found" >&2
             exit 1
           fi
-          version=${tag#dev-}
-          echo "Found dev release: $tag -> image tag: $version"
+          version=${tag#stage-}
+          echo "Found stage release: $tag -> image tag: $version"
           echo "image_tag=$version" >> "$GITHUB_OUTPUT"
     # outputs set from 'set' step above
 
@@ -45,7 +45,7 @@ jobs:
     environment:
       name: production
     runs-on: ubuntu-latest
-    needs: fetch-dev-tag
+    needs: fetch-stage-tag
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout
@@ -68,19 +68,19 @@ jobs:
 
           # Specific list of application services (not infra)
           declare -a APP_DEPLOYMENTS=(
-            "service-discovery-container"
-            "cloud-config-container"
             "api-gateway-container"
-            "proxy-client-container"
             "product-service-container"
             "user-service-container"
             "order-service-container"
             "payment-service-container"
             "shipping-service-container"
             "favourite-service-container"
+            "proxy-client-container"
+            "service-discovery-container"
+            "cloud-config-container"
           )
 
-          IMAGE_TAG="${{ needs.fetch-dev-tag.outputs.image_tag }}"
+          IMAGE_TAG="${{ needs.fetch-stage-tag.outputs.image_tag }}"
           REGISTRY="ghcr.io/${{ github.repository_owner }}"
 
           for deployment in "${APP_DEPLOYMENTS[@]}"; do
@@ -89,6 +89,15 @@ jobs:
             echo "📦 Updating $deployment with image tag: $IMAGE_TAG"
 
             if kubectl get deployment "$deployment" -n prod &> /dev/null; then
+              # Verify the image tag exists in GHCR for the service before updating
+              MANIFEST_URL="https://ghcr.io/v2/${{ github.repository_owner }}/${SERVICE_NAME}/manifests/${IMAGE_TAG}"
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$MANIFEST_URL")
+
+              if [ "$HTTP_CODE" != "200" ]; then
+                echo "⚠️  Image ghcr.io/${{ github.repository_owner }}/${SERVICE_NAME}:${IMAGE_TAG} not found (HTTP $HTTP_CODE). Skipping update for $deployment"
+                continue
+              fi
+
               kubectl set image deployment/"$deployment" \
                 "$deployment=$REGISTRY/$SERVICE_NAME:$IMAGE_TAG" \
                 -n prod
@@ -103,16 +112,16 @@ jobs:
           echo "⏳ Waiting for rollouts to complete in prod..."
 
           declare -a APP_DEPLOYMENTS=(
-            "service-discovery-container"
-            "cloud-config-container"
             "api-gateway-container"
-            "proxy-client-container"
             "product-service-container"
             "user-service-container"
             "order-service-container"
             "payment-service-container"
             "shipping-service-container"
             "favourite-service-container"
+            "proxy-client-container"
+            "service-discovery-container"
+            "cloud-config-container"
           )
 
           FAILED_DEPLOYMENTS=()
@@ -120,7 +129,7 @@ jobs:
           for deployment in "${APP_DEPLOYMENTS[@]}"; do
             if kubectl get deployment "$deployment" -n prod &> /dev/null; then
               echo "⏳ Waiting for $deployment rollout (prod)..."
-              if kubectl rollout status deployment/"$deployment" -n prod --timeout=15m; then
+              if kubectl rollout status deployment/"$deployment" -n prod --timeout=10m; then
                 echo "✅ $deployment rolled out successfully"
               else
                 echo "❌ $deployment rollout failed or timed out"
@@ -179,20 +188,20 @@ jobs:
 
           echo "Ingress host/IP: $INGRESS_HOST"
 
-          HEALTH_URL="https://${INGRESS_HOST}/actuator/health"
+          HEALTH_URL="http://${INGRESS_HOST}/actuator/health"
           echo "Checking health endpoint: $HEALTH_URL"
 
           RETRIES=0
-          MAX_RETRIES=30
+          MAX_RETRIES=10
 
           while [ $RETRIES -lt $MAX_RETRIES ]; do
-            HTTP_CODE=$(curl -kLs -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
             if [ "$HTTP_CODE" = "200" ]; then
               echo "✅ API Gateway via ingress is healthy (HTTP $HTTP_CODE)"
               break
             else
               echo "⏳ Waiting for API Gateway via ingress... (HTTP $HTTP_CODE) - Retry $((RETRIES+1))/$MAX_RETRIES"
-              sleep 20
+              sleep 10
               RETRIES=$((RETRIES+1))
             fi
           done
@@ -397,7 +406,7 @@ jobs:
   generate-release-notes:
     name: Generate Release Notes
     runs-on: ubuntu-latest
-    needs: [smoke-tests, fetch-dev-tag]
+    needs: [smoke-tests, fetch-stage-tag]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master' && success()
     outputs:
       release_version: ${{ steps.output_info.outputs.version }}
@@ -411,17 +420,17 @@ jobs:
       - name: Use Stage release info as production release
         id: output_info
         run: |
-          VERSION="${{ needs.fetch-dev-tag.outputs.image_tag }}"
+          VERSION="${{ needs.fetch-stage-tag.outputs.image_tag }}"
           OWNER=${{ github.repository_owner }}
           REPO=$(basename $GITHUB_REPOSITORY)
 
-          echo "Using dev-$VERSION as base for production release"
-          # Fetch changelog body from dev release
-          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases/tags/dev-$VERSION")
+          echo "Using stage-$VERSION as base for production release"
+          # Fetch changelog body from stage release
+          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases/tags/stage-$VERSION")
           changelog=$(echo "$resp" | jq -r '.body // ""')
 
           if [ -z "$changelog" ] || [ "$changelog" = "null" ]; then
-            changelog="No changelog found in dev release dev-$VERSION"
+            changelog="No changelog found in stage release stage-$VERSION"
           fi
 
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -514,7 +523,7 @@ jobs:
     if: success()
     needs:
       [
-        fetch-dev-tag,
+        fetch-stage-tag,
         kubernetes-deploy,
         post-deployment,
         generate-release-notes,
@@ -547,7 +556,7 @@ jobs:
     if: failure() || cancelled()
     needs:
       [
-        fetch-dev-tag,
+        fetch-stage-tag,
         kubernetes-deploy,
         post-deployment,
         generate-release-notes,
