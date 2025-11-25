@@ -13,9 +13,9 @@ on:
   workflow_dispatch:
     inputs:
       run_infra:
-        description: 'Run infra deploy job? (true/false)'
+        description: "Run infra deploy job? (true/false)"
         required: false
-        default: 'false'
+        default: "false"
 
 jobs:
   fetch-stage-tag:
