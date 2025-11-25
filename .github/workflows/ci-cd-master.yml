@@ -36,7 +36,7 @@ jobs:
           version=${tag#stage-}
           echo "Found stage release: $tag -> image tag: $version"
           echo "image_tag=$version" >> "$GITHUB_OUTPUT"
-    # output set from 'set' step above
+    # outputs set from 'set' step above
 
   kubernetes-deploy:
     name: Deploy to Kubernetes (Production)
@@ -55,11 +55,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Get AKS Credentials (prod)
-        run: az aks get-credentials --resource-group ecommerce-rg-prod --name ecommerce-aks-prod --overwrite-existing
+      - name: Set AKS Context (prod)
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ecommerce-rg-prod
+          cluster-name: ecommerce-aks-prod
 
       - name: Update image tags in deployments (selective)
         run: |
@@ -127,7 +127,23 @@ jobs:
 
                 echo "--- Debugging $deployment ---"
                 kubectl describe deployment/"$deployment" -n prod | tail -30
-                kubectl get pods -n prod -l "io.kompose.service=$deployment" -o wide
+                # Attempt to list pods for the deployment and fetch logs (init + containers)
+                PODS=$(kubectl get pods -n prod -l "io.kompose.service=$deployment" -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true)
+
+                if [ -z "$PODS" ]; then
+                  echo "⚠️  No pods found for $deployment using label selector. Listing all pods in prod for debugging:" 
+                  kubectl get pods -n prod -o wide || true
+                else
+                  for P in $PODS; do
+                    echo "\n--- Pod details: $P ---"
+                    kubectl describe pod "$P" -n prod || true
+                    echo "\n--- Container logs (last 200 lines) for $P ---"
+                    kubectl logs "$P" -n prod --all-containers --tail=200 || true
+                    echo "\n--- Init container logs (if any) for $P ---"
+                    # Many pods use an init container named 'wait-for-dependencies' — attempt to print its logs
+                    kubectl logs "$P" -n prod -c wait-for-dependencies --tail=200 || true
+                  done
+                fi
               fi
             fi
           done
@@ -201,11 +217,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Get AKS Credentials (prod)
-        run: az aks get-credentials --resource-group ecommerce-rg-prod --name ecommerce-aks-prod --overwrite-existing
+      - name: Set AKS Context (prod)
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ecommerce-rg-prod
+          cluster-name: ecommerce-aks-prod
 
       - name: Get API Gateway ingress host
         id: get-host-smoke
