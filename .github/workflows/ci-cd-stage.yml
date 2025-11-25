@@ -10,6 +10,12 @@ on:
     branches: [stage, "ops/feat/*", "ops/fix/*"]
   pull_request:
     branches: [stage, "ops/feat/*", "ops/fix/*"]
+  workflow_dispatch:
+    inputs:
+      run_infra:
+        description: "Run infra deploy job? (true/false)"
+        required: false
+        default: "false"
 
 jobs:
   fetch-image-tag:
@@ -48,7 +54,7 @@ jobs:
     environment:
       name: stage
     runs-on: ubuntu-latest
-    needs: [fetch-image-tag, infrastructure-deploy]
+    needs: [fetch-image-tag]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
     steps:
       - name: Checkout
@@ -79,8 +85,6 @@ jobs:
             "shipping-service-container"
             "favourite-service-container"
             "proxy-client-container"
-            "service-discovery-container"
-            "cloud-config-container"
           )
 
           IMAGE_TAG="${{ needs.fetch-image-tag.outputs.image_tag }}"
@@ -244,6 +248,118 @@ jobs:
           echo ""
           echo "Pods:"
           kubectl get pods -n stage -o wide
+
+  # ------------------------
+  # Infra deployment (manual/approved)
+  # ------------------------
+  kubernetes-deploy-infra:
+    name: Deploy to Kubernetes (Stage - Infra)
+    environment:
+      name: stage-infra
+    runs-on: ubuntu-latest
+    needs: fetch-image-tag
+    # Only run infra job when explicitly requested (workflow_dispatch run_infra=true)
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_infra == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login (stage)
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS Context (stage)
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ecommerce-rg-stage
+          cluster-name: ecommerce-aks-stage
+
+      - name: Pre-deploy safety checks (infra)
+        run: |
+          echo "⚠️  Infra deploy - running safety checks (stage)"
+          kubectl get nodes -o wide || true
+          kubectl get pods -n stage --field-selector=status.phase!=Running -o wide || true
+          echo "This job typically requires manual approval — running only when triggered via workflow_dispatch with run_infra=true"
+
+      - name: Update infra image tags in deployments (stage namespace)
+        run: |
+          echo "🚀 Updating infra deployments (stage namespace)"
+          IMAGE_TAG="${{ needs.fetch-image-tag.outputs.image_tag }}"
+          REGISTRY="ghcr.io/${{ github.repository_owner }}"
+
+          declare -a INFRA_DEPLOYMENTS=(
+            "service-discovery-container"
+            "cloud-config-container"
+          )
+
+          for deployment in "${INFRA_DEPLOYMENTS[@]}"; do
+            SERVICE_NAME="${deployment%-container}"
+
+            echo "📦 Updating $deployment with image tag: $IMAGE_TAG"
+
+            if kubectl get deployment "$deployment" -n stage &> /dev/null; then
+              MANIFEST_URL="https://ghcr.io/v2/${{ github.repository_owner }}/${SERVICE_NAME}/manifests/${IMAGE_TAG}"
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$MANIFEST_URL")
+
+              if [ "$HTTP_CODE" != "200" ]; then
+                echo "⚠️  Image ghcr.io/${{ github.repository_owner }}/${SERVICE_NAME}:${IMAGE_TAG} not found (HTTP $HTTP_CODE). Skipping update for $deployment"
+                continue
+              fi
+
+              kubectl set image deployment/"$deployment" \
+                "$deployment=$REGISTRY/$SERVICE_NAME:$IMAGE_TAG" \
+                -n stage
+              kubectl annotate deployment/"$deployment" -n stage release.image-tag="${IMAGE_TAG}" --overwrite || true
+              echo "✅ Updated $deployment"
+            else
+              echo "⚠️  Deployment $deployment not found in stage, skipping..."
+            fi
+          done
+
+      - name: Wait for infra rollouts with extended timeout
+        run: |
+          declare -a INFRA_DEPLOYMENTS=(
+            "service-discovery-container"
+            "cloud-config-container"
+          )
+
+          FAILED_DEPLOYMENTS=()
+
+          for deployment in "${INFRA_DEPLOYMENTS[@]}"; do
+            if kubectl get deployment "$deployment" -n stage &> /dev/null; then
+              echo "⏳ Waiting for $deployment rollout (stage)..."
+              if kubectl rollout status deployment/"$deployment" -n stage --timeout=15m; then
+                echo "✅ $deployment rolled out successfully"
+              else
+                echo "❌ $deployment rollout failed or timed out"
+                FAILED_DEPLOYMENTS+=("$deployment")
+                echo "--- Debugging $deployment ---"
+                kubectl describe deployment/"$deployment" -n stage | tail -30 || true
+                PODS=$(kubectl get pods -n stage -l "io.kompose.service=$deployment" -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true)
+                if [ -z "$PODS" ]; then
+                  echo "⚠️  No pods found for $deployment using label selector. Listing all pods in stage for debugging:"
+                  kubectl get pods -n stage -o wide || true
+                else
+                  for P in $PODS; do
+                    echo "\n--- Pod details: $P ---"
+                    kubectl describe pod "$P" -n stage || true
+                    echo "\n--- Container logs (last 200 lines) for $P ---"
+                    kubectl logs "$P" -n stage --all-containers --tail=200 || true
+                  done
+                fi
+              fi
+            fi
+          done
+
+          if [ ${#FAILED_DEPLOYMENTS[@]} -gt 0 ]; then
+            echo ""
+            echo "❌ The following infra deployments failed in stage:"
+            printf '%s\n' "${FAILED_DEPLOYMENTS[@]}"
+            exit 1
+          fi
+
+          echo "✅ All infra deployments completed successfully (stage)"
 
   integration-tests:
     name: Run Integration Tests
@@ -628,9 +744,11 @@ jobs:
 
   infrastructure-deploy:
     name: Deploy Infrastructure (Terraform)
+    environment:
+      name: stage-infra
     runs-on: ubuntu-latest
-    # no compilation required in stage — infra can be applied independently
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/stage' || startsWith(github.ref, 'refs/heads/ops/fix/'))
+    # Infrastructure should only be updated manually — switch to workflow_dispatch (run_infra=true)
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_infra == 'true'
     env:
       ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
       ARM_CLIENT_SECRET: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
@@ -728,7 +846,6 @@ jobs:
     needs:
       [
         fetch-image-tag,
-        infrastructure-deploy,
         kubernetes-deploy,
         integration-tests,
         e2e-tests,
@@ -765,7 +882,6 @@ jobs:
     needs:
       [
         fetch-image-tag,
-        infrastructure-deploy,
         kubernetes-deploy,
         integration-tests,
         e2e-tests,
