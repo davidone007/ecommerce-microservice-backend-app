@@ -349,8 +349,16 @@ jobs:
   smoke-tests:
     name: Run Smoke Tests
     runs-on: ubuntu-latest
-    needs: kubernetes-deploy
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # Run after deploy on push, or independently on PRs (testing existing production environment)
+    needs: [fetch-stage-tag, kubernetes-deploy]
+    # Always run if conditions match, even if kubernetes-deploy was skipped (in PRs)
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.fetch-stage-tag.result == 'success' &&
+      (needs.kubernetes-deploy.result == 'success' || needs.kubernetes-deploy.result == 'skipped') &&
+      ((github.event_name == 'push' && github.ref == 'refs/heads/master') ||
+       (github.event_name == 'pull_request' && github.base_ref == 'master'))
     steps:
       - name: Checkout
         uses: actions/checkout@v4
