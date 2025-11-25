@@ -57,12 +57,10 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Set AKS Context
-        uses: azure/aks-set-context@v3
-        with:
-          resource-group: ecommerce-rg-stage
-          cluster-name: ecommerce-aks-stage
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Get AKS Credentials
+        run: az aks get-credentials --resource-group ecommerce-rg-stage --name ecommerce-aks-stage --overwrite-existing
 
       - name: Update image tags in deployments (selective)
         run: |
@@ -254,12 +252,10 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Set AKS Context
-        uses: azure/aks-set-context@v3
-        with:
-          resource-group: ecommerce-rg-stage
-          cluster-name: ecommerce-aks-stage
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Get AKS Credentials
+        run: az aks get-credentials --resource-group ecommerce-rg-stage --name ecommerce-aks-stage --overwrite-existing
 
       - name: Get API Gateway External IP
         id: get-ip
@@ -388,12 +384,10 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Set AKS Context
-        uses: azure/aks-set-context@v3
-        with:
-          resource-group: ecommerce-rg-stage
-          cluster-name: ecommerce-aks-stage
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Get AKS Credentials
+        run: az aks get-credentials --resource-group ecommerce-rg-stage --name ecommerce-aks-stage --overwrite-existing
 
       - name: Get API Gateway External IP
         id: get-ip
@@ -668,12 +662,10 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Set AKS Context
-        uses: azure/aks-set-context@v3
-        with:
-          resource-group: ecommerce-rg-stage
-          cluster-name: ecommerce-aks-stage
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Get AKS Credentials
+        run: az aks get-credentials --resource-group ecommerce-rg-stage --name ecommerce-aks-stage --overwrite-existing
 
       - name: Get API Gateway External IP
         id: get-ip
@@ -799,11 +791,10 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Set AKS Context
-        uses: azure/aks-set-context@v3
-        with:
-          resource-group: ecommerce-rg-stage
-          cluster-name: ecommerce-aks-stage
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Get AKS Credentials
+        run: az aks get-credentials --resource-group ecommerce-rg-stage --name ecommerce-aks-stage --overwrite-existing
 
       - name: Get API Gateway External IP
         id: get-ip

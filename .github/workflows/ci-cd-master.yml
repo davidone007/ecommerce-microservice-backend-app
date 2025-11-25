@@ -55,11 +55,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
 
-      - name: Set AKS Context (prod)
-        uses: azure/aks-set-context@v3
-        with:
-          resource-group: ecommerce-rg-prod
-          cluster-name: ecommerce-aks-prod
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Get AKS Credentials (prod)
+        run: az aks get-credentials --resource-group ecommerce-rg-prod --name ecommerce-aks-prod --overwrite-existing
 
       - name: Update image tags in deployments (selective)
         run: |
@@ -201,11 +201,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
 
-      - name: Set AKS Context (prod)
-        uses: azure/aks-set-context@v3
-        with:
-          resource-group: ecommerce-rg-prod
-          cluster-name: ecommerce-aks-prod
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Get AKS Credentials (prod)
+        run: az aks get-credentials --resource-group ecommerce-rg-prod --name ecommerce-aks-prod --overwrite-existing
 
       - name: Get API Gateway ingress host
         id: get-host-smoke
