@@ -31,6 +31,9 @@ import com.selimhorri.app.exception.wrapper.ProductNotFoundException;
 import com.selimhorri.app.exception.wrapper.UserNotFoundException;
 import com.selimhorri.app.repository.FavouriteRepository;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
 /**
  * Pruebas unitarias para FavouriteServiceImpl.
  * Valida el comportamiento del servicio de favoritos.
@@ -44,6 +47,12 @@ class FavouriteServiceImplTest {
 
 	@Mock
 	private RestTemplate restTemplate;
+
+	@Mock
+	private MeterRegistry meterRegistry;
+
+	@Mock
+	private Counter counter;
 
 	@InjectMocks
 	private FavouriteServiceImpl favouriteService;
@@ -65,6 +74,9 @@ class FavouriteServiceImplTest {
 		testFavouriteDto.setUserId(1);
 		testFavouriteDto.setProductId(1);
 		testFavouriteDto.setLikeDate(LocalDateTime.now());
+
+		// Mock MeterRegistry to return a counter (lenient because not all tests use it)
+		lenient().when(meterRegistry.counter(anyString())).thenReturn(counter);
 	}
 
 	@Test
@@ -75,9 +87,9 @@ class FavouriteServiceImplTest {
 		ProductDto productDto = new ProductDto();
 
 		when(restTemplate.getForEntity(anyString(), eq(UserDto.class)))
-			.thenReturn(new ResponseEntity<>(userDto, HttpStatus.OK));
+				.thenReturn(new ResponseEntity<>(userDto, HttpStatus.OK));
 		when(restTemplate.getForEntity(anyString(), eq(ProductDto.class)))
-			.thenReturn(new ResponseEntity<>(productDto, HttpStatus.OK));
+				.thenReturn(new ResponseEntity<>(productDto, HttpStatus.OK));
 		when(favouriteRepository.existsByUserIdAndProductId(1, 1)).thenReturn(false);
 		when(favouriteRepository.save(any(Favourite.class))).thenReturn(testFavourite);
 
@@ -97,9 +109,9 @@ class FavouriteServiceImplTest {
 		ProductDto productDto = new ProductDto();
 
 		when(restTemplate.getForEntity(anyString(), eq(UserDto.class)))
-			.thenReturn(new ResponseEntity<>(userDto, HttpStatus.OK));
+				.thenReturn(new ResponseEntity<>(userDto, HttpStatus.OK));
 		when(restTemplate.getForEntity(anyString(), eq(ProductDto.class)))
-			.thenReturn(new ResponseEntity<>(productDto, HttpStatus.OK));
+				.thenReturn(new ResponseEntity<>(productDto, HttpStatus.OK));
 		when(favouriteRepository.existsByUserIdAndProductId(1, 1)).thenReturn(true);
 
 		// Act & Assert
@@ -111,11 +123,11 @@ class FavouriteServiceImplTest {
 	void testFindById_Success() {
 		// Arrange
 		when(favouriteRepository.findByUserIdAndProductId(1, 1))
-			.thenReturn(Optional.of(testFavourite));
+				.thenReturn(Optional.of(testFavourite));
 		when(restTemplate.getForObject(anyString(), eq(UserDto.class)))
-			.thenReturn(new UserDto());
+				.thenReturn(new UserDto());
 		when(restTemplate.getForObject(anyString(), eq(ProductDto.class)))
-			.thenReturn(new ProductDto());
+				.thenReturn(new ProductDto());
 
 		// Act
 		FavouriteDto result = favouriteService.findById(testFavouriteId);
@@ -131,7 +143,7 @@ class FavouriteServiceImplTest {
 		// Arrange
 		FavouriteId nonExistentId = new FavouriteId(999, 999, LocalDateTime.now());
 		when(favouriteRepository.findByUserIdAndProductId(999, 999))
-			.thenReturn(Optional.empty());
+				.thenReturn(Optional.empty());
 
 		// Act & Assert
 		assertThrows(FavouriteNotFoundException.class, () -> {

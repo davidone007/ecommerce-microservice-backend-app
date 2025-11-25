@@ -30,15 +30,21 @@ jobs:
       #     restore-keys: |
       #       ${{ runner.os }}-m2-
 
-      - name: Set up JDK 11
+      - name: Set up JDK 11 and 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "11"
-          # No usar cache en self-hosted para evitar timeouts
+          java-version: |
+            11
+            17
 
       - name: Build with Maven (run unit tests)
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_11_X64 }}
         run: |
+          echo "Building with Java 11"
+          echo "JAVA_HOME: $JAVA_HOME"
+          java -version
           chmod +x ./mvnw
           # Run unit tests. Some modules may not have tests matching the pattern
           # and would cause Maven Surefire to fail the build. Add -DfailIfNoTests=false
@@ -49,13 +55,27 @@ jobs:
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
         run: |
+          # Check if secrets are set and not empty
           if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ]; then
             echo "⚠️  SONAR_HOST_URL or SONAR_TOKEN not set; skipping SonarQube analysis"
             exit 0
           fi
 
+          # Validate that SONAR_HOST_URL has proper scheme (http:// or https://)
+          if [[ ! "$SONAR_HOST_URL" =~ ^https?:// ]]; then
+            echo "⚠️  SONAR_HOST_URL does not start with http:// or https://; skipping SonarQube analysis"
+            echo "   Current value: '$SONAR_HOST_URL'"
+            echo "   Please update the secret to include the proper URL scheme (e.g., https://sonarqube.example.com)"
+            exit 0
+          fi
+
           echo "➡️ Running SonarQube analysis against $SONAR_HOST_URL"
+          echo "   JAVA_HOME: $JAVA_HOME"
+          echo "   Java version: $(java -version 2>&1 | head -n 1)"
+          echo "   Maven Java version: $(./mvnw --version | grep 'Java version')"
+          
           chmod +x ./mvnw
           ./mvnw -B -DskipTests=true sonar:sonar \
             -Dsonar.host.url="$SONAR_HOST_URL" \
@@ -146,17 +166,17 @@ jobs:
         if: steps.check.outputs.exists == 'true'
         uses: docker/setup-buildx-action@v3
 
-      # NOTE: removed conditional push decision; images will be pushed for all branches/PRs with tag 'dev'
-
       - name: Log in to GHCR
-        if: steps.check.outputs.exists == 'true'
+        # Only login for push events to dev (where we push images)
+        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/dev'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Using fixed tag 'dev' for all pushed images
+      # Images are pushed only on direct pushes to dev (after merge)
+      # PRs and feature branches will build images to verify they compile but won't push them
 
       - name: Extract metadata
         if: steps.check.outputs.exists == 'true'
@@ -173,13 +193,26 @@ jobs:
             type=raw,value=dev
 
       - name: Build and push
-        # Push images on direct pushes to dev and PRs targeting dev
-        if: steps.check.outputs.exists == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/dev') || (github.event_name == 'pull_request' && github.base_ref == 'dev'))
+        # Only push images on direct pushes to dev (after merge)
+        if: steps.check.outputs.exists == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/dev'
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ${{ matrix.service }}/Dockerfile
           push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build only (for PRs and Feature Branches)
+        # Build images for PRs or feature branches without pushings
+        if: steps.check.outputs.exists == 'true' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/dev'))
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.service }}/Dockerfile
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

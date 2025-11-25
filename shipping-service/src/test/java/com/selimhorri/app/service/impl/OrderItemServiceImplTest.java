@@ -26,6 +26,9 @@ import com.selimhorri.app.dto.ProductDto;
 import com.selimhorri.app.exception.wrapper.OrderItemNotFoundException;
 import com.selimhorri.app.repository.OrderItemRepository;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
 /**
  * Pruebas unitarias para OrderItemServiceImpl.
  * Valida el comportamiento del servicio de items de orden (shipping).
@@ -39,6 +42,12 @@ class OrderItemServiceImplTest {
 
 	@Mock
 	private RestTemplate restTemplate;
+
+	@Mock
+	private MeterRegistry meterRegistry;
+
+	@Mock
+	private Counter counter;
 
 	@InjectMocks
 	private OrderItemServiceImpl orderItemService;
@@ -74,6 +83,9 @@ class OrderItemServiceImplTest {
 				.productId(1)
 				.quantity(10)
 				.build();
+
+		// Mock MeterRegistry to return a counter (lenient because not all tests use it)
+		lenient().when(meterRegistry.counter(anyString())).thenReturn(counter);
 	}
 
 	@Test
