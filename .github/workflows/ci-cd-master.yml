@@ -10,16 +10,10 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-  workflow_dispatch:
-    inputs:
-      image_tag:
-        description: 'Image tag to deploy (e.g., 0.2.0). Leave empty to use latest stage- tag.'
-        required: false
-        type: string
 
 jobs:
-  fetch-stage-tag:
-    name: Find latest Stage release
+  fetch-dev-tag:
+    name: Find latest Dev release
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.set.outputs.image_tag }}
@@ -27,30 +21,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Get latest stage release tag and set image tag
+      - name: Get latest dev release tag and set image tag
         id: set
         run: |
-          # Check for manual input first
-          MANUAL_TAG="${{ github.event.inputs.image_tag }}"
-          
-          if [ -n "$MANUAL_TAG" ]; then
-            echo "Manual image tag provided: $MANUAL_TAG"
-            echo "image_tag=$MANUAL_TAG" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
           OWNER=${{ github.repository_owner }}
           REPO=$(basename $GITHUB_REPOSITORY)
-          echo "Looking for latest release tag starting with stage- in $OWNER/$REPO..."
-          # pick latest stage- release by created_at (newest)
+          echo "Looking for latest release tag starting with dev- in $OWNER/$REPO..."
+          # pick latest dev- release by created_at (newest)
           resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases?per_page=100")
-          tag=$(echo "$resp" | jq -r 'sort_by(.created_at) | reverse[] | select(.tag_name | startswith("stage-")) | .tag_name' | head -n1)
+          tag=$(echo "$resp" | jq -r 'sort_by(.created_at) | reverse[] | select(.tag_name | startswith("dev-")) | .tag_name' | head -n1)
           if [ -z "$tag" ] || [ "$tag" = "null" ]; then
-            echo "No stage release tag found" >&2
+            echo "No dev release tag found" >&2
             exit 1
           fi
-          version=${tag#stage-}
-          echo "Found stage release: $tag -> image tag: $version"
+          version=${tag#dev-}
+          echo "Found dev release: $tag -> image tag: $version"
           echo "image_tag=$version" >> "$GITHUB_OUTPUT"
     # outputs set from 'set' step above
 
@@ -60,7 +45,7 @@ jobs:
     environment:
       name: production
     runs-on: ubuntu-latest
-    needs: fetch-stage-tag
+    needs: fetch-dev-tag
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout
@@ -95,7 +80,7 @@ jobs:
             "cloud-config-container"
           )
 
-          IMAGE_TAG="${{ needs.fetch-stage-tag.outputs.image_tag }}"
+          IMAGE_TAG="${{ needs.fetch-dev-tag.outputs.image_tag }}"
           REGISTRY="ghcr.io/${{ github.repository_owner }}"
 
           for deployment in "${APP_DEPLOYMENTS[@]}"; do
@@ -421,7 +406,7 @@ jobs:
   generate-release-notes:
     name: Generate Release Notes
     runs-on: ubuntu-latest
-    needs: [smoke-tests, fetch-stage-tag]
+    needs: [smoke-tests, fetch-dev-tag]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master' && success()
     outputs:
       release_version: ${{ steps.output_info.outputs.version }}
@@ -435,17 +420,17 @@ jobs:
       - name: Use Stage release info as production release
         id: output_info
         run: |
-          VERSION="${{ needs.fetch-stage-tag.outputs.image_tag }}"
+          VERSION="${{ needs.fetch-dev-tag.outputs.image_tag }}"
           OWNER=${{ github.repository_owner }}
           REPO=$(basename $GITHUB_REPOSITORY)
 
-          echo "Using stage-$VERSION as base for production release"
-          # Fetch changelog body from stage release
-          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases/tags/stage-$VERSION")
+          echo "Using dev-$VERSION as base for production release"
+          # Fetch changelog body from dev release
+          resp=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$OWNER/$REPO/releases/tags/dev-$VERSION")
           changelog=$(echo "$resp" | jq -r '.body // ""')
 
           if [ -z "$changelog" ] || [ "$changelog" = "null" ]; then
-            changelog="No changelog found in stage release stage-$VERSION"
+            changelog="No changelog found in dev release dev-$VERSION"
           fi
 
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -538,7 +523,7 @@ jobs:
     if: success()
     needs:
       [
-        fetch-stage-tag,
+        fetch-dev-tag,
         kubernetes-deploy,
         post-deployment,
         generate-release-notes,
@@ -571,7 +556,7 @@ jobs:
     if: failure() || cancelled()
     needs:
       [
-        fetch-stage-tag,
+        fetch-dev-tag,
         kubernetes-deploy,
         post-deployment,
         generate-release-notes,
