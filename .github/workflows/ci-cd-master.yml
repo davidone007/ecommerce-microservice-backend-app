@@ -36,7 +36,7 @@ jobs:
           version=${tag#stage-}
           echo "Found stage release: $tag -> image tag: $version"
           echo "image_tag=$version" >> "$GITHUB_OUTPUT"
-    # outputs set from 'set' step above
+    # output set from 'set' step above
 
   kubernetes-deploy:
     name: Deploy to Kubernetes (Production)
