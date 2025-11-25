@@ -68,16 +68,16 @@ jobs:
 
           # Specific list of application services (not infra)
           declare -a APP_DEPLOYMENTS=(
+            "service-discovery-container"
+            "cloud-config-container"
             "api-gateway-container"
+            "proxy-client-container"
             "product-service-container"
             "user-service-container"
             "order-service-container"
             "payment-service-container"
             "shipping-service-container"
             "favourite-service-container"
-            "proxy-client-container"
-            "service-discovery-container"
-            "cloud-config-container"
           )
 
           IMAGE_TAG="${{ needs.fetch-dev-tag.outputs.image_tag }}"
@@ -103,16 +103,16 @@ jobs:
           echo "⏳ Waiting for rollouts to complete in prod..."
 
           declare -a APP_DEPLOYMENTS=(
+            "service-discovery-container"
+            "cloud-config-container"
             "api-gateway-container"
+            "proxy-client-container"
             "product-service-container"
             "user-service-container"
             "order-service-container"
             "payment-service-container"
             "shipping-service-container"
             "favourite-service-container"
-            "proxy-client-container"
-            "service-discovery-container"
-            "cloud-config-container"
           )
 
           FAILED_DEPLOYMENTS=()
