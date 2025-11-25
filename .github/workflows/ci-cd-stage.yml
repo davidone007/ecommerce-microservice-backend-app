@@ -7,9 +7,9 @@ permissions:
 
 on:
   push:
-    branches: [stage, "ops/feat/*", "ops/fix/*"]
+    branches: [stage]
   pull_request:
-    branches: [stage, "ops/feat/*", "ops/fix/*"]
+    branches: [stage]
   workflow_dispatch:
     inputs:
       run_infra:
