@@ -23,6 +23,32 @@ poner ecommerce.xxx.nip.io
 
 
 
+#Borrar ip 
+kubectl delete svc ingress-nginx-controller -n ingress-nginx
+az network public-ip delete --resource-group ecommerce-static-resources --name ecommerce-prod-ip
+
+#Crearla
+az network public-ip create \
+  --resource-group ecommerce-static-resources \
+  --name ecommerce-prod-ip \
+  --sku Standard \
+  --allocation-method Static \
+  --location eastus
+
+
+#Obtener ip
+az network public-ip show \
+  --resource-group ecommerce-static-resources \
+  --name ecommerce-prod-ip \
+  --query ipAddress \
+  --output tsv
+
+
+
+
+
+
+
 
 
 
