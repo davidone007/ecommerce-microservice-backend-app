@@ -638,7 +638,7 @@ jobs:
 
   post-deployment:
     name: Post Deployment Verification
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: generate-release-notes
     if: always()
     steps:
