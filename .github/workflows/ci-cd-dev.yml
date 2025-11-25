@@ -30,32 +30,32 @@ jobs:
       #     restore-keys: |
       #       ${{ runner.os }}-m2-
 
-      - name: Set up JDK 11
+      - name: Set up JDK 11 and 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "11"
-          # No usar cache en self-hosted para evitar timeouts
+          java-version: |
+            11
+            17
 
       - name: Build with Maven (run unit tests)
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_11_X64 }}
         run: |
+          echo "Building with Java 11"
+          echo "JAVA_HOME: $JAVA_HOME"
+          java -version
           chmod +x ./mvnw
           # Run unit tests. Some modules may not have tests matching the pattern
           # and would cause Maven Surefire to fail the build. Add -DfailIfNoTests=false
           # so that modules without matching tests don't fail the aggregated build.
           ./mvnw -B -T 1C verify -Dtest="*ServiceImplTest" -DfailIfNoTests=false
 
-      - name: Set up JDK 17 for SonarQube
-        if: env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != ''
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
       - name: SonarQube analysis
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
         run: |
           # Check if secrets are set and not empty
           if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ]; then
@@ -72,7 +72,10 @@ jobs:
           fi
 
           echo "➡️ Running SonarQube analysis against $SONAR_HOST_URL"
-          echo "   Using Java version: $(java -version 2>&1 | head -n 1)"
+          echo "   JAVA_HOME: $JAVA_HOME"
+          echo "   Java version: $(java -version 2>&1 | head -n 1)"
+          echo "   Maven Java version: $(./mvnw --version | grep 'Java version')"
+          
           chmod +x ./mvnw
           ./mvnw -B -DskipTests=true sonar:sonar \
             -Dsonar.host.url="$SONAR_HOST_URL" \
