@@ -642,6 +642,17 @@ jobs:
     needs: generate-release-notes
     if: always()
     steps:
+      - name: Azure Login (production)
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+
+      - name: Set AKS Context (prod)
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ecommerce-rg-prod
+          cluster-name: ecommerce-aks-prod
+
       - name: Deployment Summary
         run: |
           echo "📊 Post-Deployment Verification Report"
@@ -649,10 +660,10 @@ jobs:
           echo "🟢 Production Deployment Completed"
           echo ""
           echo "Services Status:"
-          kubectl get deployments -o wide
+          kubectl get deployments -n prod -o wide
           echo ""
           echo "Pods Status:"
-          kubectl get pods -o wide
+          kubectl get pods -n prod -o wide
           echo ""
           echo "✅ All deployment steps completed successfully"
           echo ""
