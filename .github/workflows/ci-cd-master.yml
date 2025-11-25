@@ -52,8 +52,8 @@ jobs:
       name: production
     runs-on: ubuntu-latest
     needs: fetch-stage-tag
-    # Only run infra job manually via workflow_dispatch (run_infra=true)
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_infra == 'true'
+    # Run application deployments automatically on push to master
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -230,7 +230,8 @@ jobs:
       name: production-infra
     runs-on: ubuntu-latest
     needs: fetch-stage-tag
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # Only run infra job when explicitly requested (manual workflow_dispatch run_infra=true)
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_infra == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
