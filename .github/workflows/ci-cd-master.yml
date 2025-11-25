@@ -91,7 +91,7 @@ jobs:
             if kubectl get deployment "$deployment" -n prod &> /dev/null; then
               # Verify the image tag exists in GHCR for the service before updating
               MANIFEST_URL="https://ghcr.io/v2/${{ github.repository_owner }}/${SERVICE_NAME}/manifests/${IMAGE_TAG}"
-              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -u ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} "$MANIFEST_URL")
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$MANIFEST_URL")
 
               if [ "$HTTP_CODE" != "200" ]; then
                 echo "⚠️  Image ghcr.io/${{ github.repository_owner }}/${SERVICE_NAME}:${IMAGE_TAG} not found (HTTP $HTTP_CODE). Skipping update for $deployment"
