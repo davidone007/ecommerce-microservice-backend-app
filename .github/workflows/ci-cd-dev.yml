@@ -206,7 +206,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build only (for PRs and Feature Branches)
-        # Build images for PRs or feature branches without pushing
+        # Build images for PRs or feature branches without pushings
         if: steps.check.outputs.exists == 'true' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/dev'))
         uses: docker/build-push-action@v5
         with:
