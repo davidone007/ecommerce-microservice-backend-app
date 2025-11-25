@@ -10,6 +10,12 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (e.g., 0.2.0). Leave empty to use latest stage- tag.'
+        required: false
+        type: string
 
 jobs:
   fetch-stage-tag:
@@ -24,6 +30,15 @@ jobs:
       - name: Get latest stage release tag and set image tag
         id: set
         run: |
+          # Check for manual input first
+          MANUAL_TAG="${{ github.event.inputs.image_tag }}"
+          
+          if [ -n "$MANUAL_TAG" ]; then
+            echo "Manual image tag provided: $MANUAL_TAG"
+            echo "image_tag=$MANUAL_TAG" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           OWNER=${{ github.repository_owner }}
           REPO=$(basename $GITHUB_REPOSITORY)
           echo "Looking for latest release tag starting with stage- in $OWNER/$REPO..."
