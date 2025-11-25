@@ -37,7 +37,7 @@ jobs:
           echo "Found dev release: $tag -> image tag: $version"
           echo "image_tag=$version" >> "$GITHUB_OUTPUT"
 
-  # (no semantic calculation or build in stage; image comes from dev release)
+  # (no semantic calculation or build in stage; image comes from dev releases)
 
   # No docker build in stage (image comes from Dev) — stage will fetch the image tag and deploy it
 
