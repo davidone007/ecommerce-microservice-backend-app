@@ -5,7 +5,7 @@ permissions:
   packages: write
 
 on:
-  # Run this workflow on any branch except master and stage (both on push and PR)
+  # Run this workflow on any branch except master and stage (both on push and PRs)
   push:
     branches-ignore: [master, stage]
   pull_request:
