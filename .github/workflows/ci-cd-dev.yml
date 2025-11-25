@@ -50,8 +50,17 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          # Check if secrets are set and not empty
           if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ]; then
             echo "⚠️  SONAR_HOST_URL or SONAR_TOKEN not set; skipping SonarQube analysis"
+            exit 0
+          fi
+
+          # Validate that SONAR_HOST_URL has proper scheme (http:// or https://)
+          if [[ ! "$SONAR_HOST_URL" =~ ^https?:// ]]; then
+            echo "⚠️  SONAR_HOST_URL does not start with http:// or https://; skipping SonarQube analysis"
+            echo "   Current value: '$SONAR_HOST_URL'"
+            echo "   Please update the secret to include the proper URL scheme (e.g., https://sonarqube.example.com)"
             exit 0
           fi
 
