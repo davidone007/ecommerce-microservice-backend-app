@@ -25,7 +25,7 @@ variable "dns_prefix" {
 variable "node_count" {
   description = "Number of nodes in the default node pool"
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "vm_size" {
@@ -50,3 +50,9 @@ variable "jwt_secret_value" {
   default     = "mysecretkey-stage"
 }
 
+variable "grafana_admin_password" {
+  description = "Grafana admin password"
+  type        = string
+  sensitive   = true
+  default     = "admin"
+}

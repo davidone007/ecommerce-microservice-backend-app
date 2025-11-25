@@ -1,6 +1,7 @@
 global:
   imageRegistry: ghcr.io/davidone007
   imageTag: stage
+  imagePullPolicy: Always
 
 keyVault:
   enabled: true
