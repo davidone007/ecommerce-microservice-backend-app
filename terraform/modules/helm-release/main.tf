@@ -3,12 +3,13 @@ resource "helm_release" "ecommerce" {
   chart            = var.chart_path
   namespace        = var.namespace
   create_namespace = true
+  timeout          = 1000
+  wait             = true
 
   values = [
     file(var.values_file)
   ]
 
-  timeout = var.timeout
 
   dynamic "set" {
     for_each = var.set_values

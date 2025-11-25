@@ -33,7 +33,20 @@ module "helm_release" {
 
 module "sonarqube" {
   source       = "../../modules/sonarqube"
-  service_type = "ClusterIP"
+  service_type = "LoadBalancer"
+
+  depends_on = [module.aks]
+}
+
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  namespace                = "monitoring"
+  prometheus_retention     = "15d"
+  prometheus_storage_size  = "10Gi"
+  grafana_admin_password   = var.grafana_admin_password
+  elasticsearch_replicas   = 1
+  elasticsearch_storage_size = "10Gi"
 
   depends_on = [module.aks]
 }

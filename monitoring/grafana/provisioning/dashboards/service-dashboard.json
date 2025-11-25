@@ -1,0 +1,735 @@
+{
+  "id": null,
+  "uid": "micro-service-enhanced",
+  "title": "Microservice - Service Detail (Enhanced)",
+  "tags": [
+    "microservices",
+    "service-detail"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 3,
+  "refresh": "10s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "type": "query",
+        "name": "service",
+        "label": "Service",
+        "datasource": "Prometheus",
+        "query": "label_values(job)",
+        "multi": false,
+        "includeAll": false,
+        "current": {
+          "text": "user-service-container",
+          "value": "user-service-container"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "type": "row",
+      "title": "Service Health",
+      "collapsed": false
+    },
+    {
+      "id": 2,
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "type": "stat",
+      "title": "Request Rate",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[1m]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": 0,
+                "color": "green"
+              },
+              {
+                "value": 10,
+                "color": "yellow"
+              },
+              {
+                "value": 50,
+                "color": "red"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "type": "stat",
+      "title": "Avg Response Time",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "1000 * sum(rate(http_server_requests_seconds_sum{job=~\"$service\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": 0,
+                "color": "green"
+              },
+              {
+                "value": 200,
+                "color": "yellow"
+              },
+              {
+                "value": 500,
+                "color": "red"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "type": "stat",
+      "title": "Error Rate",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "100 * sum(rate(http_server_requests_seconds_count{job=~\"$service\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": 0,
+                "color": "green"
+              },
+              {
+                "value": 1,
+                "color": "yellow"
+              },
+              {
+                "value": 5,
+                "color": "red"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "type": "stat",
+      "title": "Success Rate",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "100 * sum(rate(http_server_requests_seconds_count{job=~\"$service\",status=~\"2..\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": 0,
+                "color": "red"
+              },
+              {
+                "value": 95,
+                "color": "yellow"
+              },
+              {
+                "value": 99,
+                "color": "green"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      },
+      "type": "row",
+      "title": "Business Metrics",
+      "collapsed": false
+    },
+    {
+      "id": 7,
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 8,
+        "h": 4
+      },
+      "type": "stat",
+      "title": "Events Counter (Total)",
+      "description": "Total events: users registered, orders placed, payments processed, shipments created, or favourites added",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(users_registered_total{job=~\"$service\"}) or sum(orders_placed_total{job=~\"$service\"}) or sum(payments_processed_total{job=~\"$service\"}) or sum(shipments_created_total{job=~\"$service\"}) or sum(favourites_added_total{job=~\"$service\"})",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": 0,
+                "color": "blue"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "gridPos": {
+        "x": 8,
+        "y": 6,
+        "w": 8,
+        "h": 4
+      },
+      "type": "stat",
+      "title": "Total Records (DB)",
+      "description": "Total records in database: users, orders, products, payments, shipments, or favourites",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "users_total{job=~\"$service\"} or orders_total{job=~\"$service\"} or products_total{job=~\"$service\"} or payments_total{job=~\"$service\"} or shipments_total{job=~\"$service\"} or favourites_total{job=~\"$service\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": 0,
+                "color": "green"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "gridPos": {
+        "x": 16,
+        "y": 6,
+        "w": 8,
+        "h": 4
+      },
+      "type": "stat",
+      "title": "Event Rate (Last 5m)",
+      "description": "Recent activity rate in the last 5 minutes",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "increase(users_registered_total{job=~\"$service\"}[5m]) or increase(orders_placed_total{job=~\"$service\"}[5m]) or increase(payments_processed_total{job=~\"$service\"}[5m]) or increase(shipments_created_total{job=~\"$service\"}[5m]) or increase(favourites_added_total{job=~\"$service\"}[5m])",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": 0,
+                "color": "purple"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 24,
+        "h": 1
+      },
+      "type": "row",
+      "title": "Performance Metrics",
+      "collapsed": false
+    },
+    {
+      "id": 11,
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 12,
+        "h": 8
+      },
+      "type": "timeseries",
+      "title": "Request Rate Over Time",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[1m]))",
+          "refId": "A",
+          "legendFormat": "Requests/s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 20
+          }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "gridPos": {
+        "x": 12,
+        "y": 11,
+        "w": 12,
+        "h": 8
+      },
+      "type": "timeseries",
+      "title": "Response Time Percentiles",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le)) * 1000",
+          "refId": "A",
+          "legendFormat": "P50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le)) * 1000",
+          "refId": "B",
+          "legendFormat": "P95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le)) * 1000",
+          "refId": "C",
+          "legendFormat": "P99"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10
+          }
+        }
+      }
+    },
+    {
+      "id": 13,
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 12,
+        "h": 8
+      },
+      "type": "timeseries",
+      "title": "Requests by Status Code",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{job=~\"$service\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 14,
+      "gridPos": {
+        "x": 12,
+        "y": 19,
+        "w": 12,
+        "h": 8
+      },
+      "type": "timeseries",
+      "title": "Requests by Endpoint",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "topk(10, sum by (uri) (rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])))",
+          "refId": "A",
+          "legendFormat": "{{uri}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10
+          }
+        }
+      }
+    },
+    {
+      "id": 20,
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 24,
+        "h": 1
+      },
+      "type": "row",
+      "title": "Resource Usage",
+      "collapsed": false
+    },
+    {
+      "id": 21,
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 8,
+        "h": 8
+      },
+      "type": "timeseries",
+      "title": "CPU Usage",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "100 * rate(process_cpu_seconds_total{job=~\"$service\"}[1m])",
+          "refId": "A",
+          "legendFormat": "CPU %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 20
+          }
+        }
+      }
+    },
+    {
+      "id": 22,
+      "gridPos": {
+        "x": 8,
+        "y": 28,
+        "w": 8,
+        "h": 8
+      },
+      "type": "timeseries",
+      "title": "Memory Usage",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(jvm_memory_used_bytes{job=~\"$service\",area=\"heap\"}) / 1024 / 1024",
+          "refId": "A",
+          "legendFormat": "Heap Used"
+        },
+        {
+          "expr": "sum(jvm_memory_max_bytes{job=~\"$service\",area=\"heap\"}) / 1024 / 1024",
+          "refId": "B",
+          "legendFormat": "Heap Max"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10
+          }
+        }
+      }
+    },
+    {
+      "id": 23,
+      "gridPos": {
+        "x": 16,
+        "y": 28,
+        "w": 8,
+        "h": 8
+      },
+      "type": "timeseries",
+      "title": "Thread Count",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "jvm_threads_live_threads{job=~\"$service\"}",
+          "refId": "A",
+          "legendFormat": "Live Threads"
+        },
+        {
+          "expr": "jvm_threads_peak_threads{job=~\"$service\"}",
+          "refId": "B",
+          "legendFormat": "Peak Threads"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10
+          }
+        }
+      }
+    },
+    {
+      "id": 30,
+      "gridPos": {
+        "x": 0,
+        "y": 36,
+        "w": 24,
+        "h": 1
+      },
+      "type": "row",
+      "title": "Error Analysis",
+      "collapsed": false
+    },
+    {
+      "id": 31,
+      "gridPos": {
+        "x": 0,
+        "y": 37,
+        "w": 12,
+        "h": 8
+      },
+      "type": "timeseries",
+      "title": "Errors by Type",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{job=~\"$service\",status=~\"[45].*\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 32,
+      "gridPos": {
+        "x": 12,
+        "y": 37,
+        "w": 12,
+        "h": 8
+      },
+      "type": "timeseries",
+      "title": "Top Error Endpoints",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "topk(5, sum by (uri) (rate(http_server_requests_seconds_count{job=~\"$service\",status=~\"5..\"}[5m])))",
+          "refId": "A",
+          "legendFormat": "{{uri}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10
+          }
+        }
+      }
+    },
+    {
+      "id": 40,
+      "gridPos": {
+        "x": 0,
+        "y": 45,
+        "w": 24,
+        "h": 1
+      },
+      "type": "row",
+      "title": "JVM Details",
+      "collapsed": false
+    },
+    {
+      "id": 41,
+      "gridPos": {
+        "x": 0,
+        "y": 46,
+        "w": 12,
+        "h": 8
+      },
+      "type": "timeseries",
+      "title": "Garbage Collection Time",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(jvm_gc_pause_seconds_sum{job=~\"$service\"}[1m]) * 1000",
+          "refId": "A",
+          "legendFormat": "{{action}} - {{cause}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10
+          }
+        }
+      }
+    },
+    {
+      "id": 42,
+      "gridPos": {
+        "x": 12,
+        "y": 46,
+        "w": 12,
+        "h": 8
+      },
+      "type": "timeseries",
+      "title": "Class Loading",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "jvm_classes_loaded_classes{job=~\"$service\"}",
+          "refId": "A",
+          "legendFormat": "Loaded Classes"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10
+          }
+        }
+      }
+    }
+  ]
+}

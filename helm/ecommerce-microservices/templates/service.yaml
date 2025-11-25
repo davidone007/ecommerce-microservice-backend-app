@@ -10,7 +10,8 @@ spec:
   selector:
     app: {{ $val.name }}
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: {{ $val.port }}
       targetPort: {{ $val.port }}
   type: {{ default "ClusterIP" $val.type }}

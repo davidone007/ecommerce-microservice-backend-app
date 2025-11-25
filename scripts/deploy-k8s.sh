@@ -49,15 +49,40 @@ fi
 echo -e "${GREEN}✅ kubectl está disponible${NC}"
 echo ""
 
+# Ensure Secrets Store CSI CRDs are installed (needed for SecretProviderClass)
+echo -e "${BLUE}🔐 Comprobando CRDs de Secrets Store CSI...${NC}"
+CRDS_VERSION="v1.5.4"
+if ! kubectl get crd secretproviderclasses.secrets-store.csi.x-k8s.io >/dev/null 2>&1; then
+    echo -e "${YELLOW}CRD 'secretproviderclasses' no encontrada. Instalando CRDs (se usará ${CRDS_VERSION})...${NC}"
+    kubectl apply -f "https://github.com/kubernetes-sigs/secrets-store-csi-driver/releases/download/${CRDS_VERSION}/secrets-store.csi.x-k8s.io_secretproviderclasses.yaml" || true
+    kubectl apply -f "https://github.com/kubernetes-sigs/secrets-store-csi-driver/releases/download/${CRDS_VERSION}/secrets-store.csi.x-k8s.io_secretproviderclasspodstatuses.yaml" || true
+else
+    echo -e "${GREEN}CRDs de Secrets Store CSI ya presentes${NC}"
+fi
+echo ""
+
 # Desplegar con Helm
 echo -e "${BLUE}🚀 Ejecutando helm upgrade --install...${NC}"
 echo ""
 
+# Detect Minikube context: if current kubectl context contains 'minikube', disable keyVault in Helm for local deploys
+HELM_EXTRA_SET=""
+CURRENT_CTX=$(kubectl config current-context 2>/dev/null || true)
+if [[ "$CURRENT_CTX" == *"minikube"* ]]; then
+    echo -e "${YELLOW}Minikube context detected ($CURRENT_CTX). Disabling KeyVault mounts for local deploy.${NC}"
+    HELM_EXTRA_SET="--set keyVault.enabled=false"
+    # Create a local Kubernetes Secret for Minikube so deployments relying on jwt-secret-csi
+    # don't fail when the Secrets Store CSI driver is not installed. This is idempotent.
+    echo -e "${YELLOW}Ensuring local secret 'jwt-secret-csi' exists in namespace $NAMESPACE...${NC}"
+    kubectl create secret generic jwt-secret-csi --from-literal=jwt-secret=secret123 -n "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f - >/dev/null 2>&1 || true
+fi
+
 if helm upgrade --install "$RELEASE_NAME" "$CHART_PATH" \
-    -f "$VALUES_FILE" \
-    --set global.imageTag="$BRANCH_TAG" \
-    --namespace "$NAMESPACE" \
-    --create-namespace; then
+        -f "$VALUES_FILE" \
+        --set global.imageTag="$BRANCH_TAG" \
+        $HELM_EXTRA_SET \
+        --namespace "$NAMESPACE" \
+        --create-namespace; then
     
     echo ""
     echo -e "${GREEN}✅ Despliegue exitoso${NC}"

@@ -1,0 +1,29 @@
+{{- range $service := .Values.services }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ $service.name }}-monitor
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: {{ $service.name }}
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: {{ $service.name }}
+  endpoints:
+  - port: http
+    {{- if eq $service.name "api-gateway-container" }}
+    path: /actuator/prometheus
+    {{- else if eq $service.name "proxy-client-container" }}
+    path: /app/actuator/prometheus
+    {{- else if eq $service.name "zipkin-container" }}
+    path: /prometheus
+    {{- else if or (eq $service.name "service-discovery-container") (eq $service.name "cloud-config-container") }}
+    path: /actuator/prometheus
+    {{- else }}
+    path: /{{ $service.image }}/actuator/prometheus
+    {{- end }}
+    interval: 30s
+{{- end }}

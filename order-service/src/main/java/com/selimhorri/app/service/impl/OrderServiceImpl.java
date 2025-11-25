@@ -18,6 +18,9 @@ import com.selimhorri.app.repository.CartRepository;
 import com.selimhorri.app.repository.OrderRepository;
 import com.selimhorri.app.service.OrderService;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import javax.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +32,12 @@ public class OrderServiceImpl implements OrderService {
 
         private final OrderRepository orderRepository;
         private final CartRepository cartRepository;
+        private final MeterRegistry meterRegistry;
+
+        @PostConstruct
+        public void initMetrics() {
+                meterRegistry.gauge("orders.total", orderRepository, OrderRepository::count);
+        }
 
         @Override
         public List<OrderDto> findAll() {
@@ -69,8 +78,9 @@ public class OrderServiceImpl implements OrderService {
                                 });
 
                 // Proceed with saving if validations pass
-                return OrderMappingHelper.map(
-                                this.orderRepository.save(OrderMappingHelper.mapForCreationOrder(orderDto)));
+                Order savedOrder = this.orderRepository.save(OrderMappingHelper.mapForCreationOrder(orderDto));
+                meterRegistry.counter("orders.placed").increment();
+                return OrderMappingHelper.map(savedOrder);
         }
 
         @Override
