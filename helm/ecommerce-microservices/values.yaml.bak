@@ -53,7 +53,7 @@ services:
     initContainers:
       - name: wait-for-eureka
         image: curlimages/curl:7.85.0
-        command: ["sh", "-c", "until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done"]
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done"]
 
   api-gateway:
     name: api-gateway-container
@@ -80,7 +80,7 @@ services:
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
-        command: ["sh", "-c", "until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done; until curl -sS http://zipkin-container:9411/ >/dev/null 2>&1; do echo waiting for zipkin...; sleep 2; done"]
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done; until curl -sS http://zipkin-container:9411/ >/dev/null 2>&1; do echo waiting for zipkin...; sleep 2; done"]
 
   zipkin:
     name: zipkin-container
@@ -116,7 +116,7 @@ services:
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
-        command: ["sh", "-c", "until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
 
   payment-service:
     name: payment-service-container
@@ -144,7 +144,7 @@ services:
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
-        command: ["sh", "-c", "until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
 
   product-service:
     name: product-service-container
@@ -172,7 +172,7 @@ services:
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
-        command: ["sh", "-c", "until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
 
   favourite-service:
     name: favourite-service-container
@@ -200,7 +200,7 @@ services:
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
-        command: ["sh", "-c", "until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
 
   proxy-client:
     name: proxy-client-container
@@ -233,7 +233,7 @@ services:
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
-        command: ["sh", "-c", "until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
 
   shipping-service:
     name: shipping-service-container
@@ -261,7 +261,7 @@ services:
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
-        command: ["sh", "-c", "until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
 
   user-service:
     name: user-service-container
@@ -289,4 +289,4 @@ services:
     initContainers:
       - name: wait-for-dependencies
         image: curlimages/curl:7.85.0
-        command: ["sh", "-c", "until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
+        command: ["sh", "-c", "until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sS http://cloud-config-container:9296/ >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done"]
