@@ -26,7 +26,7 @@ graph TD
     User((Usuario)) -->|HTTPS| CDN[Azure CDN]
     CDN -->|Traffic| AG[API Gateway / Load Balancer]
     
-    subgraph Azure Kubernetes Service (AKS)
+    subgraph AKS[Azure Kubernetes Service AKS]
         AG -->|Route| Auth[Auth Service]
         AG -->|Route| Prod[Product Service]
         AG -->|Route| Order[Order Service]
@@ -36,22 +36,34 @@ graph TD
         Order <--> DB2[(SQL Database)]
         Pay <--> DB3[(SQL Database)]
         
-        Order -->|Event| Broker[Message Broker (RabbitMQ/Kafka)]
+        Order -->|Event| Broker[Message Broker RabbitMQ/Kafka]
         Broker -->|Consume| Ship[Shipping Service]
     end
     
     subgraph Observability
-        Prom[Prometheus] -->|Scrape| AKS
+        Prom[Prometheus] -->|Scrape| Auth
+        Prom -->|Scrape| Prod
+        Prom -->|Scrape| Order
         Graf[Grafana] -->|Visualize| Prom
-        ELK[ELK Stack] -->|Logs| AKS
+        ELK[ELK Stack] -->|Logs| Auth
+        ELK -->|Logs| Prod
+        ELK -->|Logs| Order
     end
     
-    subgraph CI/CD
+    subgraph CICD[CI/CD Pipeline]
         Git[GitHub] -->|Push| Actions[GitHub Actions]
-        Actions -->|Deploy| AKS
+        Actions -->|Deploy| AG
         Actions -->|IaC| TF[Terraform]
         TF -->|Provision| Azure[Azure Resources]
     end
+    
+    style User fill:#e1f5ff
+    style CDN fill:#4CAF50
+    style AG fill:#FF9800
+    style AKS fill:#f5f5f5
+    style Observability fill:#fff3e0
+    style CICD fill:#e8f5e9
+
 ```
 
 ### Diagrama de Arquitectura Implementada
