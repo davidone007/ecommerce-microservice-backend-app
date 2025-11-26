@@ -38,26 +38,47 @@ production → 1 protection rule
 ## 🗺️ Diagrama de Infraestructura (Propuesta)
 
 ```mermaid
-graph TB
-    subgraph Azure Cloud
-        subgraph Resource Group
-            VNet[Virtual Network]
-            
-            subgraph Subnets
-                AKS_Subnet[AKS Subnet]
-            end
-            
-            AKS[Azure Kubernetes Service]
-            ACR[Azure Container Registry]
-            Storage[Azure Storage Account (TF State)]
-            KV[Key Vault]
-            
-            VNet --> AKS_Subnet
-            AKS_Subnet --> AKS
-            AKS -->|Pull Images| ACR
-            AKS -->|Get Secrets| KV
-        end
+graph TD
+    User((Usuario)) -->|HTTPS| CDN[Azure CDN]
+    CDN -->|Traffic| AG[API Gateway / Load Balancer]
+    
+    subgraph AKS[Azure Kubernetes Service AKS]
+        AG -->|Route| Auth[Auth Service]
+        AG -->|Route| Prod[Product Service]
+        AG -->|Route| Order[Order Service]
+        AG -->|Route| Pay[Payment Service]
+        
+        Prod <--> DB1[(SQL Database)]
+        Order <--> DB2[(SQL Database)]
+        Pay <--> DB3[(SQL Database)]
+        
+        Order -->|Event| Broker[Message Broker RabbitMQ/Kafka]
+        Broker -->|Consume| Ship[Shipping Service]
     end
+    
+    subgraph Observability
+        Prom[Prometheus] -->|Scrape| Auth
+        Prom -->|Scrape| Prod
+        Prom -->|Scrape| Order
+        Graf[Grafana] -->|Visualize| Prom
+        ELK[ELK Stack] -->|Logs| Auth
+        ELK -->|Logs| Prod
+        ELK -->|Logs| Order
+    end
+    
+    subgraph CICD[CI/CD Pipeline]
+        Git[GitHub] -->|Push| Actions[GitHub Actions]
+        Actions -->|Deploy| AG
+        Actions -->|IaC| TF[Terraform]
+        TF -->|Provision| Azure[Azure Resources]
+    end
+    
+    style User fill:#e1f5ff
+    style CDN fill:#4CAF50
+    style AG fill:#FF9800
+    style AKS fill:#f5f5f5
+    style Observability fill:#fff3e0
+    style CICD fill:#e8f5e9
 ```
 
 ## 📸 Evidencia de Infraestructura
