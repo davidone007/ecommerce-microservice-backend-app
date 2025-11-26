@@ -1,0 +1,86 @@
+# 🌙 Stage Release stage-0.1.0
+
+## 📝 Changelog
+
+# 🔧 Dev Release dev-0.1.0
+
+## 📝 Changelog
+
+## [0.1.0](https://github.com/davidone007/ecommerce-microservice-backend-app/compare/dev-0.0.0...dev-0.1.0) (2025-11-25)
+
+
+### Features
+
+* Add MeterRegistry and Counter mocks to unit tests for FavouriteServiceImpl and OrderItemServiceImpl ([8137441](https://github.com/davidone007/ecommerce-microservice-backend-app/commit/813744189b6b80bbf0c2b8c8756966f78d8b1bfc))
+* configure pipelines ([b7267c8](https://github.com/davidone007/ecommerce-microservice-backend-app/commit/b7267c81145b03c7b455dbc078926d0dd4710d18))
+* configure pipelines ([f83b1a1](https://github.com/davidone007/ecommerce-microservice-backend-app/commit/f83b1a17623176640a2727b4032d9d3067106a00))
+* configure pipelines ([216e27d](https://github.com/davidone007/ecommerce-microservice-backend-app/commit/216e27ddef0f4f3319442e76099be3c0c0bf10ea))
+
+
+### Bug Fixes
+
+* Configure both Java 11 and 17 for build and SonarQube analysis ([7d6cfb1](https://github.com/davidone007/ecommerce-microservice-backend-app/commit/7d6cfb1fecd6e554e69f0529b2953b8fafb39427))
+* fix pipeline ([5f1d2c4](https://github.com/davidone007/ecommerce-microservice-backend-app/commit/5f1d2c402dad78601468ddf009fece314495833c))
+
+
+### Continuous Integration
+
+* **stage:** only auto-update app images; set infra jobs to manual (workflow_dispatch run_infra=true); remove infra from notify needs ([96bf77c](https://github.com/davidone007/ecommerce-microservice-backend-app/commit/96bf77c5a4e3ce245e93b03b515cc15213aaa81a))
+* Add JDK 17 setup for SonarQube analysis in the dev workflow. ([665a7f0](https://github.com/davidone007/ecommerce-microservice-backend-app/commit/665a7f0f59edc7c4c19b557c8a2107e80d4040fb))
+
+
+
+## 📦 Artifacts
+
+- Build Date: 2025-11-25T18:13:18-05:00
+- Commit: a97d50b93d8ca3a5eafd9670548eaf73f9726946
+- Author: davidone007
+- Branch: dev
+
+## 🔗 Images (Dev Tag)
+
+Docker images for this dev release:
+- `ghcr.io/davidone007/api-gateway:dev`
+- `ghcr.io/davidone007/product-service:dev`
+- `ghcr.io/davidone007/user-service:dev`
+- `ghcr.io/davidone007/order-service:dev`
+- `ghcr.io/davidone007/payment-service:dev`
+- `ghcr.io/davidone007/shipping-service:dev`
+- `ghcr.io/davidone007/favourite-service:dev`
+- `ghcr.io/davidone007/proxy-client:dev`
+- `ghcr.io/davidone007/service-discovery:dev`
+- `ghcr.io/davidone007/cloud-config:dev`
+
+## ⚠️ Development Build
+
+This is a pre-release development build. Use with caution.
+
+## 📦 Artifacts
+
+- Build Date: 2025-11-25T18:59:59-05:00
+- Commit: cd537d8cbee58118e4461d5f6e562642e7096adc
+- Author: davidone007
+- Branch: stage
+
+## 🔗 Images (Stage Tag)
+
+Docker images for this stage release:
+- `ghcr.io/davidone007/api-gateway:stage`
+- `ghcr.io/davidone007/product-service:stage`
+- `ghcr.io/davidone007/user-service:stage`
+- `ghcr.io/davidone007/order-service:stage`
+- `ghcr.io/davidone007/payment-service:stage`
+- `ghcr.io/davidone007/shipping-service:stage`
+- `ghcr.io/davidone007/favourite-service:stage`
+- `ghcr.io/davidone007/proxy-client:stage`
+- `ghcr.io/davidone007/service-discovery:stage`
+- `ghcr.io/davidone007/cloud-config:stage`
+
+## ✅ Quality Gates Passed
+
+- Unit Tests: ✅
+- Code Quality (SonarQube): ✅
+- Container Build: ✅
+- Kubernetes Deployment: ✅
+- Integration Tests: ✅
+- E2E Tests: ✅
