@@ -1,0 +1,21 @@
+https://ecommerce.172.172.180.123.nip.io/product-service/api/products
+https://ecommerce.172.172.180.123.nip.io/user-service/api/users
+https://ecommerce.172.172.180.123.nip.io/favourite-service/api/favourites
+https://ecommerce.172.172.180.123.nip.io/payment-service/api/payments
+https://ecommerce.172.172.180.123.nip.io/shipping-service/api/shippings
+
+# 6. Port forward Eureka en Prod
+kubectl port-forward svc/service-discovery-container 8761:8761 -n prod
+# Eureka: http://localhost:8761
+
+# 7. Port forward Zipkin en Prod
+kubectl port-forward svc/zipkin-container 9411:9411 -n prod
+# Zipkin: http://localhost:9411
+
+
+https://ecommerce.172.172.180.123.nip.io/product-service/api/products/config/custom-property
+
+curl -X POST http://localhost:8500/product-service/actuator/refresh
+
+kubectl port-forward svc/product-service-container 8500:8500 -n prod
+
