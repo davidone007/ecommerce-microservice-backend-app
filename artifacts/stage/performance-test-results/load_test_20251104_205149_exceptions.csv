@@ -1,0 +1,39 @@
+Count,Message,Traceback,Nodes
+2,timed out,"  File ""/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/locust/user/task.py"", line 347, in run
+    self.execute_next_task()
+  File ""/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/locust/user/task.py"", line 378, in execute_next_task
+    self.execute_task(self._task_queue.pop(0))
+  File ""/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/locust/user/task.py"", line 390, in execute_task
+    task(self)
+  File ""/Users/davidef/Desktop/ecommerce-microservice-backend-appC/performance-tests/locustfile.py"", line 143, in browse_products
+    with self.client.get(
+         ^^^^^^^^^^^^^^^^
+  File ""/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/locust/contrib/fasthttp.py"", line 264, in get
+    return self.request(""GET"", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/locust/contrib/fasthttp.py"", line 235, in request
+    request_meta[""response_length""] = len(response.content or """")
+                                          ^^^^^^^^^^^^^^^^
+  File ""/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/geventhttpclient/useragent.py"", line 203, in content
+    self._cached_content = self._content()
+                           ^^^^^^^^^^^^^^^
+  File ""/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/locust/contrib/fasthttp.py"", line 498, in _content
+    return super()._content()
+           ^^^^^^^^^^^^^^^^^^
+  File ""/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/geventhttpclient/useragent.py"", line 218, in _content
+    ret = self._response.read()
+          ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/geventhttpclient/response.py"", line 253, in read
+    data = self._sock.recv(length or self.block_size)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/gevent/_socketcommon.py"", line 662, in recv
+    self._wait(self._read_event)
+  File ""src/gevent/_hub_primitives.py"", line 317, in gevent._gevent_c_hub_primitives.wait_on_socket
+  File ""src/gevent/_hub_primitives.py"", line 322, in gevent._gevent_c_hub_primitives.wait_on_socket
+  File ""src/gevent/_hub_primitives.py"", line 313, in gevent._gevent_c_hub_primitives._primitive_wait
+  File ""src/gevent/_hub_primitives.py"", line 314, in gevent._gevent_c_hub_primitives._primitive_wait
+  File ""src/gevent/_hub_primitives.py"", line 55, in gevent._gevent_c_hub_primitives.WaitOperationsGreenlet.wait
+  File ""src/gevent/_waiter.py"", line 154, in gevent._gevent_c_waiter.Waiter.get
+  File ""src/gevent/_greenlet_primitives.py"", line 65, in gevent._gevent_c_greenlet_primitives.SwitchOutGreenletWithLoop.switch
+  File ""src/gevent/_gevent_c_greenlet_primitives.pxd"", line 35, in gevent._gevent_c_greenlet_primitives._greenlet_switch
+",local

@@ -1,0 +1,2 @@
+Method,Name,Error,Occurrences
+POST,/app/api/categories [CREATE],"BadStatusCode('http://51.8.48.112:8080/app/api/categories', code=400)",1

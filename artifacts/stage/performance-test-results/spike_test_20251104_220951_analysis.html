@@ -1,0 +1,297 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reporte de Rendimiento - E-commerce Microservices</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 20px;
+                color: #333;
+            }
+            
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                overflow: hidden;
+            }
+            
+            .header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 40px;
+                text-align: center;
+            }
+            
+            .header h1 {
+                font-size: 2.5em;
+                margin-bottom: 10px;
+            }
+            
+            .header p {
+                font-size: 1.2em;
+                opacity: 0.9;
+            }
+            
+            .content {
+                padding: 40px;
+            }
+            
+            .metrics-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-bottom: 40px;
+            }
+            
+            .metric-card {
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                padding: 25px;
+                border-radius: 15px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease;
+            }
+            
+            .metric-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            }
+            
+            .metric-card.success {
+                background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            }
+            
+            .metric-card.warning {
+                background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            }
+            
+            .metric-card.danger {
+                background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            }
+            
+            .metric-label {
+                font-size: 0.9em;
+                color: #555;
+                margin-bottom: 10px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            
+            .metric-value {
+                font-size: 2.5em;
+                font-weight: bold;
+                color: #333;
+            }
+            
+            .metric-unit {
+                font-size: 0.5em;
+                color: #666;
+                font-weight: normal;
+            }
+            
+            .section {
+                margin-bottom: 40px;
+            }
+            
+            .section-title {
+                font-size: 1.8em;
+                color: #667eea;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 3px solid #667eea;
+            }
+            
+            .charts {
+                background: #f8f9fa;
+                padding: 30px;
+                border-radius: 15px;
+                margin-bottom: 30px;
+            }
+            
+            .chart-image {
+                width: 100%;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+            
+            .summary {
+                background: #f8f9fa;
+                padding: 30px;
+                border-radius: 15px;
+                margin-bottom: 30px;
+            }
+            
+            .summary-item {
+                display: flex;
+                justify-content: space-between;
+                padding: 15px 0;
+                border-bottom: 1px solid #ddd;
+            }
+            
+            .summary-item:last-child {
+                border-bottom: none;
+            }
+            
+            .summary-label {
+                font-weight: 600;
+                color: #555;
+            }
+            
+            .summary-value {
+                color: #667eea;
+                font-weight: bold;
+            }
+            
+            .footer {
+                background: #2c3e50;
+                color: white;
+                padding: 30px;
+                text-align: center;
+            }
+            
+            .status-badge {
+                display: inline-block;
+                padding: 8px 20px;
+                border-radius: 20px;
+                font-weight: bold;
+                font-size: 0.9em;
+                margin-top: 10px;
+            }
+            
+            .status-excellent {
+                background: #27ae60;
+                color: white;
+            }
+            
+            .status-good {
+                background: #3498db;
+                color: white;
+            }
+            
+            .status-fair {
+                background: #f39c12;
+                color: white;
+            }
+            
+            .status-poor {
+                background: #e74c3c;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>📊 Reporte de Rendimiento</h1>
+                <p>E-commerce Microservices - Performance Testing</p>
+                <p style="font-size: 0.9em; margin-top: 10px;">Generado: 2025-11-04 23:06:34</p>
+            </div>
+            
+            <div class="content">
+                <div class="section">
+                    <h2 class="section-title">🎯 Métricas Clave</h2>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-card danger">
+                            <div class="metric-label">Tasa de Éxito</div>
+                            <div class="metric-value">36.14<span class="metric-unit">%</span></div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-label">Total Requests</div>
+                            <div class="metric-value">664</div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-label">Tiempo Promedio</div>
+                            <div class="metric-value">46029.31<span class="metric-unit">ms</span></div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-label">Throughput Promedio</div>
+                            <div class="metric-value">1.55<span class="metric-unit">RPS</span></div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-label">P95 Response Time</div>
+                            <div class="metric-value">60000.0<span class="metric-unit">ms</span></div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-label">P99 Response Time</div>
+                            <div class="metric-value">60000.0<span class="metric-unit">ms</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title">📈 Resumen Detallado</h2>
+                    <div class="summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Total de Requests:</span>
+                            <span class="summary-value">664</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Requests Fallidas:</span>
+                            <span class="summary-value">424</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Tasa de Error:</span>
+                            <span class="summary-value">63.86%</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Tiempo de Respuesta Mínimo:</span>
+                            <span class="summary-value">254 ms</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Tiempo de Respuesta Máximo:</span>
+                            <span class="summary-value">60182 ms</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Tiempo de Respuesta Mediano:</span>
+                            <span class="summary-value">60000.5 ms</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Throughput Máximo:</span>
+                            <span class="summary-value">3.11 RPS</span>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <span class="status-badge status-poor">Estado General: NECESITA MEJORAS</span>
+                    </div>
+                </div>
+                
+                
+        <div class="section">
+            <h2 class="section-title">📊 Gráficos de Análisis</h2>
+            <div class="charts">
+        <img src="performance_charts.png" alt="Performance Chart" class="chart-image">
+
+            </div>
+        </div>
+        
+            </div>
+            
+            <div class="footer">
+                <p>🚀 Performance Testing Suite - E-commerce Microservices</p>
+                <p style="margin-top: 10px; font-size: 0.9em;">
+                    Generado automáticamente por el sistema de análisis de rendimiento
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    
