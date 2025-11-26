@@ -1,0 +1,2863 @@
+
+Report Summary
+
+┌──────────────────────────────────────────────────────────────────────────────────┬───────────────┬───────────────────┐
+│                                      Target                                      │     Type      │ Misconfigurations │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ .                                                                                │ terraformplan │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ api-gateway/Dockerfile                                                           │  dockerfile   │         1         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ cloud-config/Dockerfile                                                          │  dockerfile   │         1         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ favourite-service/Dockerfile                                                     │  dockerfile   │         1         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ helm/ecommerce-microservices/templates/deployment.yaml                           │     helm      │        51         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ helm/ecommerce-microservices/templates/secret-provider-class.yaml                │     helm      │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ helm/ecommerce-microservices/templates/service.yaml                              │     helm      │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ helm/ecommerce-microservices/templates/servicemonitor.yaml                       │     helm      │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/api-gateway-container-deployment.yaml                                        │  kubernetes   │         5         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/api-gateway-container-service.yaml                                           │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/cloud-config-container-deployment.yaml                                       │  kubernetes   │         3         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/cloud-config-container-service.yaml                                          │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/favourite-service-container-deployment.yaml                                  │  kubernetes   │         5         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/favourite-service-container-service.yaml                                     │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/monitoring/elasticsearch.yaml                                                │  kubernetes   │         3         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/monitoring/grafana.yaml                                                      │  kubernetes   │         3         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/monitoring/kibana.yaml                                                       │  kubernetes   │         3         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/monitoring/logstash.yaml                                                     │  kubernetes   │         3         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/monitoring/prometheus-configmap.yaml                                         │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/monitoring/prometheus.yaml                                                   │  kubernetes   │         3         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/order-service-container-deployment.yaml                                      │  kubernetes   │         5         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/order-service-container-service.yaml                                         │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/payment-service-container-deployment.yaml                                    │  kubernetes   │         5         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/payment-service-container-service.yaml                                       │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/product-service-container-deployment.yaml                                    │  kubernetes   │         5         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/product-service-container-service.yaml                                       │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/production-issuer.yaml                                                       │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/proxy-client-container-deployment.yaml                                       │  kubernetes   │         5         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/proxy-client-container-service.yaml                                          │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/service-discovery-container-deployment.yaml                                  │  kubernetes   │         3         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/service-discovery-container-service.yaml                                     │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/shipping-service-container-deployment.yaml                                   │  kubernetes   │         5         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/shipping-service-container-service.yaml                                      │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/user-service-container-deployment.yaml                                       │  kubernetes   │         5         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/user-service-container-service.yaml                                          │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/zipkin-container-deployment.yaml                                             │  kubernetes   │         3         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ k8s/zipkin-container-service.yaml                                                │  kubernetes   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ main.tf                                                                          │ terraformplan │         3         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ order-service/Dockerfile                                                         │  dockerfile   │         1         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ payment-service/Dockerfile                                                       │  dockerfile   │         1         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ performance-tests/Dockerfile                                                     │  dockerfile   │         1         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ product-service/Dockerfile                                                       │  dockerfile   │         1         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ proxy-client/Dockerfile                                                          │  dockerfile   │         1         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ service-discovery/Dockerfile                                                     │  dockerfile   │         1         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ shipping-service/Dockerfile                                                      │  dockerfile   │         1         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ terraform/environments/prod                                                      │   terraform   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ terraform/environments/stage                                                     │   terraform   │         0         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ terraform/modules/aks/main.tf                                                    │   terraform   │         6         │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ terraform/modules/cert-manager/cluster-issuer-chart/templates/cluster-issuer.ya- │     helm      │         0         │
+│ ml                                                                               │               │                   │
+├──────────────────────────────────────────────────────────────────────────────────┼───────────────┼───────────────────┤
+│ user-service/Dockerfile                                                          │  dockerfile   │         1         │
+└──────────────────────────────────────────────────────────────────────────────────┴───────────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+api-gateway/Dockerfile (dockerfile)
+===================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────
+
+
+
+cloud-config/Dockerfile (dockerfile)
+====================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────
+
+
+
+favourite-service/Dockerfile (dockerfile)
+=========================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────
+
+
+
+helm/ecommerce-microservices/templates/deployment.yaml (helm)
+=============================================================
+Tests: 71 (SUCCESSES: 20, FAILURES: 51)
+Failures: 51 (HIGH: 51, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'api-gateway-container' of Deployment 'api-gateway-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:30-54
+────────────────────────────────────────
+  30 ┌         - name: api-gateway-container
+  31 │           image: "ghcr.io/davidone007/api-gateway:stage"
+  32 │           imagePullPolicy: Always
+  33 │           ports:
+  34 │             - containerPort: 8080
+  35 │               protocol: TCP
+  36 │           env:
+  37 │             - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+  38 └               value: http://service-discovery-container:8761/eureka/
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'cloud-config-container' of Deployment 'cloud-config-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:27-51
+────────────────────────────────────────
+  27 ┌         - name: cloud-config-container
+  28 │           image: "ghcr.io/davidone007/cloud-config:stage"
+  29 │           imagePullPolicy: Always
+  30 │           ports:
+  31 │             - containerPort: 9296
+  32 │               protocol: TCP
+  33 │           env:
+  34 │             - name: EUREKA_CLIENT_ENABLED
+  35 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'favourite-service-container' of Deployment 'favourite-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: favourite-service-container
+  29 │           image: "ghcr.io/davidone007/favourite-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8800
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'order-service-container' of Deployment 'order-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: order-service-container
+  29 │           image: "ghcr.io/davidone007/order-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8300
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'payment-service-container' of Deployment 'payment-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: payment-service-container
+  29 │           image: "ghcr.io/davidone007/payment-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8400
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'product-service-container' of Deployment 'product-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: product-service-container
+  29 │           image: "ghcr.io/davidone007/product-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8500
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'proxy-client-container' of Deployment 'proxy-client-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-63
+────────────────────────────────────────
+  28 ┌         - name: proxy-client-container
+  29 │           image: "ghcr.io/davidone007/proxy-client:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8900
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: JWT_SECRET
+  36 └               valueFrom:
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'service-discovery-container' of Deployment 'service-discovery-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-27
+────────────────────────────────────────
+  19 ┌         - name: service-discovery-container
+  20 │           image: "ghcr.io/davidone007/service-discovery:stage"
+  21 │           imagePullPolicy: Always
+  22 │           ports:
+  23 │             - containerPort: 8761
+  24 │               protocol: TCP
+  25 │           env:
+  26 │             - name: SPRING_PROFILES_ACTIVE
+  27 └               value: dev
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'shipping-service-container' of Deployment 'shipping-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: shipping-service-container
+  29 │           image: "ghcr.io/davidone007/shipping-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8600
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'user-service-container' of Deployment 'user-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: user-service-container
+  29 │           image: "ghcr.io/davidone007/user-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8700
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'api-gateway-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-28
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done; until curl
+  25 │             -sS http://zipkin-container:9411/ >/dev/null 2>&1; do echo waiting for zipkin...;
+  26 │             sleep 2; done
+  27 │           image: curlimages/curl:7.85.0
+  28 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'favourite-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'order-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'payment-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'product-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'proxy-client-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'shipping-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'user-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-eureka' of Deployment 'cloud-config-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-25
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done
+  24 │           image: curlimages/curl:7.85.0
+  25 └           name: wait-for-eureka
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'zipkin-container' of Deployment 'zipkin-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - name: zipkin-container
+  20 │           image: "openzipkin/zipkin"
+  21 │           imagePullPolicy: Always
+  22 │           ports:
+  23 │             - containerPort: 9411
+  24 │               protocol: TCP
+  25 │           env:
+  26 └             []
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container api-gateway-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:30-54
+────────────────────────────────────────
+  30 ┌         - name: api-gateway-container
+  31 │           image: "ghcr.io/davidone007/api-gateway:stage"
+  32 │           imagePullPolicy: Always
+  33 │           ports:
+  34 │             - containerPort: 8080
+  35 │               protocol: TCP
+  36 │           env:
+  37 │             - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+  38 └               value: http://service-discovery-container:8761/eureka/
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container api-gateway-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-28
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done; until curl
+  25 │             -sS http://zipkin-container:9411/ >/dev/null 2>&1; do echo waiting for zipkin...;
+  26 │             sleep 2; done
+  27 │           image: curlimages/curl:7.85.0
+  28 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container cloud-config-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:27-51
+────────────────────────────────────────
+  27 ┌         - name: cloud-config-container
+  28 │           image: "ghcr.io/davidone007/cloud-config:stage"
+  29 │           imagePullPolicy: Always
+  30 │           ports:
+  31 │             - containerPort: 9296
+  32 │               protocol: TCP
+  33 │           env:
+  34 │             - name: EUREKA_CLIENT_ENABLED
+  35 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container cloud-config-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-25
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done
+  24 │           image: curlimages/curl:7.85.0
+  25 └           name: wait-for-eureka
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container favourite-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: favourite-service-container
+  29 │           image: "ghcr.io/davidone007/favourite-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8800
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container favourite-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container order-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: order-service-container
+  29 │           image: "ghcr.io/davidone007/order-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8300
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container order-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container payment-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: payment-service-container
+  29 │           image: "ghcr.io/davidone007/payment-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8400
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container payment-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container product-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container product-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: product-service-container
+  29 │           image: "ghcr.io/davidone007/product-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8500
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container proxy-client-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-63
+────────────────────────────────────────
+  28 ┌         - name: proxy-client-container
+  29 │           image: "ghcr.io/davidone007/proxy-client:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8900
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: JWT_SECRET
+  36 └               valueFrom:
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container proxy-client-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container service-discovery-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-27
+────────────────────────────────────────
+  19 ┌         - name: service-discovery-container
+  20 │           image: "ghcr.io/davidone007/service-discovery:stage"
+  21 │           imagePullPolicy: Always
+  22 │           ports:
+  23 │             - containerPort: 8761
+  24 │               protocol: TCP
+  25 │           env:
+  26 │             - name: SPRING_PROFILES_ACTIVE
+  27 └               value: dev
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container shipping-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: shipping-service-container
+  29 │           image: "ghcr.io/davidone007/shipping-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8600
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container shipping-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container user-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container user-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:28-54
+────────────────────────────────────────
+  28 ┌         - name: user-service-container
+  29 │           image: "ghcr.io/davidone007/user-service:stage"
+  30 │           imagePullPolicy: Always
+  31 │           ports:
+  32 │             - containerPort: 8700
+  33 │               protocol: TCP
+  34 │           env:
+  35 │             - name: EUREKA_CLIENT_ENABLED
+  36 └               value: "true"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container zipkin-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:19-26
+────────────────────────────────────────
+  19 ┌         - name: zipkin-container
+  20 │           image: "openzipkin/zipkin"
+  21 │           imagePullPolicy: Always
+  22 │           ports:
+  23 │             - containerPort: 9411
+  24 │               protocol: TCP
+  25 │           env:
+  26 └             []
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment api-gateway-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:18-55
+────────────────────────────────────────
+  18 ┌       initContainers:
+  19 │         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done; until curl
+  25 │             -sS http://zipkin-container:9411/ >/dev/null 2>&1; do echo waiting for zipkin...;
+  26 └             sleep 2; done
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment cloud-config-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:18-52
+────────────────────────────────────────
+  18 ┌       initContainers:
+  19 │         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done
+  24 │           image: curlimages/curl:7.85.0
+  25 │           name: wait-for-eureka
+  26 └       containers:
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment favourite-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:18-55
+────────────────────────────────────────
+  18 ┌       initContainers:
+  19 │         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment order-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:18-55
+────────────────────────────────────────
+  18 ┌       initContainers:
+  19 │         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment payment-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:18-55
+────────────────────────────────────────
+  18 ┌       initContainers:
+  19 │         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment product-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:18-55
+────────────────────────────────────────
+  18 ┌       initContainers:
+  19 │         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment proxy-client-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:18-71
+────────────────────────────────────────
+  18 ┌       initContainers:
+  19 │         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment service-discovery-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:18-28
+────────────────────────────────────────
+  18 ┌       containers:
+  19 │         - name: service-discovery-container
+  20 │           image: "ghcr.io/davidone007/service-discovery:stage"
+  21 │           imagePullPolicy: Always
+  22 │           ports:
+  23 │             - containerPort: 8761
+  24 │               protocol: TCP
+  25 │           env:
+  26 └             - name: SPRING_PROFILES_ACTIVE
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment shipping-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:18-55
+────────────────────────────────────────
+  18 ┌       initContainers:
+  19 │         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment user-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:18-55
+────────────────────────────────────────
+  18 ┌       initContainers:
+  19 │         - command:
+  20 │           - sh
+  21 │           - -c
+  22 │           - until curl -sf http://service-discovery-container:8761/actuator/health >/dev/null
+  23 │             2>&1; do echo waiting for eureka...; sleep 2; done; until curl -sf http://cloud-config-container:9296/actuator/health
+  24 │             >/dev/null 2>&1; do echo waiting for cloud-config...; sleep 2; done
+  25 │           image: curlimages/curl:7.85.0
+  26 └           name: wait-for-dependencies
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment zipkin-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ helm/ecommerce-microservices/templates/deployment.yaml:18-27
+────────────────────────────────────────
+  18 ┌       containers:
+  19 │         - name: zipkin-container
+  20 │           image: "openzipkin/zipkin"
+  21 │           imagePullPolicy: Always
+  22 │           ports:
+  23 │             - containerPort: 9411
+  24 │               protocol: TCP
+  25 │           env:
+  26 │             []
+  27 └       restartPolicy: Always
+────────────────────────────────────────
+
+
+
+k8s/api-gateway-container-deployment.yaml (kubernetes)
+======================================================
+Tests: 27 (SUCCESSES: 22, FAILURES: 5)
+Failures: 5 (HIGH: 5, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'api-gateway-container' of Deployment 'api-gateway-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/api-gateway-container-deployment.yaml:43-64
+────────────────────────────────────────
+  43 ┌         - env:
+  44 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  45 │               value: http://service-discovery-container:8761/eureka/
+  46 │             - name: EUREKA_INSTANCE_HOSTNAME
+  47 │               value: api-gateway-container
+  48 │             - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+  49 │               value: "false"
+  50 │             - name: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED
+  51 └               value: "false"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'api-gateway-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/api-gateway-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container api-gateway-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/api-gateway-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container api-gateway-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/api-gateway-container-deployment.yaml:43-64
+────────────────────────────────────────
+  43 ┌         - env:
+  44 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  45 │               value: http://service-discovery-container:8761/eureka/
+  46 │             - name: EUREKA_INSTANCE_HOSTNAME
+  47 │               value: api-gateway-container
+  48 │             - name: EUREKA_INSTANCE_PREFER-IP-ADDRESS
+  49 │               value: "false"
+  50 │             - name: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED
+  51 └               value: "false"
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment api-gateway-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/api-gateway-container-deployment.yaml:23-65
+────────────────────────────────────────
+  23 ┌       initContainers:
+  24 │         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 │             - |
+  30 │               until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do
+  31 └                 echo "waiting for eureka..."
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/cloud-config-container-deployment.yaml (kubernetes)
+=======================================================
+Tests: 25 (SUCCESSES: 22, FAILURES: 3)
+Failures: 3 (HIGH: 3, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'cloud-config-container' of Deployment 'cloud-config-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/cloud-config-container-deployment.yaml:24-35
+────────────────────────────────────────
+  24 ┌         - env:
+  25 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  26 │               value: http://service-discovery-container:8761/eureka/
+  27 │             - name: SPRING_PROFILES_ACTIVE
+  28 │               value: dev
+  29 │             - name: SPRING_ZIPKIN_BASE_URL
+  30 │               value: http://zipkin-container:9411
+  31 │           image: ghcr.io/davidone007/cloud-config:${BRANCH_TAG}
+  32 └           name: cloud-config-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container cloud-config-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/cloud-config-container-deployment.yaml:24-35
+────────────────────────────────────────
+  24 ┌         - env:
+  25 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  26 │               value: http://service-discovery-container:8761/eureka/
+  27 │             - name: SPRING_PROFILES_ACTIVE
+  28 │               value: dev
+  29 │             - name: SPRING_ZIPKIN_BASE_URL
+  30 │               value: http://zipkin-container:9411
+  31 │           image: ghcr.io/davidone007/cloud-config:${BRANCH_TAG}
+  32 └           name: cloud-config-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment cloud-config-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/cloud-config-container-deployment.yaml:23-36
+────────────────────────────────────────
+  23 ┌       containers:
+  24 │         - env:
+  25 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  26 │               value: http://service-discovery-container:8761/eureka/
+  27 │             - name: SPRING_PROFILES_ACTIVE
+  28 │               value: dev
+  29 │             - name: SPRING_ZIPKIN_BASE_URL
+  30 │               value: http://zipkin-container:9411
+  31 └           image: ghcr.io/davidone007/cloud-config:${BRANCH_TAG}
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/favourite-service-container-deployment.yaml (kubernetes)
+============================================================
+Tests: 27 (SUCCESSES: 22, FAILURES: 5)
+Failures: 5 (HIGH: 5, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'favourite-service-container' of Deployment 'favourite-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/favourite-service-container-deployment.yaml:39-62
+────────────────────────────────────────
+  39 ┌         - env:
+  40 │             - name: EUREKA_CLIENT_ENABLED
+  41 │               value: "true"
+  42 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  43 │               value: "true"
+  44 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  45 │               value: http://service-discovery-container:8761/eureka/
+  46 │             - name: EUREKA_INSTANCE_HOSTNAME
+  47 └               value: favourite-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'favourite-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/favourite-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container favourite-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/favourite-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container favourite-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/favourite-service-container-deployment.yaml:39-62
+────────────────────────────────────────
+  39 ┌         - env:
+  40 │             - name: EUREKA_CLIENT_ENABLED
+  41 │               value: "true"
+  42 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  43 │               value: "true"
+  44 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  45 │               value: http://service-discovery-container:8761/eureka/
+  46 │             - name: EUREKA_INSTANCE_HOSTNAME
+  47 └               value: favourite-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment favourite-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/favourite-service-container-deployment.yaml:23-63
+────────────────────────────────────────
+  23 ┌       initContainers:
+  24 │         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 │             - |
+  30 │               until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do
+  31 └                 echo "waiting for eureka..."
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/monitoring/elasticsearch.yaml (kubernetes)
+==============================================
+Tests: 27 (SUCCESSES: 24, FAILURES: 3)
+Failures: 3 (HIGH: 3, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'elasticsearch' of Deployment 'elasticsearch' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/monitoring/elasticsearch.yaml:16-25
+────────────────────────────────────────
+  16 ┌         - name: elasticsearch
+  17 │           image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+  18 │           env:
+  19 │             - name: discovery.type
+  20 │               value: single-node
+  21 │             - name: ES_JAVA_OPTS
+  22 │               value: "-Xms512m -Xmx512m"
+  23 │           ports:
+  24 │             - containerPort: 9200
+  25 └             - containerPort: 9300
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container elasticsearch in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/monitoring/elasticsearch.yaml:16-25
+────────────────────────────────────────
+  16 ┌         - name: elasticsearch
+  17 │           image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+  18 │           env:
+  19 │             - name: discovery.type
+  20 │               value: single-node
+  21 │             - name: ES_JAVA_OPTS
+  22 │               value: "-Xms512m -Xmx512m"
+  23 │           ports:
+  24 │             - containerPort: 9200
+  25 └             - containerPort: 9300
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment elasticsearch in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/monitoring/elasticsearch.yaml:15-25
+────────────────────────────────────────
+  15 ┌       containers:
+  16 │         - name: elasticsearch
+  17 │           image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+  18 │           env:
+  19 │             - name: discovery.type
+  20 │               value: single-node
+  21 │             - name: ES_JAVA_OPTS
+  22 │               value: "-Xms512m -Xmx512m"
+  23 └           ports:
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/monitoring/grafana.yaml (kubernetes)
+========================================
+Tests: 27 (SUCCESSES: 24, FAILURES: 3)
+Failures: 3 (HIGH: 3, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'grafana' of Deployment 'grafana' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/monitoring/grafana.yaml:26-41
+────────────────────────────────────────
+  26 ┌         - name: grafana
+  27 │           image: grafana/grafana:latest
+  28 │           ports:
+  29 │             - containerPort: 3000
+  30 │           env:
+  31 │             - name: GF_SECURITY_ADMIN_PASSWORD
+  32 │               value: "admin"
+  33 │           volumeMounts:
+  34 └             - name: grafana-provisioning-datasources
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container grafana in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/monitoring/grafana.yaml:26-41
+────────────────────────────────────────
+  26 ┌         - name: grafana
+  27 │           image: grafana/grafana:latest
+  28 │           ports:
+  29 │             - containerPort: 3000
+  30 │           env:
+  31 │             - name: GF_SECURITY_ADMIN_PASSWORD
+  32 │               value: "admin"
+  33 │           volumeMounts:
+  34 └             - name: grafana-provisioning-datasources
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment grafana in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/monitoring/grafana.yaml:15-41
+────────────────────────────────────────
+  15 ┌       volumes:
+  16 │         - name: grafana-provisioning-datasources
+  17 │           configMap:
+  18 │             name: grafana-provisioning-datasources
+  19 │         - name: grafana-dashboards-volume
+  20 │           configMap:
+  21 │             name: grafana-dashboards
+  22 │         - name: grafana-dashboards-config-volume
+  23 └           configMap:
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/monitoring/kibana.yaml (kubernetes)
+=======================================
+Tests: 27 (SUCCESSES: 24, FAILURES: 3)
+Failures: 3 (HIGH: 3, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'kibana' of Deployment 'kibana' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/monitoring/kibana.yaml:16-22
+────────────────────────────────────────
+  16 ┌         - name: kibana
+  17 │           image: docker.elastic.co/kibana/kibana:7.17.0
+  18 │           env:
+  19 │             - name: ELASTICSEARCH_HOSTS
+  20 │               value: http://elasticsearch:9200
+  21 │           ports:
+  22 └             - containerPort: 5601
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container kibana in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/monitoring/kibana.yaml:16-22
+────────────────────────────────────────
+  16 ┌         - name: kibana
+  17 │           image: docker.elastic.co/kibana/kibana:7.17.0
+  18 │           env:
+  19 │             - name: ELASTICSEARCH_HOSTS
+  20 │               value: http://elasticsearch:9200
+  21 │           ports:
+  22 └             - containerPort: 5601
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment kibana in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/monitoring/kibana.yaml:15-22
+────────────────────────────────────────
+  15 ┌       containers:
+  16 │         - name: kibana
+  17 │           image: docker.elastic.co/kibana/kibana:7.17.0
+  18 │           env:
+  19 │             - name: ELASTICSEARCH_HOSTS
+  20 │               value: http://elasticsearch:9200
+  21 │           ports:
+  22 └             - containerPort: 5601
+────────────────────────────────────────
+
+
+
+k8s/monitoring/logstash.yaml (kubernetes)
+=========================================
+Tests: 27 (SUCCESSES: 24, FAILURES: 3)
+Failures: 3 (HIGH: 3, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'logstash' of Deployment 'logstash' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/monitoring/logstash.yaml:36-44
+────────────────────────────────────────
+  36 ┌         - name: logstash
+  37 │           image: docker.elastic.co/logstash/logstash:7.17.0
+  38 │           ports:
+  39 │             - containerPort: 5000
+  40 │             - containerPort: 9600
+  41 │           volumeMounts:
+  42 │             - name: config-volume
+  43 │               mountPath: /usr/share/logstash/pipeline/logstash.conf
+  44 └               subPath: logstash.conf
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container logstash in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/monitoring/logstash.yaml:36-44
+────────────────────────────────────────
+  36 ┌         - name: logstash
+  37 │           image: docker.elastic.co/logstash/logstash:7.17.0
+  38 │           ports:
+  39 │             - containerPort: 5000
+  40 │             - containerPort: 9600
+  41 │           volumeMounts:
+  42 │             - name: config-volume
+  43 │               mountPath: /usr/share/logstash/pipeline/logstash.conf
+  44 └               subPath: logstash.conf
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment logstash in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/monitoring/logstash.yaml:35-48
+────────────────────────────────────────
+  35 ┌       containers:
+  36 │         - name: logstash
+  37 │           image: docker.elastic.co/logstash/logstash:7.17.0
+  38 │           ports:
+  39 │             - containerPort: 5000
+  40 │             - containerPort: 9600
+  41 │           volumeMounts:
+  42 │             - name: config-volume
+  43 └               mountPath: /usr/share/logstash/pipeline/logstash.conf
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/monitoring/prometheus.yaml (kubernetes)
+===========================================
+Tests: 27 (SUCCESSES: 24, FAILURES: 3)
+Failures: 3 (HIGH: 3, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'prometheus' of Deployment 'prometheus' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/monitoring/prometheus.yaml:16-23
+────────────────────────────────────────
+  16 ┌         - name: prometheus
+  17 │           image: prom/prometheus:latest
+  18 │           ports:
+  19 │             - containerPort: 9090
+  20 │           volumeMounts:
+  21 │             - name: config-volume
+  22 │               mountPath: /etc/prometheus/prometheus.yml
+  23 └               subPath: prometheus.yml
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container prometheus in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/monitoring/prometheus.yaml:16-23
+────────────────────────────────────────
+  16 ┌         - name: prometheus
+  17 │           image: prom/prometheus:latest
+  18 │           ports:
+  19 │             - containerPort: 9090
+  20 │           volumeMounts:
+  21 │             - name: config-volume
+  22 │               mountPath: /etc/prometheus/prometheus.yml
+  23 └               subPath: prometheus.yml
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment prometheus in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/monitoring/prometheus.yaml:15-27
+────────────────────────────────────────
+  15 ┌       containers:
+  16 │         - name: prometheus
+  17 │           image: prom/prometheus:latest
+  18 │           ports:
+  19 │             - containerPort: 9090
+  20 │           volumeMounts:
+  21 │             - name: config-volume
+  22 │               mountPath: /etc/prometheus/prometheus.yml
+  23 └               subPath: prometheus.yml
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/order-service-container-deployment.yaml (kubernetes)
+========================================================
+Tests: 27 (SUCCESSES: 22, FAILURES: 5)
+Failures: 5 (HIGH: 5, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'order-service-container' of Deployment 'order-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/order-service-container-deployment.yaml:39-62
+────────────────────────────────────────
+  39 ┌         - env:
+  40 │             - name: EUREKA_CLIENT_ENABLED
+  41 │               value: "true"
+  42 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  43 │               value: "true"
+  44 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  45 │               value: http://service-discovery-container:8761/eureka/
+  46 │             - name: EUREKA_INSTANCE_HOSTNAME
+  47 └               value: order-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'order-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/order-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container order-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/order-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container order-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/order-service-container-deployment.yaml:39-62
+────────────────────────────────────────
+  39 ┌         - env:
+  40 │             - name: EUREKA_CLIENT_ENABLED
+  41 │               value: "true"
+  42 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  43 │               value: "true"
+  44 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  45 │               value: http://service-discovery-container:8761/eureka/
+  46 │             - name: EUREKA_INSTANCE_HOSTNAME
+  47 └               value: order-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment order-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/order-service-container-deployment.yaml:23-63
+────────────────────────────────────────
+  23 ┌       initContainers:
+  24 │         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 │             - |
+  30 │               until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do
+  31 └                 echo "waiting for eureka..."
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/payment-service-container-deployment.yaml (kubernetes)
+==========================================================
+Tests: 27 (SUCCESSES: 22, FAILURES: 5)
+Failures: 5 (HIGH: 5, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'payment-service-container' of Deployment 'payment-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/payment-service-container-deployment.yaml:39-62
+────────────────────────────────────────
+  39 ┌         - env:
+  40 │             - name: EUREKA_CLIENT_ENABLED
+  41 │               value: "true"
+  42 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  43 │               value: "true"
+  44 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  45 │               value: http://service-discovery-container:8761/eureka/
+  46 │             - name: EUREKA_INSTANCE_HOSTNAME
+  47 └               value: payment-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'payment-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/payment-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container payment-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/payment-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container payment-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/payment-service-container-deployment.yaml:39-62
+────────────────────────────────────────
+  39 ┌         - env:
+  40 │             - name: EUREKA_CLIENT_ENABLED
+  41 │               value: "true"
+  42 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  43 │               value: "true"
+  44 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  45 │               value: http://service-discovery-container:8761/eureka/
+  46 │             - name: EUREKA_INSTANCE_HOSTNAME
+  47 └               value: payment-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment payment-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/payment-service-container-deployment.yaml:23-63
+────────────────────────────────────────
+  23 ┌       initContainers:
+  24 │         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 │             - |
+  30 │               until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do
+  31 └                 echo "waiting for eureka..."
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/product-service-container-deployment.yaml (kubernetes)
+==========================================================
+Tests: 27 (SUCCESSES: 22, FAILURES: 5)
+Failures: 5 (HIGH: 5, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'product-service-container' of Deployment 'product-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/product-service-container-deployment.yaml:39-62
+────────────────────────────────────────
+  39 ┌         - env:
+  40 │             - name: EUREKA_CLIENT_ENABLED
+  41 │               value: "true"
+  42 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  43 │               value: "true"
+  44 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  45 │               value: http://service-discovery-container:8761/eureka/
+  46 │             - name: EUREKA_INSTANCE_HOSTNAME
+  47 └               value: product-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'product-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/product-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container product-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/product-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container product-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/product-service-container-deployment.yaml:39-62
+────────────────────────────────────────
+  39 ┌         - env:
+  40 │             - name: EUREKA_CLIENT_ENABLED
+  41 │               value: "true"
+  42 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  43 │               value: "true"
+  44 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  45 │               value: http://service-discovery-container:8761/eureka/
+  46 │             - name: EUREKA_INSTANCE_HOSTNAME
+  47 └               value: product-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment product-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/product-service-container-deployment.yaml:23-63
+────────────────────────────────────────
+  23 ┌       initContainers:
+  24 │         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 │             - |
+  30 │               until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do
+  31 └                 echo "waiting for eureka..."
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/proxy-client-container-deployment.yaml (kubernetes)
+=======================================================
+Tests: 27 (SUCCESSES: 22, FAILURES: 5)
+Failures: 5 (HIGH: 5, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'proxy-client-container' of Deployment 'proxy-client-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/proxy-client-container-deployment.yaml:40-63
+────────────────────────────────────────
+  40 ┌         - env:
+  41 │             - name: EUREKA_CLIENT_ENABLED
+  42 │               value: "true"
+  43 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  44 │               value: "true"
+  45 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  46 │               value: http://service-discovery-container:8761/eureka/
+  47 │             - name: EUREKA_INSTANCE_HOSTNAME
+  48 └               value: proxy-client-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'proxy-client-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/proxy-client-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container proxy-client-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/proxy-client-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container proxy-client-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/proxy-client-container-deployment.yaml:40-63
+────────────────────────────────────────
+  40 ┌         - env:
+  41 │             - name: EUREKA_CLIENT_ENABLED
+  42 │               value: "true"
+  43 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  44 │               value: "true"
+  45 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  46 │               value: http://service-discovery-container:8761/eureka/
+  47 │             - name: EUREKA_INSTANCE_HOSTNAME
+  48 └               value: proxy-client-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment proxy-client-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/proxy-client-container-deployment.yaml:23-64
+────────────────────────────────────────
+  23 ┌       initContainers:
+  24 │         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 │             - |
+  30 │               until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do
+  31 └                 echo "waiting for eureka..."
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/service-discovery-container-deployment.yaml (kubernetes)
+============================================================
+Tests: 25 (SUCCESSES: 22, FAILURES: 3)
+Failures: 3 (HIGH: 3, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'service-discovery-container' of Deployment 'service-discovery-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/service-discovery-container-deployment.yaml:24-31
+────────────────────────────────────────
+  24 ┌         - env:
+  25 │             - name: SPRING_PROFILES_ACTIVE
+  26 │               value: dev
+  27 │           image: ghcr.io/davidone007/service-discovery:${BRANCH_TAG}
+  28 │           name: service-discovery-container
+  29 │           ports:
+  30 │             - containerPort: 8761
+  31 └               protocol: TCP
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container service-discovery-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/service-discovery-container-deployment.yaml:24-31
+────────────────────────────────────────
+  24 ┌         - env:
+  25 │             - name: SPRING_PROFILES_ACTIVE
+  26 │               value: dev
+  27 │           image: ghcr.io/davidone007/service-discovery:${BRANCH_TAG}
+  28 │           name: service-discovery-container
+  29 │           ports:
+  30 │             - containerPort: 8761
+  31 └               protocol: TCP
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment service-discovery-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/service-discovery-container-deployment.yaml:23-32
+────────────────────────────────────────
+  23 ┌       containers:
+  24 │         - env:
+  25 │             - name: SPRING_PROFILES_ACTIVE
+  26 │               value: dev
+  27 │           image: ghcr.io/davidone007/service-discovery:${BRANCH_TAG}
+  28 │           name: service-discovery-container
+  29 │           ports:
+  30 │             - containerPort: 8761
+  31 │               protocol: TCP
+  32 └       restartPolicy: Always
+────────────────────────────────────────
+
+
+
+k8s/shipping-service-container-deployment.yaml (kubernetes)
+===========================================================
+Tests: 27 (SUCCESSES: 22, FAILURES: 5)
+Failures: 5 (HIGH: 5, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'shipping-service-container' of Deployment 'shipping-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/shipping-service-container-deployment.yaml:40-63
+────────────────────────────────────────
+  40 ┌         - env:
+  41 │             - name: EUREKA_CLIENT_ENABLED
+  42 │               value: "true"
+  43 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  44 │               value: "true"
+  45 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  46 │               value: http://service-discovery-container:8761/eureka/
+  47 │             - name: EUREKA_INSTANCE_HOSTNAME
+  48 └               value: shipping-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'shipping-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/shipping-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container shipping-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/shipping-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container shipping-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/shipping-service-container-deployment.yaml:40-63
+────────────────────────────────────────
+  40 ┌         - env:
+  41 │             - name: EUREKA_CLIENT_ENABLED
+  42 │               value: "true"
+  43 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  44 │               value: "true"
+  45 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  46 │               value: http://service-discovery-container:8761/eureka/
+  47 │             - name: EUREKA_INSTANCE_HOSTNAME
+  48 └               value: shipping-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment shipping-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/shipping-service-container-deployment.yaml:23-64
+────────────────────────────────────────
+  23 ┌       initContainers:
+  24 │         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 │             - |
+  30 │               until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do
+  31 └                 echo "waiting for eureka..."
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/user-service-container-deployment.yaml (kubernetes)
+=======================================================
+Tests: 27 (SUCCESSES: 22, FAILURES: 5)
+Failures: 5 (HIGH: 5, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'user-service-container' of Deployment 'user-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/user-service-container-deployment.yaml:40-63
+────────────────────────────────────────
+  40 ┌         - env:
+  41 │             - name: EUREKA_CLIENT_ENABLED
+  42 │               value: "true"
+  43 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  44 │               value: "true"
+  45 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  46 │               value: http://service-discovery-container:8761/eureka/
+  47 │             - name: EUREKA_INSTANCE_HOSTNAME
+  48 └               value: user-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0014 (HIGH): Container 'wait-for-dependencies' of Deployment 'user-service-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/user-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container user-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/user-service-container-deployment.yaml:24-29
+────────────────────────────────────────
+  24 ┌         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 └             - |
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container user-service-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/user-service-container-deployment.yaml:40-63
+────────────────────────────────────────
+  40 ┌         - env:
+  41 │             - name: EUREKA_CLIENT_ENABLED
+  42 │               value: "true"
+  43 │             - name: EUREKA_CLIENT_FETCH-REGISTRY
+  44 │               value: "true"
+  45 │             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+  46 │               value: http://service-discovery-container:8761/eureka/
+  47 │             - name: EUREKA_INSTANCE_HOSTNAME
+  48 └               value: user-service-container
+  ..   
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment user-service-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/user-service-container-deployment.yaml:23-64
+────────────────────────────────────────
+  23 ┌       initContainers:
+  24 │         - name: wait-for-dependencies
+  25 │           image: curlimages/curl:7.85.0
+  26 │           command:
+  27 │             - sh
+  28 │             - -c
+  29 │             - |
+  30 │               until curl -sS http://service-discovery-container:8761/ >/dev/null 2>&1; do
+  31 └                 echo "waiting for eureka..."
+  ..   
+────────────────────────────────────────
+
+
+
+k8s/zipkin-container-deployment.yaml (kubernetes)
+=================================================
+Tests: 25 (SUCCESSES: 22, FAILURES: 3)
+Failures: 3 (HIGH: 3, CRITICAL: 0)
+
+AVD-KSV-0014 (HIGH): Container 'zipkin-container' of Deployment 'zipkin-container' should set 'securityContext.readOnlyRootFilesystem' to true
+════════════════════════════════════════
+An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.
+
+See https://avd.aquasec.com/misconfig/ksv014
+────────────────────────────────────────
+ k8s/zipkin-container-deployment.yaml:24-28
+────────────────────────────────────────
+  24 ┌         - image: openzipkin/zipkin
+  25 │           name: zipkin-container
+  26 │           ports:
+  27 │             - containerPort: 9411
+  28 └               protocol: TCP
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): container zipkin-container in default namespace is using the default security context
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/zipkin-container-deployment.yaml:24-28
+────────────────────────────────────────
+  24 ┌         - image: openzipkin/zipkin
+  25 │           name: zipkin-container
+  26 │           ports:
+  27 │             - containerPort: 9411
+  28 └               protocol: TCP
+────────────────────────────────────────
+
+
+AVD-KSV-0118 (HIGH): deployment zipkin-container in default namespace is using the default security context, which allows root privileges
+════════════════════════════════════════
+Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.
+
+See https://avd.aquasec.com/misconfig/ksv118
+────────────────────────────────────────
+ k8s/zipkin-container-deployment.yaml:23-29
+────────────────────────────────────────
+  23 ┌       containers:
+  24 │         - image: openzipkin/zipkin
+  25 │           name: zipkin-container
+  26 │           ports:
+  27 │             - containerPort: 9411
+  28 │               protocol: TCP
+  29 └       restartPolicy: Always
+────────────────────────────────────────
+
+
+
+main.tf (terraformplan)
+=======================
+Tests: 3 (SUCCESSES: 0, FAILURES: 3)
+Failures: 3 (HIGH: 1, CRITICAL: 2)
+
+AVD-AZU-0013 (CRITICAL): Vault network ACL does not block access by default.
+════════════════════════════════════════
+Network ACLs allow you to reduce your exposure to risk by limiting what can access your key vault.
+
+The default action of the Network ACL should be set to deny for when IPs are not matched. Azure services can be allowed to bypass.
+
+
+See https://avd.aquasec.com/misconfig/avd-azu-0013
+────────────────────────────────────────
+ main.tf:391
+   via main.tf:389-392 (network_acls)
+    via main.tf:359-393 (azurerm_key_vault.kv_a154f27af205d985ff0d52eabcac5cb0)
+────────────────────────────────────────
+ 359   resource "azurerm_key_vault" "kv_a154f27af205d985ff0d52eabcac5cb0" {
+ ...   
+ 391 [ 	default_action = "Allow"
+ ...   
+ 393   }
+────────────────────────────────────────
+
+
+AVD-AZU-0041 (CRITICAL): Cluster does not limit API access to specific IP addresses.
+════════════════════════════════════════
+The API server is the central way to interact with and manage a cluster. To improve cluster security and minimize attacks, the API server should only be accessible from a limited set of IP address ranges.
+
+
+See https://avd.aquasec.com/misconfig/avd-azu-0041
+────────────────────────────────────────
+ main.tf:35-148
+────────────────────────────────────────
+  35 ┌ resource "azurerm_kubernetes_cluster" "aks_19b4dcfece3d7f00c7ff6ed873b6cd7f" {
+  36 │ 	current_kubernetes_version = "1.32.9"
+  37 │ 	dns_prefix = "ecommerce-prod"
+  38 │ 	fqdn = "ecommerce-prod-v1qpimhu.hcp.eastus.azmk8s.io"
+  39 │ 	id = "/subscriptions/256bea1e-51c0-4409-97c4-118ae42d16dc/resourceGroups/ecommerce-rg-prod/providers/Microsoft.ContainerService/managedClusters/ecommerce-aks-prod"
+  40 │ 	image_cleaner_interval_hours = 48
+  41 │ 	kube_config_raw = <<EOF
+  42 │ 		apiVersion: v1
+  43 └ clusters:
+  ..   
+────────────────────────────────────────
+
+
+AVD-AZU-0043 (HIGH): Kubernetes cluster does not have a network policy set.
+════════════════════════════════════════
+The Kubernetes object type NetworkPolicy should be defined to have opportunity allow or block traffic to pods, as in a Kubernetes cluster configured with default settings, all pods can discover and communicate with each other without any restrictions.
+
+
+See https://avd.aquasec.com/misconfig/avd-azu-0043
+────────────────────────────────────────
+ main.tf:118-147
+   via main.tf:35-148 (azurerm_kubernetes_cluster.aks_19b4dcfece3d7f00c7ff6ed873b6cd7f)
+────────────────────────────────────────
+  35   resource "azurerm_kubernetes_cluster" "aks_19b4dcfece3d7f00c7ff6ed873b6cd7f" {
+  ..   
+ 118 ┌ network_profile {
+ 119 │ 	dns_service_ip = "10.0.0.10"
+ 120 │ 	ip_versions = [
+ 121 │ 	"IPv4",
+ 122 │ ]
+ 123 │ 	load_balancer_profile {
+ 124 └ 	outbound_ip_prefix_ids = []
+ ...   
+────────────────────────────────────────
+
+
+
+order-service/Dockerfile (dockerfile)
+=====================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────
+
+
+
+payment-service/Dockerfile (dockerfile)
+=======================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────
+
+
+
+performance-tests/Dockerfile (dockerfile)
+=========================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────
+
+
+
+product-service/Dockerfile (dockerfile)
+=======================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────
+
+
+
+proxy-client/Dockerfile (dockerfile)
+====================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────
+
+
+
+service-discovery/Dockerfile (dockerfile)
+=========================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────
+
+
+
+shipping-service/Dockerfile (dockerfile)
+========================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────
+
+
+
+terraform/modules/aks/main.tf (terraform)
+=========================================
+Tests: 6 (SUCCESSES: 0, FAILURES: 6)
+Failures: 6 (HIGH: 4, CRITICAL: 2)
+
+AVD-AZU-0041 (CRITICAL): Cluster does not limit API access to specific IP addresses.
+════════════════════════════════════════
+The API server is the central way to interact with and manage a cluster. To improve cluster security and minimize attacks, the API server should only be accessible from a limited set of IP address ranges.
+
+
+See https://avd.aquasec.com/misconfig/avd-azu-0041
+────────────────────────────────────────
+ terraform/modules/aks/main.tf:6-28
+   via terraform/environments/prod/main.tf:1-10 (module.aks)
+────────────────────────────────────────
+   6 ┌ resource "azurerm_kubernetes_cluster" "aks" {
+   7 │   name                = var.cluster_name
+   8 │   location            = azurerm_resource_group.rg.location
+   9 │   resource_group_name = azurerm_resource_group.rg.name
+  10 │   dns_prefix          = var.dns_prefix
+  11 │ 
+  12 │   default_node_pool {
+  13 │     name                        = "default"
+  14 └     node_count                  = var.node_count
+  ..   
+────────────────────────────────────────
+
+
+AVD-AZU-0041 (CRITICAL): Cluster does not limit API access to specific IP addresses.
+════════════════════════════════════════
+The API server is the central way to interact with and manage a cluster. To improve cluster security and minimize attacks, the API server should only be accessible from a limited set of IP address ranges.
+
+
+See https://avd.aquasec.com/misconfig/avd-azu-0041
+────────────────────────────────────────
+ terraform/modules/aks/main.tf:6-28
+   via terraform/environments/stage/main.tf:1-10 (module.aks)
+────────────────────────────────────────
+   6 ┌ resource "azurerm_kubernetes_cluster" "aks" {
+   7 │   name                = var.cluster_name
+   8 │   location            = azurerm_resource_group.rg.location
+   9 │   resource_group_name = azurerm_resource_group.rg.name
+  10 │   dns_prefix          = var.dns_prefix
+  11 │ 
+  12 │   default_node_pool {
+  13 │     name                        = "default"
+  14 └     node_count                  = var.node_count
+  ..   
+────────────────────────────────────────
+
+
+AVD-AZU-0042 (HIGH): RBAC is not enabled on cluster
+════════════════════════════════════════
+Using Kubernetes role-based access control (RBAC), you can grant users, groups, and service accounts access to only the resources they need.
+
+
+See https://avd.aquasec.com/misconfig/avd-azu-0042
+────────────────────────────────────────
+ terraform/modules/aks/main.tf:6-28
+   via terraform/environments/prod/main.tf:1-10 (module.aks)
+────────────────────────────────────────
+   6 ┌ resource "azurerm_kubernetes_cluster" "aks" {
+   7 │   name                = var.cluster_name
+   8 │   location            = azurerm_resource_group.rg.location
+   9 │   resource_group_name = azurerm_resource_group.rg.name
+  10 │   dns_prefix          = var.dns_prefix
+  11 │ 
+  12 │   default_node_pool {
+  13 │     name                        = "default"
+  14 └     node_count                  = var.node_count
+  ..   
+────────────────────────────────────────
+
+
+AVD-AZU-0042 (HIGH): RBAC is not enabled on cluster
+════════════════════════════════════════
+Using Kubernetes role-based access control (RBAC), you can grant users, groups, and service accounts access to only the resources they need.
+
+
+See https://avd.aquasec.com/misconfig/avd-azu-0042
+────────────────────────────────────────
+ terraform/modules/aks/main.tf:6-28
+   via terraform/environments/stage/main.tf:1-10 (module.aks)
+────────────────────────────────────────
+   6 ┌ resource "azurerm_kubernetes_cluster" "aks" {
+   7 │   name                = var.cluster_name
+   8 │   location            = azurerm_resource_group.rg.location
+   9 │   resource_group_name = azurerm_resource_group.rg.name
+  10 │   dns_prefix          = var.dns_prefix
+  11 │ 
+  12 │   default_node_pool {
+  13 │     name                        = "default"
+  14 └     node_count                  = var.node_count
+  ..   
+────────────────────────────────────────
+
+
+AVD-AZU-0043 (HIGH): Kubernetes cluster does not have a network policy set.
+════════════════════════════════════════
+The Kubernetes object type NetworkPolicy should be defined to have opportunity allow or block traffic to pods, as in a Kubernetes cluster configured with default settings, all pods can discover and communicate with each other without any restrictions.
+
+
+See https://avd.aquasec.com/misconfig/avd-azu-0043
+────────────────────────────────────────
+ terraform/modules/aks/main.tf:6-28
+   via terraform/environments/prod/main.tf:1-10 (module.aks)
+────────────────────────────────────────
+   6 ┌ resource "azurerm_kubernetes_cluster" "aks" {
+   7 │   name                = var.cluster_name
+   8 │   location            = azurerm_resource_group.rg.location
+   9 │   resource_group_name = azurerm_resource_group.rg.name
+  10 │   dns_prefix          = var.dns_prefix
+  11 │ 
+  12 │   default_node_pool {
+  13 │     name                        = "default"
+  14 └     node_count                  = var.node_count
+  ..   
+────────────────────────────────────────
+
+
+AVD-AZU-0043 (HIGH): Kubernetes cluster does not have a network policy set.
+════════════════════════════════════════
+The Kubernetes object type NetworkPolicy should be defined to have opportunity allow or block traffic to pods, as in a Kubernetes cluster configured with default settings, all pods can discover and communicate with each other without any restrictions.
+
+
+See https://avd.aquasec.com/misconfig/avd-azu-0043
+────────────────────────────────────────
+ terraform/modules/aks/main.tf:6-28
+   via terraform/environments/stage/main.tf:1-10 (module.aks)
+────────────────────────────────────────
+   6 ┌ resource "azurerm_kubernetes_cluster" "aks" {
+   7 │   name                = var.cluster_name
+   8 │   location            = azurerm_resource_group.rg.location
+   9 │   resource_group_name = azurerm_resource_group.rg.name
+  10 │   dns_prefix          = var.dns_prefix
+  11 │ 
+  12 │   default_node_pool {
+  13 │     name                        = "default"
+  14 └     node_count                  = var.node_count
+  ..   
+────────────────────────────────────────
+
+
+
+user-service/Dockerfile (dockerfile)
+====================================
+Tests: 20 (SUCCESSES: 19, FAILURES: 1)
+Failures: 1 (HIGH: 1, CRITICAL: 0)
+
+AVD-DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds002
+────────────────────────────────────────
+
+

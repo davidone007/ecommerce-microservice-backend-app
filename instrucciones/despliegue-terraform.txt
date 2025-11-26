@@ -17,7 +17,7 @@ terraform apply -var="jwt_secret_value=secret123" -auto-approve
 172.173.175.23
 #Si se llega a borrar crearlo con los pasos del md de despliegue-prod-ip-estatica.md
 y toca reemplazar en
-/Users/davidef/Desktop/ecommerce-microservice-backend-appC/terraform/environments/prod/values.yaml
+terraform/environments/prod/values.yaml
 poner ecommerce.xxx.nip.io
 
 

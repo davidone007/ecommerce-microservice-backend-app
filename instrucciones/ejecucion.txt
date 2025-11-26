@@ -75,5 +75,5 @@ nohup kubectl port-forward svc/api-gateway-container 8080:8080 > portforward.log
 # 🧪 TESTS UNITARIOS
 #######################################
 
-cd "/Users/davidef/Desktop/ecommerce-microservice-backend-app copy"
+cd "$(git rev-parse --show-toplevel)"
 ./mvnw test -Dtest="*ServiceImplTest"

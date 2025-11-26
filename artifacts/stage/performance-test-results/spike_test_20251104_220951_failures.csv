@@ -1,0 +1,4 @@
+Method,Name,Error,Occurrences
+POST,/app/api/authenticate [ADMIN],"RetriesExceeded('http://localhost:8080/app/api/authenticate', 1, original=timed out)",30
+POST,/app/api/credentials [CREATE ADMIN CREDS],"RetriesExceeded('http://localhost:8080/app/api/credentials', 1, original=timed out)",58
+POST,/app/api/users [CREATE ADMIN],"RetriesExceeded('http://localhost:8080/app/api/users', 1, original=timed out)",124
